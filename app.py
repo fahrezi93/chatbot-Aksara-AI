@@ -1,32 +1,49 @@
 import os
 import requests
+import json # ✅ Impor library json
 from flask import Flask, render_template, request, Response, jsonify, session, redirect, url_for
 from dotenv import load_dotenv
 import google.generativeai as genai
 import markdown
 import firebase_admin
 from firebase_admin import credentials, auth, firestore
-import datetime
 
 # --- KONFIGURASI ---
 load_dotenv()
 app = Flask(__name__)
 app.secret_key = os.getenv("FLASK_SECRET_KEY", "ganti-dengan-kunci-rahasia-yang-kuat")
 
-# --- INISIALISASI ---
+# --- INISIALISASI SEMUA LAYANAN ---
 try:
-    cred = credentials.Certificate("firebase-admin-sdk.json")
+    # ✅ PERBAIKAN: Inisialisasi Firebase dari Environment Variable
+    firebase_sdk_json_str = os.getenv("FIREBASE_ADMIN_SDK_JSON")
+    if not firebase_sdk_json_str:
+        raise ValueError("Environment variable FIREBASE_ADMIN_SDK_JSON tidak diatur.")
+    
+    # Ubah string JSON menjadi dictionary Python
+    cred_dict = json.loads(firebase_sdk_json_str)
+    cred = credentials.Certificate(cred_dict)
     firebase_admin.initialize_app(cred)
+    
     db = firestore.client()
+
+    # Inisialisasi Gemini
     gemini_api_key = os.getenv("GEMINI_API_KEY")
     if not gemini_api_key: raise ValueError("Kunci API Gemini tidak ditemukan.")
     genai.configure(api_key=gemini_api_key)
     gemini_model = genai.GenerativeModel('gemini-1.5-flash')
+
+    # Ambil kunci API OpenWeatherMap
+    weather_api_key = os.getenv("OPENWEATHER_API_KEY")
+    if not weather_api_key: print("PERINGATAN: Kunci API OpenWeatherMap tidak ditemukan.")
+
 except Exception as e:
     print(f"Error saat inisialisasi: {e}")
     exit()
 
-# --- HALAMAN & AUTENTIKASI (Tidak berubah) ---
+# ... sisa kode app.py tidak ada yang berubah ...
+# (Semua route dan fungsi lainnya tetap sama)
+
 @app.route("/")
 def index(): return render_template('chat.html')
 @app.route('/login', methods=['GET', 'POST'])
@@ -51,9 +68,6 @@ def check_auth():
     if 'user_id' in session:
         return jsonify({"logged_in": True, "email": session.get('user_email')})
     return jsonify({"logged_in": False})
-
-# --- ✅ API BARU UNTUK MANAJEMEN PERCAKAPAN ---
-
 @app.route("/get_conversations")
 def get_conversations():
     if 'user_id' not in session: return jsonify([]), 200
@@ -65,7 +79,6 @@ def get_conversations():
     except Exception as e:
         print(f"Error get_conversations: {e}")
         return jsonify([])
-
 @app.route("/get_conversation/<conversation_id>")
 def get_conversation(conversation_id):
     if 'user_id' not in session: return jsonify({"error": "Unauthorized"}), 401
@@ -75,9 +88,7 @@ def get_conversation(conversation_id):
         messages = [msg.to_dict() for msg in messages_ref]
         return jsonify(messages)
     except Exception as e:
-        print(f"Error get_conversation: {e}")
         return jsonify({"error": str(e)}), 500
-
 @app.route("/save_message", methods=['POST'])
 def save_message():
     if 'user_id' not in session: return jsonify({"status": "guest"}), 200
@@ -85,38 +96,21 @@ def save_message():
     data = request.json
     conversation_id = data.get('conversationId')
     message_data = data.get('messageData')
-    
     try:
-        # Jika tidak ada ID percakapan, buat yang baru
         if not conversation_id:
-            conversation_id = db.collection('chats').document(user_id).collection('conversations').document().id
-            # Simpan pesan pertama sebagai judul
-            conv_ref = db.collection('chats').document(user_id).collection('conversations').document(conversation_id)
-            conv_ref.set({
-                "title": message_data.get('text'),
-                "last_updated": firestore.SERVER_TIMESTAMP
-            })
-        
-        # Simpan pesan di dalam sub-koleksi
+            conv_ref = db.collection('chats').document(user_id).collection('conversations').document()
+            conversation_id = conv_ref.id
+            conv_ref.set({"title": message_data.get('text'), "last_updated": firestore.SERVER_TIMESTAMP})
         msg_ref = db.collection('chats').document(user_id).collection('conversations').document(conversation_id).collection('messages').document()
         msg_ref.set({**message_data, 'timestamp': firestore.SERVER_TIMESTAMP})
-
-        # Update timestamp percakapan
-        db.collection('chats').document(user_id).collection('conversations').document(conversation_id).update({
-            "last_updated": firestore.SERVER_TIMESTAMP
-        })
-
+        db.collection('chats').document(user_id).collection('conversations').document(conversation_id).update({"last_updated": firestore.SERVER_TIMESTAMP})
         return jsonify({"status": "success", "conversationId": conversation_id})
     except Exception as e:
-        print(f"Error save_message: {e}")
         return jsonify({"status": "error", "message": str(e)}), 500
-
 @app.route("/send_message", methods=["POST"])
 def send_message():
-    # Fungsi ini sekarang hanya fokus untuk mendapatkan respons dari Gemini
     user_message = request.json['message']
     prompt_to_gemini = ( "Kamu adalah 'Asisten Cerdas' yang ramah dan sopan. Format jawabanmu menggunakan Markdown. Jawab pertanyaan ini:\n\n" f"{user_message}")
-
     def stream_response():
         try:
             chat_session = gemini_model.start_chat(history=[])
@@ -124,7 +118,7 @@ def send_message():
             for chunk in response_stream:
                 if chunk.text: yield chunk.text
         except Exception as e:
-            print(f"Error saat streaming: {e}")
             yield "Maaf, terjadi kesalahan."
-
     return Response(stream_response(), mimetype='text/plain')
+if __name__ == "__main__":
+    app.run(debug=True)
