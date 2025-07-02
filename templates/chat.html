@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chatbot Asisten</title>
+    <link rel="icon" type="image/png" href="{{ url_for('static', filename='robot.png') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+</head>
+<body>
+    <!-- ✅ 1. Layar Sambutan (Awalnya Tersembunyi) -->
+    <div id="welcome-screen">
+        <div class="welcome-content">
+            <div class="welcome-icon">👋</div>
+            <h1>Selamat Datang Kembali!</h1>
+            <p>Riwayat obrolan Anda sudah siap. Klik untuk memulai percakapan.</p>
+            <button id="start-chat-btn">Mulai Chat</button>
+        </div>
+    </div>
+
+    <div id="app-wrapper">
+        <div id="sidebar">
+            <div class="sidebar-header">
+                <h3>Riwayat</h3>
+                <button id="new-chat-btn" title="Mulai Obrolan Baru">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+                </button>
+            </div>
+            <div id="history-list"></div>
+        </div>
+
+        <div id="chat-container">
+            <div id="chat-header">
+                <div class="header-content">
+                    <div class="bot-avatar">🤖</div>
+                    <div class="bot-info">
+                        <h2>Asisten Chatbot Kamu</h2>
+                        <p>Online</p>
+                    </div>
+                </div>
+                <div class="header-actions">
+                    <div id="guest-actions">
+                        <button id="theme-toggle-guest" class="theme-toggle-btn" aria-label="Ganti Tema" title="Ganti Tema">
+                            <svg class="sun-icon" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>
+                            <svg class="moon-icon" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
+                        </button>
+                        <a href="/login" class="header-btn">Masuk</a>
+                        <a href="/register" class="header-btn primary">Daftar</a>
+                    </div>
+                    <div id="user-actions" style="display: none;">
+                        <button id="clear-chat-btn" aria-label="Hapus Obrolan" title="Hapus Obrolan">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+                        </button>
+                        <button id="theme-toggle-user" class="theme-toggle-btn" aria-label="Ganti Tema" title="Ganti Tema">
+                            <svg class="sun-icon" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>
+                            <svg class="moon-icon" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
+                        </button>
+                        <div class="profile-menu">
+                            <button id="profile-btn" aria-label="Profil">
+                                <span id="profile-initial">?</span>
+                            </button>
+                            <div id="profile-dropdown" class="dropdown-content">
+                                <div id="user-email-display"></div>
+                                <a href="/logout">Logout</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div id="chat-box"></div>
+            <button id="scroll-to-bottom-btn" aria-label="Scroll ke bawah">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><polyline points="19 12 12 19 5 12"></polyline></svg>
+            </button>
+            <form id="chat-form">
+                <button type="button" id="mic-btn" aria-label="Gunakan suara">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path><path d="M19 10v2a7 7 0 0 1-14 0v-2"></path><line x1="12" y1="19" x2="12" y2="23"></line></svg>
+                </button>
+                <input type="text" id="user-input" placeholder="Ketik atau gunakan suara..." autocomplete="off">
+                <button type="submit" aria-label="Kirim Pesan">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
+                </button>
+            </form>
+        </div>
+    </div>
+    <div id="modal-overlay">
+        <div id="custom-confirm-modal">
+            <h3>Hapus Obrolan</h3>
+            <p>Apakah Anda yakin ingin menghapus seluruh riwayat obrolan ini secara permanen?</p>
+            <div class="modal-buttons">
+                <button id="cancel-btn">Batal</button>
+                <button id="confirm-delete-btn">Hapus</button>
+            </div>
+        </div>
+    </div>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore-compat.js"></script>
+    <script src="{{ url_for('static', filename='script.js') }}"></script>
+</body>
+</html>
