@@ -1,6 +1,6 @@
 import os
 import requests
-import json # ✅ Impor library json
+import json # Impor library json
 from flask import Flask, render_template, request, Response, jsonify, session, redirect, url_for
 from dotenv import load_dotenv
 import google.generativeai as genai
@@ -15,14 +15,23 @@ app.secret_key = os.getenv("FLASK_SECRET_KEY", "ganti-dengan-kunci-rahasia-yang-
 
 # --- INISIALISASI SEMUA LAYANAN ---
 try:
-    # ✅ PERBAIKAN: Inisialisasi Firebase dari Environment Variable
+    # ✅ PERBAIKAN: Inisialisasi Firebase dari Environment Variable ATAU File
     firebase_sdk_json_str = os.getenv("FIREBASE_ADMIN_SDK_JSON")
-    if not firebase_sdk_json_str:
-        raise ValueError("Environment variable FIREBASE_ADMIN_SDK_JSON tidak diatur.")
-    
-    # Ubah string JSON menjadi dictionary Python
-    cred_dict = json.loads(firebase_sdk_json_str)
-    cred = credentials.Certificate(cred_dict)
+    cred = None
+    if firebase_sdk_json_str:
+        # Metode untuk Vercel/Render (membaca dari env var)
+        print("Memuat kredensial Firebase dari Environment Variable...")
+        cred_dict = json.loads(firebase_sdk_json_str)
+        cred = credentials.Certificate(cred_dict)
+    else:
+        # Metode fallback untuk pengembangan lokal (membaca dari file)
+        print("Mencari file 'firebase-admin-sdk.json' untuk pengembangan lokal...")
+        if os.path.exists("firebase-admin-sdk.json"):
+            cred = credentials.Certificate("firebase-admin-sdk.json")
+        else:
+            # Jika keduanya tidak ada, hentikan aplikasi
+            raise ValueError("Kredensial Firebase tidak ditemukan. Atur FIREBASE_ADMIN_SDK_JSON atau letakkan firebase-admin-sdk.json di direktori root.")
+            
     firebase_admin.initialize_app(cred)
     
     db = firestore.client()
@@ -42,10 +51,11 @@ except Exception as e:
     exit()
 
 # ... sisa kode app.py tidak ada yang berubah ...
-# (Semua route dan fungsi lainnya tetap sama)
+# (Semua route dan fungsi lainnya tetap sama persis seperti sebelumnya)
 
 @app.route("/")
 def index(): return render_template('chat.html')
+
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     if request.method == 'POST':
@@ -57,17 +67,21 @@ def login():
         except Exception as e:
             return jsonify({"status": "error", "message": str(e)}), 401
     return render_template('login.html')
+
 @app.route('/register')
 def register(): return render_template('register.html')
+
 @app.route('/logout')
 def logout():
     session.clear()
     return redirect(url_for('index'))
+
 @app.route('/check_auth')
 def check_auth():
     if 'user_id' in session:
         return jsonify({"logged_in": True, "email": session.get('user_email')})
     return jsonify({"logged_in": False})
+
 @app.route("/get_conversations")
 def get_conversations():
     if 'user_id' not in session: return jsonify([]), 200
@@ -79,6 +93,7 @@ def get_conversations():
     except Exception as e:
         print(f"Error get_conversations: {e}")
         return jsonify([])
+
 @app.route("/get_conversation/<conversation_id>")
 def get_conversation(conversation_id):
     if 'user_id' not in session: return jsonify({"error": "Unauthorized"}), 401
@@ -89,6 +104,7 @@ def get_conversation(conversation_id):
         return jsonify(messages)
     except Exception as e:
         return jsonify({"error": str(e)}), 500
+
 @app.route("/save_message", methods=['POST'])
 def save_message():
     if 'user_id' not in session: return jsonify({"status": "guest"}), 200
@@ -107,6 +123,7 @@ def save_message():
         return jsonify({"status": "success", "conversationId": conversation_id})
     except Exception as e:
         return jsonify({"status": "error", "message": str(e)}), 500
+
 @app.route("/send_message", methods=["POST"])
 def send_message():
     user_message = request.json['message']
@@ -120,5 +137,6 @@ def send_message():
         except Exception as e:
             yield "Maaf, terjadi kesalahan."
     return Response(stream_response(), mimetype='text/plain')
+
 if __name__ == "__main__":
     app.run(debug=True)
