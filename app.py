@@ -167,7 +167,6 @@ def send_message():
     
     if image_data_b64:
         try:
-            # ✅ PERBAIKAN: Cara decode gambar yang lebih benar dan aman
             image_data_string = image_data_b64.split(',')[1]
             image_bytes = base64.b64decode(image_data_string)
             img = Image.open(io.BytesIO(image_bytes))

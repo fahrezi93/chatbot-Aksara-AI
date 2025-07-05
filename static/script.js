@@ -38,7 +38,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const scrollToBottomBtn = document.getElementById('scroll-to-bottom-btn');
     const modalButtons = document.querySelector('.modal-buttons');
     const modalLoader = document.getElementById('modal-loader');
-    // ✅ ELEMEN BARU UNTUK UPLOAD GAMBAR
     const uploadBtn = document.getElementById('upload-btn');
     const fileInput = document.getElementById('file-input');
     const imagePreviewContainer = document.getElementById('image-preview-container');
@@ -47,20 +46,40 @@ document.addEventListener('DOMContentLoaded', () => {
     const sendBtn = document.getElementById('send-btn');
 
     let conversationHistory = [];
-    let uploadedImageData = null; // Untuk menyimpan data gambar base64
+    let uploadedImageData = null;
 
-    // --- (Bank soal dan fungsi UI tidak berubah) ---
+    // ✅ BANK SOAL DIPERBANYAK
     const ALL_PROMPTS = [
-        { title: "Rencana Perjalanan", subtitle: "untuk 3 hari di Yogyakarta", full_prompt: "Buatkan saya rencana perjalanan 3 hari di Yogyakarta" },
-        { title: "Jelaskan Konsep", subtitle: "relativitas umum dengan bahasa sederhana", full_prompt: "Jelaskan konsep relativitas umum dengan bahasa yang sederhana" },
-        { title: "Ide Resep", subtitle: "masakan sehat untuk makan malam", full_prompt: "Beri aku ide resep masakan sehat untuk makan malam" },
-        { title: "Tulis Puisi", subtitle: "tentang senja di tepi pantai", full_prompt: "Tuliskan sebuah puisi tentang senja di tepi pantai" },
-        { title: "Bandingkan Teknologi", subtitle: "antara mobil listrik dan mobil hybrid", full_prompt: "Bandingkan kelebihan dan kekurangan teknologi mobil listrik dan mobil hybrid" },
-        { title: "Buat Cerita Pendek", subtitle: "tentang petualangan di hutan ajaib", full_prompt: "Buat cerita pendek tentang petualangan di hutan ajaib" },
-        { title: "Tips Belajar Efektif", subtitle: "untuk persiapan ujian", full_prompt: "Berikan saya beberapa tips belajar yang efektif untuk persiapan ujian" },
-        { title: "Ide Konten Media Sosial", subtitle: "untuk produk kopi lokal", full_prompt: "Beri aku 5 ide konten media sosial untuk mempromosikan produk kopi lokal" }
+        // Produktivitas & Profesional
+        { title: "Buat Draf Email", subtitle: "untuk menindaklanjuti proposal kerjasama", full_prompt: "Buatkan saya draf email profesional untuk menindaklanjuti proposal kerjasama yang saya kirim minggu lalu." },
+        { title: "Rangkum Teks Ini", subtitle: "menjadi 5 poin utama", full_prompt: "Tolong rangkum teks berikut menjadi 5 poin utama: [tempel teks di sini]" },
+        { title: "Ide Nama Brand", subtitle: "untuk produk fashion ramah lingkungan", full_prompt: "Berikan 10 ide nama brand yang menarik untuk produk fashion yang ramah lingkungan." },
+        { title: "Susun Rencana Proyek", subtitle: "untuk peluncuran aplikasi mobile", full_prompt: "Bantu saya menyusun kerangka rencana proyek untuk peluncuran aplikasi mobile, mulai dari riset hingga pemasaran." },
+        { title: "Latihan Wawancara Kerja", subtitle: "untuk posisi Digital Marketing", full_prompt: "Mari kita latihan wawancara kerja. Ajukan saya pertanyaan umum untuk posisi Digital Marketing." },
+
+        // Kreativitas & Menulis
+        { title: "Tulis Puisi", subtitle: "tentang hujan di perkotaan", full_prompt: "Tuliskan sebuah puisi tentang suasana hujan di tengah hiruk pikuk perkotaan." },
+        { title: "Buat Cerita Pendek", subtitle: "tentang robot yang punya perasaan", full_prompt: "Buat cerita pendek tentang robot pembersih yang tiba-tiba bisa merasakan emosi." },
+        { title: "Ide Judul Artikel", subtitle: "tentang manfaat meditasi", full_prompt: "Berikan 5 ide judul artikel yang menarik (clickbait) tentang manfaat meditasi untuk pemula." },
+        { title: "Kembangkan Plot Cerita", subtitle: "dari premis: detektif di zaman Majapahit", full_prompt: "Saya punya premis: seorang detektif di era Kerajaan Majapahit. Bantu kembangkan plot ceritanya." },
+        { title: "Buat Lirik Lagu", subtitle: "bertema persahabatan jarak jauh", full_prompt: "Tolong buatkan lirik lagu pop yang menyentuh tentang persahabatan jarak jauh." },
+
+        // Edukasi & Pengetahuan
+        { title: "Jelaskan Konsep", subtitle: "tentang black hole dengan analogi sederhana", full_prompt: "Jelaskan konsep black hole (lubang hitam) menggunakan analogi yang mudah dipahami orang awam." },
+        { title: "Bandingkan Dua Tokoh", subtitle: "antara Soekarno dan Hatta", full_prompt: "Bandingkan gaya kepemimpinan dan peran antara Soekarno dan Mohammad Hatta dalam kemerdekaan Indonesia." },
+        { title: "Sejarah Singkat", subtitle: "penemuan internet", full_prompt: "Ceritakan sejarah singkat penemuan internet, mulai dari ARPANET hingga World Wide Web." },
+        { title: "Bagaimana Cara Kerja", subtitle: "vaksin mRNA?", full_prompt: "Jelaskan bagaimana cara kerja vaksin berbasis mRNA seperti Pfizer atau Moderna." },
+        { title: "Fakta Menarik", subtitle: "tentang lautan dalam", full_prompt: "Berikan saya 5 fakta menarik yang jarang diketahui tentang kehidupan di laut dalam." },
+
+        // Gaya Hidup & Hiburan
+        { title: "Rencana Perjalanan", subtitle: "hemat 3 hari di Bali", full_prompt: "Buatkan saya rencana perjalanan hemat selama 3 hari di Bali untuk backpacker." },
+        { title: "Rekomendasi Film", subtitle: "genre thriller psikologis", full_prompt: "Beri saya 5 rekomendasi film genre thriller psikologis yang menegangkan." },
+        { title: "Ide Resep Sehat", subtitle: "untuk sarapan di bawah 15 menit", full_prompt: "Berikan 3 ide resep sarapan sehat dan praktis yang bisa dibuat dalam waktu kurang dari 15 menit." },
+        { title: "Tips Berkebun", subtitle: "untuk pemula di lahan sempit", full_prompt: "Apa saja tips penting untuk mulai berkebun sayuran bagi pemula yang hanya punya balkon apartemen?" },
+        { title: "Buat Lelucon", subtitle: "tentang programmer", full_prompt: "Buatkan sebuah lelucon singkat tentang kehidupan seorang programmer." }
     ];
 
+    // --- (Sisa kode tidak ada yang berubah) ---
     function setupGuestUI() {
         body.classList.remove('user-logged-in');
         welcomeScreen.classList.remove('visible');
@@ -191,7 +210,6 @@ document.addEventListener('DOMContentLoaded', () => {
             const response = await fetch(`/get_conversation/${conversationId}`);
             const messages = await response.json();
             messages.forEach(msg => {
-                // ✅ TAMPILKAN GAMBAR DARI RIWAYAT
                 let content = msg.htmlContent;
                 if (msg.imageData) {
                     content = `<img src="${msg.imageData}" class="message-image" alt="Gambar terlampir"><br>` + content;
@@ -222,12 +240,10 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // ✅ FUNGSI PENGIRIMAN DIPERBARUI UNTUK MENGIRIM GAMBAR
     async function handleFormSubmit(e) {
         if (e) e.preventDefault();
         const userMessageText = userInput.value.trim();
         
-        // Pesan tidak boleh kosong jika tidak ada gambar
         if (userMessageText === "" && !uploadedImageData) return;
 
         hideInitialPrompts();
@@ -243,12 +259,11 @@ document.addEventListener('DOMContentLoaded', () => {
             isUser: true, 
             text: userMessageText, 
             htmlContent: `<p>${userMessageText}</p>`,
-            imageData: uploadedImageData // Sertakan data gambar
+            imageData: uploadedImageData
         };
         
         conversationHistory.push({ isUser: true, text: userMessageText });
         
-        // Simpan data gambar untuk dikirim, lalu reset
         const imageToSend = uploadedImageData;
         uploadedImageData = null;
         imagePreviewContainer.style.display = 'none';
@@ -273,7 +288,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 body: JSON.stringify({
                     message: userMessageText,
                     history: conversationHistory.slice(0, -1),
-                    imageData: imageToSend // Kirim data gambar ke server
+                    imageData: imageToSend
                 })
             });
 
@@ -330,7 +345,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
     
-    // --- EVENT LISTENERS ---
     if (chatForm) chatForm.addEventListener('submit', handleFormSubmit);
     if (startChatBtn) {
         startChatBtn.addEventListener('click', () => {
@@ -343,7 +357,6 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     if (newChatBtn) newChatBtn.addEventListener('click', startNewChat);
     
-    // ✅ EVENT LISTENER BARU UNTUK UPLOAD GAMBAR
     if (uploadBtn) {
         uploadBtn.addEventListener('click', () => fileInput.click());
     }
@@ -365,11 +378,10 @@ document.addEventListener('DOMContentLoaded', () => {
         removePreviewBtn.addEventListener('click', () => {
             uploadedImageData = null;
             imagePreviewContainer.style.display = 'none';
-            fileInput.value = ''; // Reset input file
+            fileInput.value = '';
         });
     }
 
-    // ... (Sisa event listener tidak berubah) ...
     if (historyList) {
         historyList.addEventListener('click', (e) => {
             const historyItem = e.target.closest('.history-item');
@@ -534,7 +546,6 @@ document.addEventListener('DOMContentLoaded', () => {
         micBtn.style.display = "none";
     }
 
-    // --- FUNGSI TAMPILAN PESAN ---
     function appendMessage(content, className, isTextContent, timestamp) {
         const messageElement = document.createElement("div");
         messageElement.className = `message ${className}`;

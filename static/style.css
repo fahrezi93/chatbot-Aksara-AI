@@ -11,6 +11,7 @@
     --welcome-text-color: #666;
     --mic-recording-color: #e63946;
     --danger-color: #e63946;
+    --hover-bg-color: #f0f2f5; /* ✅ Warna abu-abu baru untuk hover */
 }
 
 body.dark-mode {
@@ -24,6 +25,7 @@ body.dark-mode {
     --border-color: #30363d;
     --welcome-text-color: #8b949e;
     --danger-color: #f85149;
+    --hover-bg-color: #2a2f37; /* ✅ Warna abu-abu baru untuk hover di mode gelap */
 }
 
 body {
@@ -112,7 +114,9 @@ body:not(.user-logged-in) #sidebar {
     justify-content: space-between;
     position: relative;
 }
-.history-item:hover { background-color: var(--bot-msg-bg); }
+.history-item:hover { 
+    background-color: var(--hover-bg-color); /* ✅ PERBAIKAN: Gunakan warna hover baru */
+}
 .history-item.active { background-color: var(--primary-color); color: white; }
 .history-placeholder { padding: 15px; font-style: italic; color: var(--welcome-text-color); text-align: center; }
 
@@ -131,11 +135,17 @@ body:not(.user-logged-in) #sidebar {
     color: var(--text-color);
     padding: 5px;
     border-radius: 50%;
-    display: none;
     flex-shrink: 0;
     margin-left: 5px;
+    /* ✅ PERBAIKAN: Gunakan visibility & opacity untuk mencegah layout shift */
+    visibility: hidden;
+    opacity: 0;
+    transition: opacity 0.2s, visibility 0.2s;
 }
-.history-item:hover .edit-title-btn { display: inline-flex; }
+.history-item:hover .edit-title-btn { 
+    visibility: visible;
+    opacity: 1;
+}
 .history-item.active .edit-title-btn { color: white; }
 .edit-title-btn:hover { background-color: var(--bot-msg-bg); }
 .history-item.active .edit-title-btn:hover { background-color: rgba(255, 255, 255, 0.2); }
@@ -216,7 +226,7 @@ body:not(.user-logged-in) #sidebar {
 }
 .dropdown-content {
     display: none; position: absolute; right: 0; top: 45px; background-color: var(--container-bg);
-    min-width: 200px; box-shadow: 0px 8px 16px 0px rgba(0, 0, 0, 0.2); z-index: 1;
+    min-width: 200px; box-shadow: 0px 8px 16px 0px rgba(0, 0, 0, 0.2); z-index: 10001;
     border-radius: 8px; padding: 10px 0; border: 1px solid var(--border-color);
 }
 .dropdown-content.show { display: block; }
@@ -324,12 +334,11 @@ body.dark-mode .moon-icon { display: block; }
 .user-message { background-color: var(--user-msg-bg); color: white; align-self: flex-end; border-bottom-right-radius: 5px; }
 .bot-message { background-color: var(--bot-msg-bg); color: var(--text-color); align-self: flex-start; border-bottom-left-radius: 5px; border: 1px solid var(--border-color); }
 
-/* ✅ GAYA BARU UNTUK GAMBAR DI DALAM PESAN */
 .message-image {
     max-width: 100%;
-    max-height: 300px; /* Batasi tinggi maksimum */
-    border-radius: 10px; /* Samakan dengan bubble chat */
-    margin-bottom: 8px; /* Beri jarak dengan teks di bawahnya */
+    max-height: 300px;
+    border-radius: 10px;
+    margin-bottom: 8px;
     display: block;
 }
 
@@ -355,6 +364,8 @@ body.dark-mode .typing-indicator span { background-color: var(--text-color); }
     padding: 15px;
     border-top: 1px solid var(--border-color);
     background-color: var(--container-bg);
+    position: relative;
+    z-index: 10;
 }
 #chat-form { 
     display: flex; 
@@ -467,6 +478,49 @@ body.dark-mode .typing-indicator span { background-color: var(--text-color); }
     100% { transform: rotate(360deg); }
 }
 
+[data-tooltip] {
+    position: relative;
+}
+[data-tooltip]::after {
+    content: attr(data-tooltip);
+    position: absolute;
+    background-color: #333;
+    color: #fff;
+    padding: 6px 10px;
+    border-radius: 5px;
+    font-size: 0.85rem;
+    white-space: nowrap;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.2s, visibility 0.2s;
+    pointer-events: none;
+    z-index: 10000;
+}
+[data-tooltip]:hover::after {
+    opacity: 1;
+    visibility: visible;
+    transition-delay: 0.5s;
+}
+
+#chat-header [data-tooltip]::after {
+    bottom: 120%;
+    left: 50%;
+    transform: translateX(-50%);
+}
+
+#input-area [data-tooltip]::after {
+    top: -40px;
+    left: 50%;
+    transform: translateX(-50%);
+}
+
+#sidebar [data-tooltip]::after {
+    top: 50%;
+    left: 105%;
+    transform: translateY(-50%);
+}
+
+
 @media (max-width: 768px) {
     body:not(.user-logged-in) #app-wrapper { align-items: stretch; }
     body:not(.user-logged-in) #chat-container { 
@@ -506,8 +560,23 @@ body.dark-mode .typing-indicator span { background-color: var(--text-color); }
 
     #chat-container { width: 100%; }
     #scroll-to-bottom-btn { bottom: 75px; right: 15px; }
-    #input-area { padding: 10px; }
-    #chat-form { gap: 8px; }
-    #user-input { padding: 10px 18px; }
-    .input-area-btn { width: 45px; height: 45px; }
+    
+    #input-area { 
+        padding: 8px 10px; 
+    }
+    #chat-form { 
+        gap: 5px; 
+    }
+    #user-input { 
+        padding: 10px 15px; 
+        min-width: 0;
+    }
+    .input-area-btn { 
+        width: 40px; 
+        height: 40px; 
+    }
+
+    [data-tooltip]::after {
+        display: none !important;
+    }
 }
