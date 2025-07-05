@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Login - Chatbot Gemini</title>
+    <title>Login - Aksara AI</title>
     <link rel="icon" type="image/png" href="{{ url_for('static', filename='robot.png') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='auth.css') }}">
 </head>
@@ -12,7 +12,6 @@
         <div class="auth-box">
             <h1>Selamat Datang Kembali!</h1>
             <p>Silakan login untuk melanjutkan.</p>
-            <!-- ✅ Menggunakan id="login-form" yang benar -->
             <form id="login-form">
                 <div class="input-group">
                     <label for="email">Email</label>
@@ -25,7 +24,10 @@
                         <button type="button" class="password-toggle-icon" aria-label="Tampilkan password"></button>
                     </div>
                 </div>
-                <!-- ✅ Tombol diubah menjadi "Login" -->
+                <!-- ✅ LINK LUPA PASSWORD DITAMBAHKAN -->
+                <div class="extra-options">
+                    <a href="{{ url_for('forgot_password') }}">Lupa Password?</a>
+                </div>
                 <button type="submit">Login</button>
                 <p id="error-message" class="error-text"></p>
             </form>
@@ -41,7 +43,7 @@
     </div>
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-auth-compat.js"></script>
-    <script src="{{ url_for('static', filename='firebase-config.js') }}"></script> <!-- Muat konfigurasi dulu -->
-    <script src="{{ url_for('static', filename='auth.js') }}"></script> <!-- Baru muat logika -->
+    <script src="{{ url_for('static', filename='firebase-config.js') }}"></script>
+    <script src="{{ url_for('static', filename='auth.js') }}"></script>
 </body>
 </html>

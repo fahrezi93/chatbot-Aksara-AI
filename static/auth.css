@@ -96,13 +96,26 @@ button[type="submit"] {
     font-size: 1rem;
     font-weight: 600;
     margin-top: 10px;
+    transition: background-color 0.2s;
 }
-.error-text {
-    color: #e63946;
+button[type="submit"]:disabled {
+    background-color: #a0c7f1;
+    cursor: not-allowed;
+}
+
+/* ✅ GAYA BARU UNTUK PESAN SUKSES & ERROR */
+.message-text {
     margin-top: 15px;
     min-height: 1.2em;
     font-weight: 500;
 }
+.error-text {
+    color: #e63946;
+}
+.success-text {
+    color: #2a9d8f;
+}
+
 .switch-auth {
     margin-top: 20px;
 }
@@ -112,7 +125,18 @@ button[type="submit"] {
     font-weight: 600;
 }
 
-/* ✅ PERBAIKAN GAYA SEPARATOR & TOMBOL GOOGLE */
+/* ✅ GAYA BARU UNTUK LINK LUPA PASSWORD */
+.extra-options {
+    text-align: right;
+    margin-top: -10px;
+    margin-bottom: 15px;
+}
+.extra-options a {
+    color: #4a90e2;
+    font-size: 0.9rem;
+    text-decoration: none;
+}
+
 .separator {
     display: flex;
     align-items: center;

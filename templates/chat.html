@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Chatbot Asisten</title>
+    <title>Aksara AI</title>
     <link rel="icon" type="image/png" href="{{ url_for('static', filename='robot.png') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -12,7 +12,7 @@
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
 </head>
 <body>
-    <!-- Layar Sambutan -->
+    <!-- ... (kode lain dari welcome screen sampai app-wrapper tidak berubah) ... -->
     <div id="welcome-screen">
         <div class="welcome-content">
             <div class="welcome-icon">👋</div>
@@ -23,7 +23,6 @@
     </div>
 
     <div id="app-wrapper">
-        <!-- Sidebar Riwayat -->
         <div id="sidebar">
             <div class="sidebar-header">
                 <h3>Riwayat</h3>
@@ -34,21 +33,18 @@
             <div id="history-list"></div>
         </div>
 
-        <!-- Kontainer Chat Utama -->
         <div id="chat-container">
             <div id="chat-header">
                 <div class="header-content">
-                    <!-- ✅ TOMBOL MENU BARU (HANYA TAMPIL DI HP) -->
                     <button id="menu-btn" aria-label="Buka Riwayat" title="Buka Riwayat">
                         <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
                     </button>
                     <div class="bot-avatar">🤖</div>
                     <div class="bot-info">
-                        <h2>Asisten Chatbot</h2>
+                        <h2>Aksara AI</h2>
                         <p>Online</p>
                     </div>
                 </div>
-                <!-- ... sisa header-actions tetap sama ... -->
                 <div class="header-actions">
                     <div id="guest-actions">
                         <button id="theme-toggle-guest" class="theme-toggle-btn" aria-label="Ganti Tema" title="Ganti Tema">
@@ -94,14 +90,13 @@
         </div>
     </div>
     
-    <!-- ✅ LAPISAN OVERLAY BARU -->
     <div id="sidebar-overlay"></div>
 
-    <!-- Modal Konfirmasi Hapus -->
     <div id="modal-overlay">
         <div id="custom-confirm-modal">
-            <h3>Hapus Obrolan</h3>
-            <p>Apakah Anda yakin ingin menghapus seluruh riwayat obrolan ini secara permanen?</p>
+            <!-- ✅ PERBAIKAN: Teks diubah agar lebih jelas -->
+            <h3>Hapus Obrolan Ini?</h3>
+            <p>Tindakan ini tidak dapat diurungkan. Apakah Anda yakin ingin menghapus percakapan ini secara permanen?</p>
             <div class="modal-buttons">
                 <button id="cancel-btn">Batal</button>
                 <button id="confirm-delete-btn">Hapus</button>

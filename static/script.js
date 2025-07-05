@@ -1,5 +1,5 @@
 document.addEventListener('DOMContentLoaded', () => {
-
+    // Inisialisasi Firebase
     try {
         firebase.initializeApp(firebaseConfig);
     } catch (e) {
@@ -26,44 +26,38 @@ document.addEventListener('DOMContentLoaded', () => {
     const themeToggleButtons = document.querySelectorAll('.theme-toggle-btn');
     const clearChatBtn = document.getElementById('clear-chat-btn');
     const newChatBtn = document.getElementById('new-chat-btn');
-    const micBtn = document.getElementById('mic-btn');
     const modalOverlay = document.getElementById('modal-overlay');
     const confirmDeleteBtn = document.getElementById('confirm-delete-btn');
     const cancelBtn = document.getElementById('cancel-btn');
-    const scrollToBottomBtn = document.getElementById('scroll-to-bottom-btn');
     const historyList = document.getElementById('history-list');
-    
-    // ✅ AMBIL ELEMEN BARU UNTUK SIDEBAR RESPONSIVE
     const menuBtn = document.getElementById('menu-btn');
-    const sidebar = document.getElementById('sidebar');
     const sidebarOverlay = document.getElementById('sidebar-overlay');
+    const micBtn = document.getElementById('mic-btn');
+    const scrollToBottomBtn = document.getElementById('scroll-to-bottom-btn');
 
+    let conversationHistory = [];
 
-    // --- MANAJEMEN UI ---
+    // --- MANAJEMEN UI & AUTH ---
     function setupGuestUI() {
-        if (body) body.classList.remove('user-logged-in');
-        if (welcomeScreen) welcomeScreen.classList.remove('visible');
-        if (guestActions) guestActions.style.display = 'flex';
-        if (userActions) userActions.style.display = 'none';
-        
-        if (chatBox) {
-            chatBox.innerHTML = '';
-            appendMessage("<p>Selamat datang! Silakan <a href='/login'>masuk</a> atau <a href='/register'>daftar</a> untuk menyimpan riwayat obrolan Anda.</p>", "bot-message", false, new Date());
-        }
+        body.classList.remove('user-logged-in');
+        welcomeScreen.classList.remove('visible');
+        guestActions.style.display = 'flex';
+        userActions.style.display = 'none';
+        chatBox.innerHTML = '';
+        appendMessage("<p>Selamat datang! Silakan <a href='/login'>masuk</a> atau <a href='/register'>daftar</a> untuk menyimpan riwayat obrolan Anda.</p>", "bot-message", false, new Date());
+        conversationHistory = [];
+        updateClearChatButtonState();
     }
 
     function setupUserUI(user) {
-        if (body) body.classList.add('user-logged-in');
-        if (welcomeScreen) welcomeScreen.classList.add('visible');
-        
-        if (guestActions) guestActions.style.display = 'none';
-        if (userActions) userActions.style.display = 'flex';
-        
-        if (profileInitial) profileInitial.textContent = user.email.charAt(0).toUpperCase();
-        if (userEmailDisplay) userEmailDisplay.textContent = user.email;
+        body.classList.add('user-logged-in');
+        welcomeScreen.classList.add('visible');
+        guestActions.style.display = 'none';
+        userActions.style.display = 'flex';
+        profileInitial.textContent = user.email.charAt(0).toUpperCase();
+        userEmailDisplay.textContent = user.email;
     }
 
-    // --- AUTENTIKASI ---
     async function checkAuthState() {
         try {
             const response = await fetch('/check_auth');
@@ -79,59 +73,31 @@ document.addEventListener('DOMContentLoaded', () => {
             setupGuestUI();
         }
     }
-    checkAuthState();
 
-
-    // ✅ FUNGSI DAN EVENT LISTENER UNTUK SIDEBAR RESPONSIVE
     function toggleSidebar() {
-        if (body) body.classList.toggle('sidebar-visible');
+        body.classList.toggle('sidebar-visible');
     }
 
-    if (menuBtn) {
-        menuBtn.addEventListener('click', toggleSidebar);
-    }
-    if (sidebarOverlay) {
-        sidebarOverlay.addEventListener('click', toggleSidebar);
+    function updateClearChatButtonState() {
+        if (clearChatBtn) {
+            clearChatBtn.disabled = !currentConversationId;
+            clearChatBtn.style.opacity = currentConversationId ? '1' : '0.5';
+            clearChatBtn.style.cursor = currentConversationId ? 'pointer' : 'not-allowed';
+        }
     }
 
     // --- FUNGSI MANAJEMEN PERCAKAPAN ---
-    async function loadConversation(conversationId) {
-        if (!currentUser || !chatBox) return;
-        currentConversationId = conversationId;
-        
-        document.querySelectorAll('.history-item').forEach(item => {
-            item.classList.toggle('active', item.dataset.conversationId === conversationId);
-        });
-
-        chatBox.innerHTML = '';
-        try {
-            const response = await fetch(`/get_conversation/${conversationId}`);
-            const messages = await response.json();
-            messages.forEach(msg => {
-                const timestamp = msg.timestamp && msg.timestamp._seconds ? new Date(msg.timestamp._seconds * 1000) : new Date();
-                appendMessage(msg.htmlContent, msg.isUser ? 'user-message' : 'bot-message', false, timestamp);
-            });
-        } catch (error) {
-            console.error(`Gagal memuat percakapan ${conversationId}:`, error);
-        }
-
-        // ✅ TUTUP SIDEBAR SETELAH MEMILIH CHAT DI HP
-        if (window.innerWidth <= 768) {
-            toggleSidebar();
-        }
-    }
-    
     async function loadConversationsList() {
-        if (!currentUser || !historyList) return;
-        historyList.innerHTML = '';
+        if (!currentUser) return;
         try {
             const response = await fetch('/get_conversations');
             const conversations = await response.json();
+            historyList.innerHTML = '';
             if (conversations.length > 0) {
                 conversations.forEach(conv => {
                     const historyItem = document.createElement('div');
                     historyItem.className = 'history-item';
-                    historyItem.textContent = conv.title.length > 25 ? conv.title.substring(0, 25) + '...' : conv.title;
+                    historyItem.textContent = conv.title;
                     historyItem.title = conv.title;
                     historyItem.dataset.conversationId = conv.id;
                     historyList.appendChild(historyItem);
@@ -143,69 +109,84 @@ document.addEventListener('DOMContentLoaded', () => {
             console.error("Gagal memuat daftar percakapan:", error);
         }
     }
+
+    async function loadConversation(conversationId) {
+        if (!currentUser) return;
+        currentConversationId = conversationId;
+        conversationHistory = [];
+        chatBox.innerHTML = '';
+
+        document.querySelectorAll('.history-item').forEach(item => {
+            item.classList.toggle('active', item.dataset.conversationId === conversationId);
+        });
+
+        updateClearChatButtonState();
+
+        try {
+            const response = await fetch(`/get_conversation/${conversationId}`);
+            const messages = await response.json();
+            messages.forEach(msg => {
+                const timestamp = msg.timestamp && msg.timestamp._seconds ? new Date(msg.timestamp._seconds * 1000) : new Date();
+                appendMessage(msg.htmlContent, msg.isUser ? 'user-message' : 'bot-message', false, timestamp);
+                conversationHistory.push({ isUser: msg.isUser, text: msg.text });
+            });
+        } catch (error) {
+            console.error(`Gagal memuat percakapan ${conversationId}:`, error);
+        }
+
+        if (window.innerWidth <= 768) {
+            toggleSidebar();
+        }
+    }
     
     function startNewChat() {
         currentConversationId = null;
-        if (chatBox) {
-            chatBox.innerHTML = '';
-            appendMessage("<p>Halo! Bagaimana saya bisa membantu Anda hari ini?</p>", "bot-message", false, new Date());
-        }
+        conversationHistory = [];
+        chatBox.innerHTML = '';
+        appendMessage("<p>Halo! Bagaimana saya bisa membantu Anda hari ini?</p>", "bot-message", false, new Date());
         document.querySelectorAll('.history-item').forEach(item => item.classList.remove('active'));
-        if (userInput) userInput.focus();
+        userInput.focus();
         
-        // ✅ TUTUP SIDEBAR JIKA MEMBUAT CHAT BARU DI HP
+        updateClearChatButtonState();
+
         if (window.innerWidth <= 768 && body.classList.contains('sidebar-visible')) {
             toggleSidebar();
         }
     }
 
-    // --- EVENT LISTENERS ---
-    if (startChatBtn) {
-        startChatBtn.addEventListener('click', () => {
-            if (welcomeScreen) welcomeScreen.classList.remove('visible');
-            if (currentUser) {
-                loadConversationsList();
-                startNewChat();
-            }
-        });
-    }
-
-    if (newChatBtn) newChatBtn.addEventListener('click', startNewChat);
-
-    if (historyList) {
-        historyList.addEventListener('click', (e) => {
-            if (e.target && e.target.classList.contains('history-item')) {
-                const convId = e.target.dataset.conversationId;
-                if (convId) loadConversation(convId);
-            }
-        });
-    }
-
-    // ... (sisa kode dari handleFormSubmit sampai akhir tidak ada perubahan) ...
     async function handleFormSubmit(e) {
         if (e) e.preventDefault();
-        const userMessage = userInput.value.trim();
-        if (userMessage === "") return;
+        const userMessageText = userInput.value.trim();
+        if (userMessageText === "") return;
 
-        const userMsgData = { isUser: true, text: userMessage, htmlContent: `<p>${userMessage}</p>` };
-        appendMessage(userMsgData.htmlContent, 'user-message', false, new Date());
-        
-        const isNewChat = !currentConversationId;
-        if (currentUser) {
-            saveMessageToDb(userMsgData, isNewChat);
-        }
-        
+        const userHtmlContent = `<p>${userMessageText}</p>`;
+        appendMessage(userHtmlContent, 'user-message', false, new Date());
+        const userMessageData = { isUser: true, text: userMessageText, htmlContent: userHtmlContent };
+        conversationHistory.push({ isUser: true, text: userMessageText });
         userInput.value = "";
         userInput.focus();
 
+        const savedUserData = await saveMessageToDb(userMessageData);
+        if (savedUserData && savedUserData.conversationId) {
+            currentConversationId = savedUserData.conversationId;
+            updateClearChatButtonState();
+        }
+
         const botMessageElement = createBotMessageElement();
         const typingIndicator = showTypingIndicator(botMessageElement);
-        let fullResponse = "";
+        let fullResponseText = "";
 
         try {
-            const response = await fetch("/send_message", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ message: userMessage }) });
+            const response = await fetch("/send_message", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    message: userMessageText,
+                    history: conversationHistory.slice(0, -1)
+                })
+            });
+
             if (!response.ok) throw new Error("Gagal mendapatkan respons dari server.");
-            
             typingIndicator.remove();
             
             const reader = response.body.getReader();
@@ -213,16 +194,17 @@ document.addEventListener('DOMContentLoaded', () => {
             while (true) {
                 const { value, done } = await reader.read();
                 if (done) break;
-                fullResponse += decoder.decode(value, { stream: true });
-                botMessageElement.querySelector(".content-wrapper").innerHTML = marked.parse(fullResponse);
+                fullResponseText += decoder.decode(value, { stream: true });
+                botMessageElement.querySelector(".content-wrapper").innerHTML = marked.parse(fullResponseText);
                 scrollToBottom();
             }
 
-            const finalHtml = marked.parse(fullResponse);
+            const finalHtml = marked.parse(fullResponseText);
             botMessageElement.querySelector(".content-wrapper").innerHTML = finalHtml;
             
-            const botMsgData = { isUser: false, text: fullResponse, htmlContent: finalHtml };
-            if (currentUser) saveMessageToDb(botMsgData, false);
+            const botMessageData = { isUser: false, text: fullResponseText, htmlContent: finalHtml };
+            await saveMessageToDb(botMessageData);
+            conversationHistory.push({ isUser: false, text: fullResponseText });
             addCopyToBotMessage(botMessageElement);
 
         } catch (error) {
@@ -232,46 +214,92 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    async function saveMessageToDb(messageData, isNewChat) {
-        if (!currentUser) return;
+    async function saveMessageToDb(messageData) {
+        if (!currentUser) return null;
         try {
             const response = await fetch('/save_message', { 
                 method: 'POST', 
                 headers: { 'Content-Type': 'application/json' }, 
                 body: JSON.stringify({ 
-                    conversationId: isNewChat ? null : currentConversationId,
+                    conversationId: currentConversationId,
                     messageData: messageData 
                 }) 
             });
             const data = await response.json();
-            if (data.status === 'success' && data.conversationId) {
-                currentConversationId = data.conversationId;
-                if (isNewChat) {
+            if (data.status === 'success') {
+                if (!currentConversationId && data.conversationId) {
                     loadConversationsList();
                 }
+                return data;
             }
+            return null;
         } catch (error) {
             console.error("Gagal menyimpan pesan:", error);
+            return null;
         }
     }
     
+    // --- EVENT LISTENERS ---
     if (chatForm) chatForm.addEventListener('submit', handleFormSubmit);
-
-    if (clearChatBtn) {
-        clearChatBtn.addEventListener("click", () => {
+    if (startChatBtn) {
+        startChatBtn.addEventListener('click', () => {
+            welcomeScreen.classList.remove('visible');
             if (currentUser) {
-                if (modalOverlay) modalOverlay.classList.add("visible");
-            } else {
-                setupGuestUI();
+                loadConversationsList();
+                startNewChat();
             }
         });
     }
-    if (confirmDeleteBtn) {
-        confirmDeleteBtn.addEventListener("click", async () => {
-            startNewChat(); 
-            if (modalOverlay) modalOverlay.classList.remove("visible");
+    if (newChatBtn) newChatBtn.addEventListener('click', startNewChat);
+    if (historyList) {
+        historyList.addEventListener('click', (e) => {
+            if (e.target && e.target.closest('.history-item')) {
+                const convId = e.target.closest('.history-item').dataset.conversationId;
+                if (convId) loadConversation(convId);
+            }
         });
     }
+    if (menuBtn) menuBtn.addEventListener('click', toggleSidebar);
+    if (sidebarOverlay) sidebarOverlay.addEventListener('click', toggleSidebar);
+
+    if (clearChatBtn) {
+        clearChatBtn.addEventListener("click", () => {
+            if (!clearChatBtn.disabled) {
+                modalOverlay.classList.add("visible");
+            }
+        });
+    }
+
+    if (confirmDeleteBtn) {
+        confirmDeleteBtn.addEventListener("click", async () => {
+            if (!currentConversationId || !currentUser) {
+                modalOverlay.classList.remove("visible");
+                return;
+            }
+
+            try {
+                const response = await fetch(`/delete_conversation/${currentConversationId}`, {
+                    method: 'DELETE',
+                });
+                const data = await response.json();
+
+                if (response.ok && data.status === 'success') {
+                    const historyItemToRemove = historyList.querySelector(`[data-conversation-id="${currentConversationId}"]`);
+                    if (historyItemToRemove) {
+                        historyItemToRemove.remove();
+                    }
+                    startNewChat();
+                } else {
+                    console.error("Gagal menghapus percakapan:", data.message);
+                }
+            } catch (error) {
+                console.error("Error saat fetch hapus:", error);
+            } finally {
+                modalOverlay.classList.remove("visible");
+            }
+        });
+    }
+
     if (cancelBtn) cancelBtn.addEventListener("click", () => modalOverlay.classList.remove("visible"));
     if (modalOverlay) modalOverlay.addEventListener("click", (e) => { if (e.target === modalOverlay) modalOverlay.classList.remove("visible"); });
 
@@ -287,9 +315,12 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
+    // ✅ PERBAIKAN: Kode ganti tema yang hilang dikembalikan
     if (themeToggleButtons) {
         const savedTheme = localStorage.getItem("theme");
-        if (savedTheme) body.classList.add(savedTheme);
+        if (savedTheme) {
+            body.classList.add(savedTheme);
+        }
         themeToggleButtons.forEach(btn => {
             btn.addEventListener("click", () => {
                 body.classList.toggle("dark-mode");
@@ -326,6 +357,7 @@ document.addEventListener('DOMContentLoaded', () => {
         micBtn.style.display = "none";
     }
 
+    // --- FUNGSI TAMPILAN PESAN ---
     function appendMessage(content, className, isTextContent, timestamp) {
         const messageElement = document.createElement("div");
         messageElement.className = `message ${className}`;
@@ -395,4 +427,7 @@ document.addEventListener('DOMContentLoaded', () => {
             chatBox.scrollTop = chatBox.scrollHeight;
         }
     }
+    
+    // Panggil checkAuthState di awal
+    checkAuthState();
 });

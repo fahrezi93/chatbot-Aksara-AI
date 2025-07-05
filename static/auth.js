@@ -14,6 +14,10 @@ document.addEventListener('DOMContentLoaded', () => {
     const passwordInput = document.getElementById('password');
     const toggleButton = document.querySelector('.password-toggle-icon');
     const googleSignInBtn = document.getElementById('google-signin-btn');
+    // ✅ ELEMEN BARU UNTUK LUPA PASSWORD
+    const forgotPasswordForm = document.getElementById('forgot-password-form');
+    const messageElement = document.getElementById('message-element');
+
 
     // --- FUNGSI & EVENT LISTENERS ---
     if (toggleButton && passwordInput) {
@@ -24,9 +28,8 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
     
-    // ✅ FUNGSI PESAN ERROR YANG DIPERBARUI
     function getFriendlyErrorMessage(errorCode) {
-        console.log("Menerima kode error:", errorCode); // Untuk debugging
+        console.log("Menerima kode error:", errorCode);
         switch (errorCode) {
             case 'auth/weak-password':
                 return 'Password harus terdiri dari minimal 6 karakter.';
@@ -35,9 +38,10 @@ document.addEventListener('DOMContentLoaded', () => {
             case 'auth/invalid-email':
                 return 'Format email yang Anda masukkan tidak valid.';
             case 'auth/user-not-found':
+                return 'Email tidak terdaftar. Periksa kembali email Anda.';
             case 'auth/wrong-password':
             case 'auth/invalid-credential':
-            case 'auth/invalid-login-credentials': // Menambahkan kode error yang spesifik
+            case 'auth/invalid-login-credentials':
                 return 'Email atau password yang Anda masukkan salah.';
             case 'auth/popup-closed-by-user':
                 return 'Jendela login ditutup sebelum selesai.';
@@ -50,10 +54,18 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    function handleError(error) {
+    function handleError(error, element = errorMessageElement) {
         console.error("Firebase Auth Error:", error);
-        if (errorMessageElement) {
-            errorMessageElement.textContent = getFriendlyErrorMessage(error.code);
+        if (element) {
+            element.textContent = getFriendlyErrorMessage(error.code);
+            element.className = 'message-text error-text';
+        }
+    }
+
+    function showSuccessMessage(message, element = messageElement) {
+        if (element) {
+            element.textContent = message;
+            element.className = 'message-text success-text';
         }
     }
 
@@ -111,6 +123,33 @@ document.addEventListener('DOMContentLoaded', () => {
                 .then((userCredential) => userCredential.user.getIdToken())
                 .then(idToken => sendTokenToBackend(idToken))
                 .catch(handleError);
+        });
+    }
+
+    // ✅ LOGIKA BARU UNTUK RESET PASSWORD
+    if (forgotPasswordForm) {
+        forgotPasswordForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            const emailInput = document.getElementById('email');
+            const email = emailInput.value;
+            
+            // Tampilkan pesan loading dan nonaktifkan tombol
+            const submitButton = forgotPasswordForm.querySelector('button[type="submit"]');
+            submitButton.disabled = true;
+            showSuccessMessage("Mengirim link...", messageElement);
+
+            auth.sendPasswordResetEmail(email)
+                .then(() => {
+                    showSuccessMessage("Link reset password telah dikirim. Silakan periksa inbox atau folder spam Anda.", messageElement);
+                    emailInput.value = ''; // Kosongkan input setelah berhasil
+                })
+                .catch((error) => {
+                    handleError(error, messageElement);
+                })
+                .finally(() => {
+                    // Aktifkan kembali tombol setelah selesai
+                    submitButton.disabled = false;
+                });
         });
     }
 });
