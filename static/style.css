@@ -39,7 +39,8 @@ body {
 #app-wrapper {
     display: flex;
     width: 100vw;
-    height: 100vh;
+    /* ✅ PERBAIKAN: Menggunakan dvh agar tidak tertutup UI browser di HP */
+    height: 100dvh; 
 }
 
 body:not(.user-logged-in) #app-wrapper {
@@ -50,7 +51,7 @@ body:not(.user-logged-in) #app-wrapper {
 body:not(.user-logged-in) #chat-container {
     max-width: 700px;
     width: 95%;
-    height: 95vh;
+    height: 95vh; /* Ini bisa tetap vh karena ada margin di sekelilingnya */
     border-radius: 16px;
     box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
 }
@@ -80,18 +81,16 @@ body:not(.user-logged-in) #chat-container {
     width: 260px;
     background-color: var(--container-bg);
     border-right: 1px solid var(--border-color);
-    display: flex; /* Diubah dari none ke flex */
+    display: flex;
     flex-direction: column;
     flex-shrink: 0;
-    transition: background-color 0.3s, border-color 0.3s, transform 0.3s ease-in-out; /* ✅ Ditambah transisi transform */
-    z-index: 1100; /* ✅ Ditambah z-index */
+    transition: background-color 0.3s, border-color 0.3s, transform 0.3s ease-in-out;
+    z-index: 1100;
 }
 
-/* Sembunyikan sidebar hanya untuk tamu */
 body:not(.user-logged-in) #sidebar {
     display: none;
 }
-
 
 .sidebar-header {
     padding: 20px; border-bottom: 1px solid var(--border-color); flex-shrink: 0;
@@ -114,7 +113,6 @@ body:not(.user-logged-in) #sidebar {
 .history-item.active { background-color: var(--primary-color); color: white; }
 .history-placeholder { padding: 15px; font-style: italic; color: var(--welcome-text-color); text-align: center; }
 
-/* ✅ Overlay untuk Sidebar */
 #sidebar-overlay {
     position: fixed;
     top: 0;
@@ -148,9 +146,8 @@ body:not(.user-logged-in) #sidebar {
 .header-btn:not(.primary) { color: var(--header-text-color); border-color: var(--header-text-color); }
 .header-btn:hover { opacity: 0.9; }
 
-/* ✅ Gaya Tombol Menu Baru */
 #menu-btn {
-    display: none; /* Sembunyi di desktop */
+    display: none;
     background: none;
     border: none;
     color: var(--header-text-color);
@@ -193,7 +190,6 @@ body.dark-mode .sun-icon { display: none; }
 body.dark-mode .moon-icon { display: block; }
 
 /* --- Chat Box & Messages --- */
-/* ... (tidak ada perubahan di sini) ... */
 #chat-box { flex-grow: 1; padding: 20px; overflow-y: auto; display: flex; flex-direction: column; gap: 12px; position: relative; }
 @keyframes fade-in-up { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 .message { max-width: 85%; padding: 10px 15px; border-radius: 20px; line-height: 1.6; word-wrap: break-word; position: relative; animation: fade-in-up 0.4s ease-out forwards; }
@@ -240,23 +236,27 @@ body.dark-mode .typing-indicator span { background-color: var(--text-color); }
 #cancel-btn { background-color: var(--bot-msg-bg); color: var(--text-color); border: 1px solid var(--border-color); }
 #confirm-delete-btn { background-color: var(--danger-color); color: white; }
 
-/* ✅ ATURAN UNTUK TAMPILAN MOBILE (RESPONSIVE) */
+/* ATURAN UNTUK TAMPILAN MOBILE (RESPONSIVE) */
 @media (max-width: 768px) {
     body:not(.user-logged-in) #app-wrapper { align-items: stretch; }
-    body:not(.user-logged-in) #chat-container { width: 100%; height: 100vh; border-radius: 0; box-shadow: none; }
+    body:not(.user-logged-in) #chat-container { 
+        width: 100%; 
+        /* ✅ PERBAIKAN: Menggunakan dvh juga untuk tampilan tamu di HP */
+        height: 100dvh; 
+        border-radius: 0; 
+        box-shadow: none; 
+    }
     
-    /* Aturan untuk sidebar di mobile */
     #sidebar {
         position: fixed;
         top: 0;
         left: 0;
         height: 100%;
-        transform: translateX(-100%); /* Sembunyi di luar layar */
+        transform: translateX(-100%);
     }
 
-    /* Aturan saat sidebar terlihat */
     body.sidebar-visible #sidebar {
-        transform: translateX(0); /* Munculkan ke dalam layar */
+        transform: translateX(0);
         box-shadow: 4px 0px 15px rgba(0,0,0,0.2);
     }
     body.sidebar-visible #sidebar-overlay {
@@ -264,7 +264,6 @@ body.dark-mode .typing-indicator span { background-color: var(--text-color); }
         visibility: visible;
     }
 
-    /* Tampilkan tombol menu hanya untuk pengguna login di mobile */
     body.user-logged-in #menu-btn {
         display: flex;
     }
