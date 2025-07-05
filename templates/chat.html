@@ -12,7 +12,7 @@
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
 </head>
 <body>
-    <!-- ✅ 1. Layar Sambutan (Awalnya Tersembunyi) -->
+    <!-- Layar Sambutan -->
     <div id="welcome-screen">
         <div class="welcome-content">
             <div class="welcome-icon">👋</div>
@@ -23,6 +23,7 @@
     </div>
 
     <div id="app-wrapper">
+        <!-- Sidebar Riwayat -->
         <div id="sidebar">
             <div class="sidebar-header">
                 <h3>Riwayat</h3>
@@ -33,15 +34,21 @@
             <div id="history-list"></div>
         </div>
 
+        <!-- Kontainer Chat Utama -->
         <div id="chat-container">
             <div id="chat-header">
                 <div class="header-content">
+                    <!-- ✅ TOMBOL MENU BARU (HANYA TAMPIL DI HP) -->
+                    <button id="menu-btn" aria-label="Buka Riwayat" title="Buka Riwayat">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
+                    </button>
                     <div class="bot-avatar">🤖</div>
                     <div class="bot-info">
                         <h2>Asisten Chatbot Kamu</h2>
                         <p>Online</p>
                     </div>
                 </div>
+                <!-- ... sisa header-actions tetap sama ... -->
                 <div class="header-actions">
                     <div id="guest-actions">
                         <button id="theme-toggle-guest" class="theme-toggle-btn" aria-label="Ganti Tema" title="Ganti Tema">
@@ -86,6 +93,11 @@
             </form>
         </div>
     </div>
+    
+    <!-- ✅ LAPISAN OVERLAY BARU -->
+    <div id="sidebar-overlay"></div>
+
+    <!-- Modal Konfirmasi Hapus -->
     <div id="modal-overlay">
         <div id="custom-confirm-modal">
             <h3>Hapus Obrolan</h3>
@@ -96,6 +108,8 @@
             </div>
         </div>
     </div>
+
+    <!-- Script Firebase & Aplikasi -->
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore-compat.js"></script>

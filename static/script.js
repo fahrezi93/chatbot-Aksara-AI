@@ -32,9 +32,12 @@ document.addEventListener('DOMContentLoaded', () => {
     const cancelBtn = document.getElementById('cancel-btn');
     const scrollToBottomBtn = document.getElementById('scroll-to-bottom-btn');
     const historyList = document.getElementById('history-list');
-    const menuBtn = document.getElementById('menu-btn'); // ✅ Ambil tombol menu
-    const sidebar = document.getElementById('sidebar'); // Ambil sidebar
+    
+    // ✅ AMBIL ELEMEN BARU UNTUK SIDEBAR RESPONSIVE
+    const menuBtn = document.getElementById('menu-btn');
+    const sidebar = document.getElementById('sidebar');
     const sidebarOverlay = document.getElementById('sidebar-overlay');
+
 
     // --- MANAJEMEN UI ---
     function setupGuestUI() {
@@ -79,7 +82,7 @@ document.addEventListener('DOMContentLoaded', () => {
     checkAuthState();
 
 
-        // ✅ FUNGSI DAN EVENT LISTENER UNTUK SIDEBAR RESPONSIVE
+    // ✅ FUNGSI DAN EVENT LISTENER UNTUK SIDEBAR RESPONSIVE
     function toggleSidebar() {
         if (body) body.classList.toggle('sidebar-visible');
     }
@@ -93,21 +96,31 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- FUNGSI MANAJEMEN PERCAKAPAN ---
     async function loadConversation(conversationId) {
-        // ... (fungsi ini tidak berubah, tapi kita tambahkan penutup sidebar) ...
+        if (!currentUser || !chatBox) return;
+        currentConversationId = conversationId;
+        
+        document.querySelectorAll('.history-item').forEach(item => {
+            item.classList.toggle('active', item.dataset.conversationId === conversationId);
+        });
+
+        chatBox.innerHTML = '';
+        try {
+            const response = await fetch(`/get_conversation/${conversationId}`);
+            const messages = await response.json();
+            messages.forEach(msg => {
+                const timestamp = msg.timestamp && msg.timestamp._seconds ? new Date(msg.timestamp._seconds * 1000) : new Date();
+                appendMessage(msg.htmlContent, msg.isUser ? 'user-message' : 'bot-message', false, timestamp);
+            });
+        } catch (error) {
+            console.error(`Gagal memuat percakapan ${conversationId}:`, error);
+        }
+
+        // ✅ TUTUP SIDEBAR SETELAH MEMILIH CHAT DI HP
         if (window.innerWidth <= 768) {
-            toggleSidebar(); // Tutup sidebar setelah memilih chat di mobile
+            toggleSidebar();
         }
     }
     
-    if (historyList) {
-        historyList.addEventListener('click', (e) => {
-            if (e.target && e.target.classList.contains('history-item')) {
-                const convId = e.target.dataset.conversationId;
-                if (convId) loadConversation(convId);
-            }
-        });
-    }
-    // --- FUNGSI MANAJEMEN PERCAKAPAN ---
     async function loadConversationsList() {
         if (!currentUser || !historyList) return;
         historyList.innerHTML = '';
@@ -130,27 +143,6 @@ document.addEventListener('DOMContentLoaded', () => {
             console.error("Gagal memuat daftar percakapan:", error);
         }
     }
-
-    async function loadConversation(conversationId) {
-        if (!currentUser || !chatBox) return;
-        currentConversationId = conversationId;
-        
-        document.querySelectorAll('.history-item').forEach(item => {
-            item.classList.toggle('active', item.dataset.conversationId === conversationId);
-        });
-
-        chatBox.innerHTML = '';
-        try {
-            const response = await fetch(`/get_conversation/${conversationId}`);
-            const messages = await response.json();
-            messages.forEach(msg => {
-                const timestamp = msg.timestamp && msg.timestamp._seconds ? new Date(msg.timestamp._seconds * 1000) : new Date();
-                appendMessage(msg.htmlContent, msg.isUser ? 'user-message' : 'bot-message', false, timestamp);
-            });
-        } catch (error) {
-            console.error(`Gagal memuat percakapan ${conversationId}:`, error);
-        }
-    }
     
     function startNewChat() {
         currentConversationId = null;
@@ -160,6 +152,11 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         document.querySelectorAll('.history-item').forEach(item => item.classList.remove('active'));
         if (userInput) userInput.focus();
+        
+        // ✅ TUTUP SIDEBAR JIKA MEMBUAT CHAT BARU DI HP
+        if (window.innerWidth <= 768 && body.classList.contains('sidebar-visible')) {
+            toggleSidebar();
+        }
     }
 
     // --- EVENT LISTENERS ---
@@ -184,6 +181,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
+    // ... (sisa kode dari handleFormSubmit sampai akhir tidak ada perubahan) ...
     async function handleFormSubmit(e) {
         if (e) e.preventDefault();
         const userMessage = userInput.value.trim();
