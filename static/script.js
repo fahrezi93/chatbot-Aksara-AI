@@ -12,11 +12,15 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- ELEMEN DOM ---
     const body = document.body;
+    const chatBox = document.getElementById('chat-box');
+    const userInput = document.getElementById('user-input');
+    const historyList = document.getElementById('history-list');
+    const newChatBtn = document.getElementById('new-chat-btn');
+    const chatForm = document.getElementById('chat-form');
+    const initialPromptsContainer = document.getElementById('initial-prompts-container');
+    const promptSuggestionsContainer = document.querySelector('.prompt-suggestions');
     const welcomeScreen = document.getElementById('welcome-screen');
     const startChatBtn = document.getElementById('start-chat-btn');
-    const chatBox = document.getElementById('chat-box');
-    const chatForm = document.getElementById('chat-form');
-    const userInput = document.getElementById('user-input');
     const guestActions = document.getElementById('guest-actions');
     const userActions = document.getElementById('user-actions');
     const profileBtn = document.getElementById('profile-btn');
@@ -25,19 +29,38 @@ document.addEventListener('DOMContentLoaded', () => {
     const userEmailDisplay = document.getElementById('user-email-display');
     const themeToggleButtons = document.querySelectorAll('.theme-toggle-btn');
     const clearChatBtn = document.getElementById('clear-chat-btn');
-    const newChatBtn = document.getElementById('new-chat-btn');
     const modalOverlay = document.getElementById('modal-overlay');
     const confirmDeleteBtn = document.getElementById('confirm-delete-btn');
     const cancelBtn = document.getElementById('cancel-btn');
-    const historyList = document.getElementById('history-list');
     const menuBtn = document.getElementById('menu-btn');
     const sidebarOverlay = document.getElementById('sidebar-overlay');
     const micBtn = document.getElementById('mic-btn');
     const scrollToBottomBtn = document.getElementById('scroll-to-bottom-btn');
+    const modalButtons = document.querySelector('.modal-buttons');
+    const modalLoader = document.getElementById('modal-loader');
+    // ✅ ELEMEN BARU UNTUK UPLOAD GAMBAR
+    const uploadBtn = document.getElementById('upload-btn');
+    const fileInput = document.getElementById('file-input');
+    const imagePreviewContainer = document.getElementById('image-preview-container');
+    const imagePreview = document.getElementById('image-preview');
+    const removePreviewBtn = document.getElementById('remove-preview-btn');
+    const sendBtn = document.getElementById('send-btn');
 
     let conversationHistory = [];
+    let uploadedImageData = null; // Untuk menyimpan data gambar base64
 
-    // --- MANAJEMEN UI & AUTH ---
+    // --- (Bank soal dan fungsi UI tidak berubah) ---
+    const ALL_PROMPTS = [
+        { title: "Rencana Perjalanan", subtitle: "untuk 3 hari di Yogyakarta", full_prompt: "Buatkan saya rencana perjalanan 3 hari di Yogyakarta" },
+        { title: "Jelaskan Konsep", subtitle: "relativitas umum dengan bahasa sederhana", full_prompt: "Jelaskan konsep relativitas umum dengan bahasa yang sederhana" },
+        { title: "Ide Resep", subtitle: "masakan sehat untuk makan malam", full_prompt: "Beri aku ide resep masakan sehat untuk makan malam" },
+        { title: "Tulis Puisi", subtitle: "tentang senja di tepi pantai", full_prompt: "Tuliskan sebuah puisi tentang senja di tepi pantai" },
+        { title: "Bandingkan Teknologi", subtitle: "antara mobil listrik dan mobil hybrid", full_prompt: "Bandingkan kelebihan dan kekurangan teknologi mobil listrik dan mobil hybrid" },
+        { title: "Buat Cerita Pendek", subtitle: "tentang petualangan di hutan ajaib", full_prompt: "Buat cerita pendek tentang petualangan di hutan ajaib" },
+        { title: "Tips Belajar Efektif", subtitle: "untuk persiapan ujian", full_prompt: "Berikan saya beberapa tips belajar yang efektif untuk persiapan ujian" },
+        { title: "Ide Konten Media Sosial", subtitle: "untuk produk kopi lokal", full_prompt: "Beri aku 5 ide konten media sosial untuk mempromosikan produk kopi lokal" }
+    ];
+
     function setupGuestUI() {
         body.classList.remove('user-logged-in');
         welcomeScreen.classList.remove('visible');
@@ -47,6 +70,7 @@ document.addEventListener('DOMContentLoaded', () => {
         appendMessage("<p>Selamat datang! Silakan <a href='/login'>masuk</a> atau <a href='/register'>daftar</a> untuk menyimpan riwayat obrolan Anda.</p>", "bot-message", false, new Date());
         conversationHistory = [];
         updateClearChatButtonState();
+        hideInitialPrompts();
     }
 
     function setupUserUI(user) {
@@ -86,7 +110,38 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // --- FUNGSI MANAJEMEN PERCAKAPAN ---
+    function shuffleArray(array) {
+        for (let i = array.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [array[i], array[j]] = [array[j], array[i]];
+        }
+    }
+
+    function showInitialPrompts() {
+        if (initialPromptsContainer && promptSuggestionsContainer) {
+            shuffleArray(ALL_PROMPTS);
+            const selectedPrompts = ALL_PROMPTS.slice(0, 4);
+            
+            promptSuggestionsContainer.innerHTML = '';
+            selectedPrompts.forEach(prompt => {
+                promptSuggestionsContainer.innerHTML += `
+                    <div class="prompt-card" data-prompt="${prompt.full_prompt}">
+                        <h3>${prompt.title}</h3>
+                        <p>${prompt.subtitle}</p>
+                    </div>
+                `;
+            });
+
+            initialPromptsContainer.classList.add('visible');
+        }
+    }
+
+    function hideInitialPrompts() {
+        if (initialPromptsContainer) {
+            initialPromptsContainer.classList.remove('visible');
+        }
+    }
+
     async function loadConversationsList() {
         if (!currentUser) return;
         try {
@@ -97,9 +152,19 @@ document.addEventListener('DOMContentLoaded', () => {
                 conversations.forEach(conv => {
                     const historyItem = document.createElement('div');
                     historyItem.className = 'history-item';
-                    historyItem.textContent = conv.title;
-                    historyItem.title = conv.title;
                     historyItem.dataset.conversationId = conv.id;
+
+                    const titleContainer = document.createElement('span');
+                    titleContainer.className = 'history-title-container';
+                    titleContainer.textContent = conv.title;
+                    
+                    const editBtn = document.createElement('button');
+                    editBtn.className = 'edit-title-btn';
+                    editBtn.innerHTML = '✏️';
+                    editBtn.title = 'Ubah judul';
+                    
+                    historyItem.appendChild(titleContainer);
+                    historyItem.appendChild(editBtn);
                     historyList.appendChild(historyItem);
                 });
             } else {
@@ -112,6 +177,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     async function loadConversation(conversationId) {
         if (!currentUser) return;
+        hideInitialPrompts();
         currentConversationId = conversationId;
         conversationHistory = [];
         chatBox.innerHTML = '';
@@ -119,15 +185,19 @@ document.addEventListener('DOMContentLoaded', () => {
         document.querySelectorAll('.history-item').forEach(item => {
             item.classList.toggle('active', item.dataset.conversationId === conversationId);
         });
-
         updateClearChatButtonState();
 
         try {
             const response = await fetch(`/get_conversation/${conversationId}`);
             const messages = await response.json();
             messages.forEach(msg => {
+                // ✅ TAMPILKAN GAMBAR DARI RIWAYAT
+                let content = msg.htmlContent;
+                if (msg.imageData) {
+                    content = `<img src="${msg.imageData}" class="message-image" alt="Gambar terlampir"><br>` + content;
+                }
                 const timestamp = msg.timestamp && msg.timestamp._seconds ? new Date(msg.timestamp._seconds * 1000) : new Date();
-                appendMessage(msg.htmlContent, msg.isUser ? 'user-message' : 'bot-message', false, timestamp);
+                appendMessage(content, msg.isUser ? 'user-message' : 'bot-message', false, timestamp);
                 conversationHistory.push({ isUser: msg.isUser, text: msg.text });
             });
         } catch (error) {
@@ -143,26 +213,46 @@ document.addEventListener('DOMContentLoaded', () => {
         currentConversationId = null;
         conversationHistory = [];
         chatBox.innerHTML = '';
-        appendMessage("<p>Halo! Bagaimana saya bisa membantu Anda hari ini?</p>", "bot-message", false, new Date());
+        showInitialPrompts();
         document.querySelectorAll('.history-item').forEach(item => item.classList.remove('active'));
         userInput.focus();
-        
         updateClearChatButtonState();
-
         if (window.innerWidth <= 768 && body.classList.contains('sidebar-visible')) {
             toggleSidebar();
         }
     }
 
+    // ✅ FUNGSI PENGIRIMAN DIPERBARUI UNTUK MENGIRIM GAMBAR
     async function handleFormSubmit(e) {
         if (e) e.preventDefault();
         const userMessageText = userInput.value.trim();
-        if (userMessageText === "") return;
+        
+        // Pesan tidak boleh kosong jika tidak ada gambar
+        if (userMessageText === "" && !uploadedImageData) return;
 
-        const userHtmlContent = `<p>${userMessageText}</p>`;
+        hideInitialPrompts();
+
+        let userHtmlContent = `<p>${userMessageText}</p>`;
+        if (uploadedImageData) {
+            userHtmlContent = `<img src="${uploadedImageData}" class="message-image" alt="Gambar terlampir"><br>` + userHtmlContent;
+        }
+
         appendMessage(userHtmlContent, 'user-message', false, new Date());
-        const userMessageData = { isUser: true, text: userMessageText, htmlContent: userHtmlContent };
+        
+        const userMessageData = { 
+            isUser: true, 
+            text: userMessageText, 
+            htmlContent: `<p>${userMessageText}</p>`,
+            imageData: uploadedImageData // Sertakan data gambar
+        };
+        
         conversationHistory.push({ isUser: true, text: userMessageText });
+        
+        // Simpan data gambar untuk dikirim, lalu reset
+        const imageToSend = uploadedImageData;
+        uploadedImageData = null;
+        imagePreviewContainer.style.display = 'none';
+        fileInput.value = '';
         userInput.value = "";
         userInput.focus();
 
@@ -182,7 +272,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
                     message: userMessageText,
-                    history: conversationHistory.slice(0, -1)
+                    history: conversationHistory.slice(0, -1),
+                    imageData: imageToSend // Kirim data gambar ke server
                 })
             });
 
@@ -251,38 +342,130 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
     if (newChatBtn) newChatBtn.addEventListener('click', startNewChat);
+    
+    // ✅ EVENT LISTENER BARU UNTUK UPLOAD GAMBAR
+    if (uploadBtn) {
+        uploadBtn.addEventListener('click', () => fileInput.click());
+    }
+    if (fileInput) {
+        fileInput.addEventListener('change', (event) => {
+            const file = event.target.files[0];
+            if (file && file.type.startsWith('image/')) {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    uploadedImageData = e.target.result;
+                    imagePreview.src = uploadedImageData;
+                    imagePreviewContainer.style.display = 'block';
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+    }
+    if (removePreviewBtn) {
+        removePreviewBtn.addEventListener('click', () => {
+            uploadedImageData = null;
+            imagePreviewContainer.style.display = 'none';
+            fileInput.value = ''; // Reset input file
+        });
+    }
+
+    // ... (Sisa event listener tidak berubah) ...
     if (historyList) {
         historyList.addEventListener('click', (e) => {
-            if (e.target && e.target.closest('.history-item')) {
-                const convId = e.target.closest('.history-item').dataset.conversationId;
+            const historyItem = e.target.closest('.history-item');
+            if (!historyItem) return;
+
+            const convId = historyItem.dataset.conversationId;
+
+            if (e.target.classList.contains('edit-title-btn')) {
+                e.stopPropagation();
+                const titleContainer = historyItem.querySelector('.history-title-container');
+                
+                let input = historyItem.querySelector('.history-title-input');
+                if (!input) {
+                    input = document.createElement('input');
+                    input.type = 'text';
+                    input.className = 'history-title-input';
+                    historyItem.insertBefore(input, titleContainer);
+                }
+
+                input.value = titleContainer.textContent;
+                titleContainer.style.display = 'none';
+                input.style.display = 'block';
+                input.focus();
+
+                const saveTitle = async () => {
+                    const newTitle = input.value.trim();
+                    if (newTitle && newTitle !== titleContainer.textContent) {
+                        try {
+                            const response = await fetch(`/update_title/${convId}`, {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({ title: newTitle })
+                            });
+                            if (response.ok) {
+                                titleContainer.textContent = newTitle;
+                            }
+                        } catch (error) {
+                            console.error("Gagal update judul:", error);
+                        }
+                    }
+                    input.style.display = 'none';
+                    titleContainer.style.display = 'block';
+                };
+
+                input.addEventListener('blur', saveTitle, { once: true });
+                input.addEventListener('keydown', (event) => {
+                    if (event.key === 'Enter') {
+                        input.blur();
+                    } else if (event.key === 'Escape') {
+                        input.style.display = 'none';
+                        titleContainer.style.display = 'block';
+                        input.removeEventListener('blur', saveTitle);
+                    }
+                });
+
+            } else {
                 if (convId) loadConversation(convId);
             }
         });
     }
-    if (menuBtn) menuBtn.addEventListener('click', toggleSidebar);
-    if (sidebarOverlay) sidebarOverlay.addEventListener('click', toggleSidebar);
 
-    if (clearChatBtn) {
-        clearChatBtn.addEventListener("click", () => {
-            if (!clearChatBtn.disabled) {
-                modalOverlay.classList.add("visible");
+    if (initialPromptsContainer) {
+        initialPromptsContainer.addEventListener('click', (e) => {
+            const promptCard = e.target.closest('.prompt-card');
+            if (promptCard) {
+                const promptText = promptCard.dataset.prompt;
+                userInput.value = promptText;
+                handleFormSubmit(new Event('submit'));
             }
         });
     }
 
+    if (menuBtn) menuBtn.addEventListener('click', toggleSidebar);
+    if (sidebarOverlay) sidebarOverlay.addEventListener('click', toggleSidebar);
+    if (clearChatBtn) {
+        clearChatBtn.addEventListener("click", () => {
+            if (!clearChatBtn.disabled) {
+                modalLoader.style.display = 'none';
+                modalButtons.style.display = 'flex';
+                modalOverlay.classList.add("visible");
+            }
+        });
+    }
     if (confirmDeleteBtn) {
         confirmDeleteBtn.addEventListener("click", async () => {
             if (!currentConversationId || !currentUser) {
                 modalOverlay.classList.remove("visible");
                 return;
             }
-
+            modalLoader.style.display = 'block';
+            modalButtons.style.display = 'none';
             try {
                 const response = await fetch(`/delete_conversation/${currentConversationId}`, {
                     method: 'DELETE',
                 });
                 const data = await response.json();
-
                 if (response.ok && data.status === 'success') {
                     const historyItemToRemove = historyList.querySelector(`[data-conversation-id="${currentConversationId}"]`);
                     if (historyItemToRemove) {
@@ -299,10 +482,8 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
     }
-
     if (cancelBtn) cancelBtn.addEventListener("click", () => modalOverlay.classList.remove("visible"));
     if (modalOverlay) modalOverlay.addEventListener("click", (e) => { if (e.target === modalOverlay) modalOverlay.classList.remove("visible"); });
-
     if (profileBtn) {
         profileBtn.addEventListener('click', (e) => {
             e.stopPropagation();
@@ -314,8 +495,6 @@ document.addEventListener('DOMContentLoaded', () => {
             profileDropdown.classList.remove('show');
         }
     });
-
-    // ✅ PERBAIKAN: Kode ganti tema yang hilang dikembalikan
     if (themeToggleButtons) {
         const savedTheme = localStorage.getItem("theme");
         if (savedTheme) {
@@ -328,7 +507,6 @@ document.addEventListener('DOMContentLoaded', () => {
             });
         });
     }
-
     if (chatBox && scrollToBottomBtn) {
         chatBox.addEventListener("scroll", () => {
             const isScrolledUp = chatBox.scrollHeight - chatBox.scrollTop > chatBox.clientHeight + 200;
@@ -336,7 +514,6 @@ document.addEventListener('DOMContentLoaded', () => {
         });
         scrollToBottomBtn.addEventListener("click", () => scrollToBottom(true));
     }
-
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
     if (SpeechRecognition && micBtn) {
         const recognition = new SpeechRecognition();
@@ -428,6 +605,5 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
     
-    // Panggil checkAuthState di awal
     checkAuthState();
 });

@@ -8,6 +8,10 @@ import markdown
 import firebase_admin
 from firebase_admin import credentials, auth, firestore
 from google.cloud.firestore_v1.base_query import FieldFilter
+import mimetypes
+from PIL import Image
+import io
+import base64 # ✅ Import library base64
 
 # --- KONFIGURASI ---
 load_dotenv()
@@ -118,19 +122,29 @@ def save_message():
     data = request.json
     conversation_id = data.get('conversationId')
     message_data = data.get('messageData')
+    
     try:
         if not conversation_id:
             conv_ref = db.collection('chats').document(user_id).collection('conversations').document()
             conversation_id = conv_ref.id
             title = " ".join(message_data.get('text', '').split()[:5])
+            if message_data.get('imageData'):
+                title = "Gambar: " + title
             conv_ref.set({"title": title or "Obrolan Baru", "last_updated": firestore.SERVER_TIMESTAMP})
+        
         msg_ref = db.collection('chats').document(user_id).collection('conversations').document(conversation_id).collection('messages').document()
-        msg_ref.set({
+        
+        doc_to_save = {
             'isUser': message_data.get('isUser'),
             'text': message_data.get('text'),
             'htmlContent': message_data.get('htmlContent'),
             'timestamp': firestore.SERVER_TIMESTAMP
-        })
+        }
+        if message_data.get('imageData'):
+            doc_to_save['imageData'] = message_data.get('imageData')
+
+        msg_ref.set(doc_to_save)
+        
         db.collection('chats').document(user_id).collection('conversations').document(conversation_id).update({"last_updated": firestore.SERVER_TIMESTAMP})
         return jsonify({"status": "success", "conversationId": conversation_id})
     except Exception as e:
@@ -142,20 +156,37 @@ def send_message():
     data = request.json
     user_message = data['message']
     history = data.get('history', [])
+    image_data_b64 = data.get('imageData')
+
     gemini_history = []
     for msg in history:
         role = "user" if msg.get("isUser") else "model"
         gemini_history.append({"role": role, "parts": [{"text": msg.get("text")}]})
 
-    system_prompt = "Kamu adalah 'Aksara AI', sebuah asisten cerdas yang ramah, sopan, dan selalu menjawab dalam bahasa Indonesia. Format jawabanmu menggunakan Markdown."
+    prompt_parts = []
     
-    # ✅ PERBAIKAN: Baris yang hilang ini ditambahkan kembali
-    full_prompt = f"{system_prompt}\n\nJawab pertanyaan ini:\n{user_message}"
+    if image_data_b64:
+        try:
+            # ✅ PERBAIKAN: Cara decode gambar yang lebih benar dan aman
+            image_data_string = image_data_b64.split(',')[1]
+            image_bytes = base64.b64decode(image_data_string)
+            img = Image.open(io.BytesIO(image_bytes))
+            
+            prompt_parts.append(img)
+        except Exception as e:
+            print(f"Error processing image: {e}")
+            return Response("Maaf, format gambar tidak valid.", status=400)
+
+    if user_message:
+        prompt_parts.append(user_message)
+
+    if not prompt_parts:
+         return Response("Maaf, saya tidak menerima pesan atau gambar.", status=400)
 
     def stream_response():
         try:
             chat_session = gemini_model.start_chat(history=gemini_history)
-            response_stream = chat_session.send_message(full_prompt, stream=True)
+            response_stream = chat_session.send_message(prompt_parts, stream=True)
             for chunk in response_stream:
                 if chunk.text:
                     yield chunk.text
@@ -178,6 +209,26 @@ def delete_conversation(conversation_id):
         return jsonify({"status": "success", "message": "Conversation deleted successfully"})
     except Exception as e:
         print(f"Error deleting conversation {conversation_id}: {e}")
+        return jsonify({"status": "error", "message": str(e)}), 500
+
+@app.route('/update_title/<conversation_id>', methods=['POST'])
+def update_title(conversation_id):
+    if 'user_id' not in session:
+        return jsonify({"status": "error", "message": "Unauthorized"}), 401
+    
+    user_id = session['user_id']
+    data = request.json
+    new_title = data.get('title')
+
+    if not new_title:
+        return jsonify({"status": "error", "message": "Title is required"}), 400
+
+    try:
+        conv_ref = db.collection('chats').document(user_id).collection('conversations').document(conversation_id)
+        conv_ref.update({"title": new_title})
+        return jsonify({"status": "success", "message": "Title updated"})
+    except Exception as e:
+        print(f"Error updating title for {conversation_id}: {e}")
         return jsonify({"status": "error", "message": str(e)}), 500
 
 if __name__ == "__main__":
