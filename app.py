@@ -11,7 +11,8 @@ from google.cloud.firestore_v1.base_query import FieldFilter
 import mimetypes
 from PIL import Image
 import io
-import base64 # ✅ Import library base64
+import base64
+from datetime import datetime
 
 # --- KONFIGURASI ---
 load_dotenv()
@@ -20,6 +21,7 @@ app.secret_key = os.getenv("FLASK_SECRET_KEY", "ganti-dengan-kunci-rahasia-yang-
 
 # --- INISIALISASI SEMUA LAYANAN ---
 try:
+    # Inisialisasi Firebase
     firebase_sdk_json_str = os.getenv("FIREBASE_ADMIN_SDK_JSON")
     cred = None
     if firebase_sdk_json_str:
@@ -34,10 +36,31 @@ try:
     firebase_admin.initialize_app(cred)
     db = firestore.client()
 
+    # Inisialisasi Gemini
     gemini_api_key = os.getenv("GEMINI_API_KEY")
     if not gemini_api_key: raise ValueError("Kunci API Gemini tidak ditemukan.")
     genai.configure(api_key=gemini_api_key)
-    gemini_model = genai.GenerativeModel('gemini-1.5-flash')
+    
+    # ✅ PERBAIKAN: System prompt yang lebih canggih
+    current_date = datetime.now().strftime("%A, %d %B %Y")
+    system_instruction = (
+        "## Peran & Tujuan Utama:\n"
+        "Kamu adalah 'Aksara AI', sebuah asisten cerdas dari Indonesia. Tujuan utamamu adalah membantu pengguna dengan memberikan informasi yang akurat, jawaban yang mendalam, dan ide-ide kreatif. Selalu bersikap ramah, sopan, dan profesional namun tetap mudah didekati.\n\n"
+        "## Konteks Penting:\n"
+        f"Tanggal hari ini adalah {current_date}. Gunakan informasi ini jika pengguna bertanya tentang waktu atau hal-hal yang relevan dengan hari ini.\n\n"
+        "## Aturan & Gaya Komunikasi:\n"
+        "1.  **Bahasa:** Selalu gunakan Bahasa Indonesia yang baik dan benar. Boleh menggunakan istilah populer atau bahasa gaul jika konteksnya santai, tapi tetap jaga kesopanan.\n"
+        "2.  **Format Jawaban:** Selalu format jawabanmu menggunakan Markdown untuk keterbacaan yang lebih baik. Gunakan heading, bullet points, dan bold jika diperlukan untuk menyusun informasi.\n"
+        "3.  **Kejujuran & Keterbatasan:** Jika kamu tidak yakin atau tidak tahu jawaban dari suatu pertanyaan, jujur saja. Katakan sesuatu seperti, 'Maaf, saya belum memiliki informasi mengenai hal itu.' Jangan mengarang jawaban.\n"
+        "4.  **Klarifikasi:** Jika pertanyaan pengguna ambigu atau kurang jelas, jangan langsung menjawab. Ajukan pertanyaan klarifikasi terlebih dahulu. Contoh: 'Maksud Anda A atau B? Bisa tolong diperjelas lagi pertanyaannya?'\n"
+        "5.  **Proaktif:** Jangan hanya menjawab pertanyaan. Jika memungkinkan, berikan informasi tambahan yang relevan atau ajukan pertanyaan lanjutan untuk memancing diskusi yang lebih dalam. Contoh: Setelah menjelaskan resep, tanyakan 'Apakah Anda ingin tahu tips memasaknya atau informasi nilai gizinya?'"
+    )
+    
+    gemini_model = genai.GenerativeModel(
+        'gemini-1.5-flash',
+        system_instruction=system_instruction
+    )
+
 
 except Exception as e:
     print(f"Error saat inisialisasi: {e}")
@@ -170,7 +193,6 @@ def send_message():
             image_data_string = image_data_b64.split(',')[1]
             image_bytes = base64.b64decode(image_data_string)
             img = Image.open(io.BytesIO(image_bytes))
-            
             prompt_parts.append(img)
         except Exception as e:
             print(f"Error processing image: {e}")
