@@ -11,7 +11,6 @@
     --welcome-text-color: #666;
     --mic-recording-color: #e63946;
     --danger-color: #e63946;
-    --hover-bg-color: #f0f2f5; /* ✅ Warna abu-abu baru untuk hover */
 }
 
 body.dark-mode {
@@ -25,7 +24,6 @@ body.dark-mode {
     --border-color: #30363d;
     --welcome-text-color: #8b949e;
     --danger-color: #f85149;
-    --hover-bg-color: #2a2f37; /* ✅ Warna abu-abu baru untuk hover di mode gelap */
 }
 
 body {
@@ -115,7 +113,7 @@ body:not(.user-logged-in) #sidebar {
     position: relative;
 }
 .history-item:hover { 
-    background-color: var(--hover-bg-color); /* ✅ PERBAIKAN: Gunakan warna hover baru */
+    background-color: var(--hover-bg-color);
 }
 .history-item.active { background-color: var(--primary-color); color: white; }
 .history-placeholder { padding: 15px; font-style: italic; color: var(--welcome-text-color); text-align: center; }
@@ -137,7 +135,6 @@ body:not(.user-logged-in) #sidebar {
     border-radius: 50%;
     flex-shrink: 0;
     margin-left: 5px;
-    /* ✅ PERBAIKAN: Gunakan visibility & opacity untuk mencegah layout shift */
     visibility: hidden;
     opacity: 0;
     transition: opacity 0.2s, visibility 0.2s;
@@ -502,8 +499,10 @@ body.dark-mode .typing-indicator span { background-color: var(--text-color); }
     transition-delay: 0.5s;
 }
 
+/* ✅ PERBAIKAN: Posisi tooltip untuk header dibalik */
 #chat-header [data-tooltip]::after {
-    bottom: 120%;
+    top: 120%; /* Muncul di BAWAH tombol */
+    bottom: auto; /* Hapus aturan bottom sebelumnya */
     left: 50%;
     transform: translateX(-50%);
 }

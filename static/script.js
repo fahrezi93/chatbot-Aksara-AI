@@ -48,35 +48,55 @@ document.addEventListener('DOMContentLoaded', () => {
     let conversationHistory = [];
     let uploadedImageData = null;
 
-    // ✅ BANK SOAL DIPERBANYAK
+    // ✅ BANK SOAL DIPERBANYAK SECARA MASIF
     const ALL_PROMPTS = [
-        // Produktivitas & Profesional
+        // Kategori: Produktivitas & Profesional (10 Prompt)
         { title: "Buat Draf Email", subtitle: "untuk menindaklanjuti proposal kerjasama", full_prompt: "Buatkan saya draf email profesional untuk menindaklanjuti proposal kerjasama yang saya kirim minggu lalu." },
         { title: "Rangkum Teks Ini", subtitle: "menjadi 5 poin utama", full_prompt: "Tolong rangkum teks berikut menjadi 5 poin utama: [tempel teks di sini]" },
         { title: "Ide Nama Brand", subtitle: "untuk produk fashion ramah lingkungan", full_prompt: "Berikan 10 ide nama brand yang menarik untuk produk fashion yang ramah lingkungan." },
         { title: "Susun Rencana Proyek", subtitle: "untuk peluncuran aplikasi mobile", full_prompt: "Bantu saya menyusun kerangka rencana proyek untuk peluncuran aplikasi mobile, mulai dari riset hingga pemasaran." },
         { title: "Latihan Wawancara Kerja", subtitle: "untuk posisi Digital Marketing", full_prompt: "Mari kita latihan wawancara kerja. Ajukan saya pertanyaan umum untuk posisi Digital Marketing." },
+        { title: "Buat Jadwal Mingguan", subtitle: "untuk menyeimbangkan kerja dan olahraga", full_prompt: "Buatkan saya contoh jadwal mingguan yang seimbang antara pekerjaan full-time dan rutinitas olahraga 3 kali seminggu." },
+        { title: "Analisis SWOT", subtitle: "untuk ide bisnis kedai kopi", full_prompt: "Lakukan analisis SWOT (Strengths, Weaknesses, Opportunities, Threats) untuk ide bisnis kedai kopi di area perkantoran." },
+        { title: "Tulis Deskripsi Produk", subtitle: "untuk sebuah jam tangan pintar", full_prompt: "Tulis deskripsi produk yang menjual untuk sebuah jam tangan pintar dengan fitur monitor detak jantung dan GPS." },
+        { title: "Buat Agenda Rapat", subtitle: "untuk kickoff proyek baru", full_prompt: "Buatkan agenda rapat yang efektif untuk kickoff proyek pengembangan website baru." },
+        { title: "Ide Ice Breaking", subtitle: "untuk workshop online", full_prompt: "Berikan saya 3 ide ice breaking yang seru dan tidak canggung untuk workshop yang diadakan secara online." },
 
-        // Kreativitas & Menulis
+        // Kategori: Kreativitas & Menulis (10 Prompt)
         { title: "Tulis Puisi", subtitle: "tentang hujan di perkotaan", full_prompt: "Tuliskan sebuah puisi tentang suasana hujan di tengah hiruk pikuk perkotaan." },
         { title: "Buat Cerita Pendek", subtitle: "tentang robot yang punya perasaan", full_prompt: "Buat cerita pendek tentang robot pembersih yang tiba-tiba bisa merasakan emosi." },
         { title: "Ide Judul Artikel", subtitle: "tentang manfaat meditasi", full_prompt: "Berikan 5 ide judul artikel yang menarik (clickbait) tentang manfaat meditasi untuk pemula." },
         { title: "Kembangkan Plot Cerita", subtitle: "dari premis: detektif di zaman Majapahit", full_prompt: "Saya punya premis: seorang detektif di era Kerajaan Majapahit. Bantu kembangkan plot ceritanya." },
         { title: "Buat Lirik Lagu", subtitle: "bertema persahabatan jarak jauh", full_prompt: "Tolong buatkan lirik lagu pop yang menyentuh tentang persahabatan jarak jauh." },
+        { title: "Deskripsikan Lukisan", subtitle: "'The Starry Night' karya Van Gogh", full_prompt: "Deskripsikan lukisan 'The Starry Night' karya Vincent van Gogh seolah-olah saya belum pernah melihatnya." },
+        { title: "Buat Naskah Iklan", subtitle: "untuk produk minuman energi alami", full_prompt: "Tulis naskah singkat untuk iklan video berdurasi 30 detik yang mempromosikan minuman energi dari bahan alami." },
+        { title: "Tulis Dialog Film", subtitle: "antara pahlawan super dan musuhnya", full_prompt: "Tulis sebuah dialog tegang antara seorang pahlawan super yang idealis dengan musuh bebuyutannya yang sinis." },
+        { title: "Ide Slogan", subtitle: "untuk kampanye 'kurangi sampah plastik'", full_prompt: "Berikan 10 ide slogan yang kuat dan mudah diingat untuk kampanye 'kurangi sampah plastik'." },
+        { title: "Buat Sinopsis Novel", subtitle: "genre fantasi petualangan", full_prompt: "Tulis sinopsis singkat untuk sebuah novel fantasi tentang pencarian artefak kuno di dunia yang hilang." },
 
-        // Edukasi & Pengetahuan
+        // Kategori: Edukasi & Pengetahuan (10 Prompt)
         { title: "Jelaskan Konsep", subtitle: "tentang black hole dengan analogi sederhana", full_prompt: "Jelaskan konsep black hole (lubang hitam) menggunakan analogi yang mudah dipahami orang awam." },
         { title: "Bandingkan Dua Tokoh", subtitle: "antara Soekarno dan Hatta", full_prompt: "Bandingkan gaya kepemimpinan dan peran antara Soekarno dan Mohammad Hatta dalam kemerdekaan Indonesia." },
         { title: "Sejarah Singkat", subtitle: "penemuan internet", full_prompt: "Ceritakan sejarah singkat penemuan internet, mulai dari ARPANET hingga World Wide Web." },
         { title: "Bagaimana Cara Kerja", subtitle: "vaksin mRNA?", full_prompt: "Jelaskan bagaimana cara kerja vaksin berbasis mRNA seperti Pfizer atau Moderna." },
         { title: "Fakta Menarik", subtitle: "tentang lautan dalam", full_prompt: "Berikan saya 5 fakta menarik yang jarang diketahui tentang kehidupan di laut dalam." },
+        { title: "Proses Terjadinya", subtitle: "gerhana matahari total", full_prompt: "Jelaskan secara sederhana proses terjadinya gerhana matahari total." },
+        { title: "Apa itu Blockchain?", subtitle: "jelaskan untuk pemula", full_prompt: "Apa itu teknologi blockchain? Jelaskan cara kerjanya seperti untuk seorang pemula." },
+        { title: "Perbedaan Utama", subtitle: "antara sel hewan dan sel tumbuhan", full_prompt: "Apa saja perbedaan utama antara sel hewan dan sel tumbuhan? Jelaskan dalam bentuk tabel." },
+        { title: "Ringkas Teori", subtitle: "Relativitas Khusus Einstein", full_prompt: "Ringkas poin-poin utama dari Teori Relativitas Khusus yang dikemukakan oleh Albert Einstein." },
+        { title: "Siapa itu Ibnu Sina?", subtitle: "dan apa kontribusinya bagi dunia?", full_prompt: "Siapakah Ibnu Sina dan apa saja kontribusi terpentingnya bagi dunia kedokteran dan filsafat?" },
 
-        // Gaya Hidup & Hiburan
+        // Kategori: Gaya Hidup & Hiburan (10 Prompt)
         { title: "Rencana Perjalanan", subtitle: "hemat 3 hari di Bali", full_prompt: "Buatkan saya rencana perjalanan hemat selama 3 hari di Bali untuk backpacker." },
         { title: "Rekomendasi Film", subtitle: "genre thriller psikologis", full_prompt: "Beri saya 5 rekomendasi film genre thriller psikologis yang menegangkan." },
         { title: "Ide Resep Sehat", subtitle: "untuk sarapan di bawah 15 menit", full_prompt: "Berikan 3 ide resep sarapan sehat dan praktis yang bisa dibuat dalam waktu kurang dari 15 menit." },
         { title: "Tips Berkebun", subtitle: "untuk pemula di lahan sempit", full_prompt: "Apa saja tips penting untuk mulai berkebun sayuran bagi pemula yang hanya punya balkon apartemen?" },
-        { title: "Buat Lelucon", subtitle: "tentang programmer", full_prompt: "Buatkan sebuah lelucon singkat tentang kehidupan seorang programmer." }
+        { title: "Buat Lelucon", subtitle: "tentang programmer", full_prompt: "Buatkan sebuah lelucon singkat tentang kehidupan seorang programmer." },
+        { title: "Rekomendasi Buku", subtitle: "novel fiksi ilmiah klasik", full_prompt: "Rekomendasikan 3 buku novel fiksi ilmiah klasik yang wajib dibaca." },
+        { title: "Rencana Latihan Fisik", subtitle: "di rumah tanpa alat", full_prompt: "Buatkan rencana latihan fisik sederhana selama 20 menit yang bisa dilakukan di rumah tanpa alat." },
+        { title: "Daftar Putar Lagu", subtitle: "untuk menemani saat hujan", full_prompt: "Buatkan saya daftar putar berisi 10 lagu yang cocok untuk didengarkan saat hujan." },
+        { title: "Ide Kado Ulang Tahun", subtitle: "untuk sahabat wanita yang suka traveling", full_prompt: "Berikan 5 ide kado ulang tahun yang unik dan bermanfaat untuk sahabat wanita yang hobi traveling." },
+        { title: "Review Singkat Game", subtitle: "'The Witcher 3'", full_prompt: "Tulis sebuah review singkat tentang game 'The Witcher 3: Wild Hunt' dari sudut pandang pemain baru." }
     ];
 
     // --- (Sisa kode tidak ada yang berubah) ---
@@ -180,7 +200,6 @@ document.addEventListener('DOMContentLoaded', () => {
                     const editBtn = document.createElement('button');
                     editBtn.className = 'edit-title-btn';
                     editBtn.innerHTML = '✏️';
-                    editBtn.title = 'Ubah judul';
                     
                     historyItem.appendChild(titleContainer);
                     historyItem.appendChild(editBtn);
