@@ -287,8 +287,7 @@ body:not(.user-logged-in) #sidebar {
 }
 .logout-button {
     display: block;
-    /* ✅ PERBAIKAN: Hapus width: 100% */
-    padding: 8px 20px; /* Beri padding horizontal agar tidak terlalu mepet */
+    padding: 8px 20px;
     border-radius: 20px;
     background-color: var(--danger-color);
     color: white !important;
@@ -298,7 +297,7 @@ body:not(.user-logged-in) #sidebar {
     transition: background-color 0.2s, transform 0.2s;
     border: none;
     cursor: pointer;
-    margin: 0 auto; /* ✅ PERBAIKAN: Tambahkan ini untuk membuat tombol ke tengah */
+    margin: 0 auto;
 }
 .logout-button:hover {
     background-color: #c12d3a;
@@ -695,6 +694,16 @@ body.dark-mode .typing-indicator span { background-color: var(--text-color); }
     #chat-container { width: 100%; }
     #scroll-to-bottom-btn { bottom: 75px; right: 15px; }
     
+    /* ✅ PERBAIKAN FINAL UNTUK MOBILE HEADER & INPUT */
+    #chat-header {
+        padding: 12px 15px;
+    }
+    .header-content {
+        gap: 10px;
+    }
+    .bot-avatar {
+        font-size: 2.2rem;
+    }
     #input-area { 
         padding: 8px 10px; 
     }

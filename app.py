@@ -90,7 +90,16 @@ def login():
 
             session['user_id'] = user_record.uid
             session['user_email'] = user_record.email
-            session['user_name'] = user_record.display_name or user_record.email.split('@')[0]
+            
+            # ✅ PERBAIKAN: Ambil hanya nama depan
+            display_name = user_record.display_name
+            if display_name:
+                # Ambil kata pertama dari nama lengkap
+                first_name = display_name.split(' ')[0]
+                session['user_name'] = first_name
+            else:
+                # Jika tidak ada nama, gunakan bagian depan email
+                session['user_name'] = user_record.email.split('@')[0]
 
             return jsonify({"status": "success", "redirect": url_for('index')})
         except Exception as e:
@@ -109,7 +118,6 @@ def forgot_password():
 @app.route('/logout')
 def logout():
     session.clear()
-    # ✅ PERBAIKAN: Arahkan ke halaman utama (chat) setelah logout
     return redirect(url_for('index'))
 
 @app.route('/check_auth')
