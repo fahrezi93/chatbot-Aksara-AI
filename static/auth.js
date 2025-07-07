@@ -14,7 +14,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const passwordInput = document.getElementById('password');
     const toggleButton = document.querySelector('.password-toggle-icon');
     const googleSignInBtn = document.getElementById('google-signin-btn');
-    // ✅ ELEMEN BARU UNTUK LUPA PASSWORD
     const forgotPasswordForm = document.getElementById('forgot-password-form');
     const messageElement = document.getElementById('message-element');
 
@@ -70,11 +69,13 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function sendTokenToBackend(idToken) {
-        const formData = new FormData();
-        formData.append('id_token', idToken);
+        // ✅ PERBAIKAN: Kirim sebagai JSON
         return fetch('/login', {
             method: 'POST',
-            body: new URLSearchParams(formData)
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ id_token: idToken })
         })
         .then(response => {
             if (!response.ok) {
@@ -105,10 +106,23 @@ document.addEventListener('DOMContentLoaded', () => {
     if (registerForm) {
         registerForm.addEventListener('submit', (e) => {
             e.preventDefault();
+            // ✅ AMBIL NILAI USERNAME
+            const username = document.getElementById('username').value;
             const email = document.getElementById('email').value;
             const password = passwordInput.value;
+
             auth.createUserWithEmailAndPassword(email, password)
-                .then(() => { window.location.href = '/login'; })
+                .then((userCredential) => {
+                    // ✅ SETELAH BERHASIL, UPDATE PROFIL DENGAN NAMA PENGGUNA
+                    const user = userCredential.user;
+                    return user.updateProfile({
+                        displayName: username
+                    });
+                })
+                .then(() => {
+                    // Setelah profil diupdate, baru arahkan ke login
+                    window.location.href = '/login';
+                })
                 .catch(handleError);
         });
     }
@@ -126,14 +140,12 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // ✅ LOGIKA BARU UNTUK RESET PASSWORD
     if (forgotPasswordForm) {
         forgotPasswordForm.addEventListener('submit', (e) => {
             e.preventDefault();
             const emailInput = document.getElementById('email');
             const email = emailInput.value;
             
-            // Tampilkan pesan loading dan nonaktifkan tombol
             const submitButton = forgotPasswordForm.querySelector('button[type="submit"]');
             submitButton.disabled = true;
             showSuccessMessage("Mengirim link...", messageElement);
@@ -141,13 +153,12 @@ document.addEventListener('DOMContentLoaded', () => {
             auth.sendPasswordResetEmail(email)
                 .then(() => {
                     showSuccessMessage("Link reset password telah dikirim. Silakan periksa inbox atau folder spam Anda.", messageElement);
-                    emailInput.value = ''; // Kosongkan input setelah berhasil
+                    emailInput.value = '';
                 })
                 .catch((error) => {
                     handleError(error, messageElement);
                 })
                 .finally(() => {
-                    // Aktifkan kembali tombol setelah selesai
                     submitButton.disabled = false;
                 });
         });

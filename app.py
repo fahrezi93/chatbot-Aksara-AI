@@ -41,10 +41,8 @@ try:
     if not gemini_api_key: raise ValueError("Kunci API Gemini tidak ditemukan.")
     genai.configure(api_key=gemini_api_key)
     
-    # ✅ PERBAIKAN: System prompt yang lebih canggih
     current_date = datetime.now().strftime("%A, %d %B %Y")
     system_instruction = (
-        "## Peran & Tujuan Utama:\n"
         "Kamu adalah 'Aksara AI', sebuah asisten cerdas dari Indonesia. Tujuan utamamu adalah membantu pengguna dengan memberikan informasi yang akurat, jawaban yang mendalam, dan ide-ide kreatif. Selalu bersikap ramah, sopan, dan profesional namun tetap mudah didekati.\n\n"
         "## Konteks Penting:\n"
         f"Tanggal hari ini adalah {current_date}. Gunakan informasi ini jika pengguna bertanya tentang waktu atau hal-hal yang relevan dengan hari ini.\n\n"
@@ -87,8 +85,13 @@ def login():
         try:
             id_token = request.form.get('id_token') or request.json.get('id_token')
             decoded_token = auth.verify_id_token(id_token)
-            session['user_id'] = decoded_token['uid']
-            session['user_email'] = decoded_token.get('email', '')
+            
+            user_record = auth.get_user(decoded_token['uid'])
+
+            session['user_id'] = user_record.uid
+            session['user_email'] = user_record.email
+            session['user_name'] = user_record.display_name or user_record.email.split('@')[0]
+
             return jsonify({"status": "success", "redirect": url_for('index')})
         except Exception as e:
             print(f"Login error: {e}")
@@ -106,12 +109,17 @@ def forgot_password():
 @app.route('/logout')
 def logout():
     session.clear()
-    return redirect(url_for('login'))
+    # ✅ PERBAIKAN: Arahkan ke halaman utama (chat) setelah logout
+    return redirect(url_for('index'))
 
 @app.route('/check_auth')
 def check_auth():
     if 'user_id' in session:
-        return jsonify({"logged_in": True, "email": session.get('user_email')})
+        return jsonify({
+            "logged_in": True, 
+            "email": session.get('user_email'),
+            "username": session.get('user_name')
+        })
     return jsonify({"logged_in": False})
 
 @app.route("/get_conversations")

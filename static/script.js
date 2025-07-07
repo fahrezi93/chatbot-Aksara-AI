@@ -1,16 +1,8 @@
 document.addEventListener('DOMContentLoaded', () => {
-    // Inisialisasi Firebase
-    try {
-        firebase.initializeApp(firebaseConfig);
-    } catch (e) {
-        console.error("Error inisialisasi Firebase:", e);
-        return;
-    }
-
+    // ... (kode inisialisasi dan deklarasi elemen DOM tidak berubah) ...
     let currentUser = null;
     let currentConversationId = null;
 
-    // --- ELEMEN DOM ---
     const body = document.body;
     const chatBox = document.getElementById('chat-box');
     const userInput = document.getElementById('user-input');
@@ -44,13 +36,15 @@ document.addEventListener('DOMContentLoaded', () => {
     const imagePreview = document.getElementById('image-preview');
     const removePreviewBtn = document.getElementById('remove-preview-btn');
     const sendBtn = document.getElementById('send-btn');
+    const logoutBtnLink = document.getElementById('logout-btn-link');
+    const logoutOverlay = document.getElementById('logout-overlay');
+    const welcomeUsernameSpan = document.getElementById('welcome-username');
+
 
     let conversationHistory = [];
     let uploadedImageData = null;
 
-    // ✅ BANK SOAL DIPERBANYAK SECARA MASIF
     const ALL_PROMPTS = [
-        // Kategori: Produktivitas & Profesional (10 Prompt)
         { title: "Buat Draf Email", subtitle: "untuk menindaklanjuti proposal kerjasama", full_prompt: "Buatkan saya draf email profesional untuk menindaklanjuti proposal kerjasama yang saya kirim minggu lalu." },
         { title: "Rangkum Teks Ini", subtitle: "menjadi 5 poin utama", full_prompt: "Tolong rangkum teks berikut menjadi 5 poin utama: [tempel teks di sini]" },
         { title: "Ide Nama Brand", subtitle: "untuk produk fashion ramah lingkungan", full_prompt: "Berikan 10 ide nama brand yang menarik untuk produk fashion yang ramah lingkungan." },
@@ -61,8 +55,6 @@ document.addEventListener('DOMContentLoaded', () => {
         { title: "Tulis Deskripsi Produk", subtitle: "untuk sebuah jam tangan pintar", full_prompt: "Tulis deskripsi produk yang menjual untuk sebuah jam tangan pintar dengan fitur monitor detak jantung dan GPS." },
         { title: "Buat Agenda Rapat", subtitle: "untuk kickoff proyek baru", full_prompt: "Buatkan agenda rapat yang efektif untuk kickoff proyek pengembangan website baru." },
         { title: "Ide Ice Breaking", subtitle: "untuk workshop online", full_prompt: "Berikan saya 3 ide ice breaking yang seru dan tidak canggung untuk workshop yang diadakan secara online." },
-
-        // Kategori: Kreativitas & Menulis (10 Prompt)
         { title: "Tulis Puisi", subtitle: "tentang hujan di perkotaan", full_prompt: "Tuliskan sebuah puisi tentang suasana hujan di tengah hiruk pikuk perkotaan." },
         { title: "Buat Cerita Pendek", subtitle: "tentang robot yang punya perasaan", full_prompt: "Buat cerita pendek tentang robot pembersih yang tiba-tiba bisa merasakan emosi." },
         { title: "Ide Judul Artikel", subtitle: "tentang manfaat meditasi", full_prompt: "Berikan 5 ide judul artikel yang menarik (clickbait) tentang manfaat meditasi untuk pemula." },
@@ -73,8 +65,6 @@ document.addEventListener('DOMContentLoaded', () => {
         { title: "Tulis Dialog Film", subtitle: "antara pahlawan super dan musuhnya", full_prompt: "Tulis sebuah dialog tegang antara seorang pahlawan super yang idealis dengan musuh bebuyutannya yang sinis." },
         { title: "Ide Slogan", subtitle: "untuk kampanye 'kurangi sampah plastik'", full_prompt: "Berikan 10 ide slogan yang kuat dan mudah diingat untuk kampanye 'kurangi sampah plastik'." },
         { title: "Buat Sinopsis Novel", subtitle: "genre fantasi petualangan", full_prompt: "Tulis sinopsis singkat untuk sebuah novel fantasi tentang pencarian artefak kuno di dunia yang hilang." },
-
-        // Kategori: Edukasi & Pengetahuan (10 Prompt)
         { title: "Jelaskan Konsep", subtitle: "tentang black hole dengan analogi sederhana", full_prompt: "Jelaskan konsep black hole (lubang hitam) menggunakan analogi yang mudah dipahami orang awam." },
         { title: "Bandingkan Dua Tokoh", subtitle: "antara Soekarno dan Hatta", full_prompt: "Bandingkan gaya kepemimpinan dan peran antara Soekarno dan Mohammad Hatta dalam kemerdekaan Indonesia." },
         { title: "Sejarah Singkat", subtitle: "penemuan internet", full_prompt: "Ceritakan sejarah singkat penemuan internet, mulai dari ARPANET hingga World Wide Web." },
@@ -85,8 +75,6 @@ document.addEventListener('DOMContentLoaded', () => {
         { title: "Perbedaan Utama", subtitle: "antara sel hewan dan sel tumbuhan", full_prompt: "Apa saja perbedaan utama antara sel hewan dan sel tumbuhan? Jelaskan dalam bentuk tabel." },
         { title: "Ringkas Teori", subtitle: "Relativitas Khusus Einstein", full_prompt: "Ringkas poin-poin utama dari Teori Relativitas Khusus yang dikemukakan oleh Albert Einstein." },
         { title: "Siapa itu Ibnu Sina?", subtitle: "dan apa kontribusinya bagi dunia?", full_prompt: "Siapakah Ibnu Sina dan apa saja kontribusi terpentingnya bagi dunia kedokteran dan filsafat?" },
-
-        // Kategori: Gaya Hidup & Hiburan (10 Prompt)
         { title: "Rencana Perjalanan", subtitle: "hemat 3 hari di Bali", full_prompt: "Buatkan saya rencana perjalanan hemat selama 3 hari di Bali untuk backpacker." },
         { title: "Rekomendasi Film", subtitle: "genre thriller psikologis", full_prompt: "Beri saya 5 rekomendasi film genre thriller psikologis yang menegangkan." },
         { title: "Ide Resep Sehat", subtitle: "untuk sarapan di bawah 15 menit", full_prompt: "Berikan 3 ide resep sarapan sehat dan praktis yang bisa dibuat dalam waktu kurang dari 15 menit." },
@@ -99,7 +87,7 @@ document.addEventListener('DOMContentLoaded', () => {
         { title: "Review Singkat Game", subtitle: "'The Witcher 3'", full_prompt: "Tulis sebuah review singkat tentang game 'The Witcher 3: Wild Hunt' dari sudut pandang pemain baru." }
     ];
 
-    // --- (Sisa kode tidak ada yang berubah) ---
+    // --- MANAJEMEN UI & AUTH ---
     function setupGuestUI() {
         body.classList.remove('user-logged-in');
         welcomeScreen.classList.remove('visible');
@@ -112,20 +100,25 @@ document.addEventListener('DOMContentLoaded', () => {
         hideInitialPrompts();
     }
 
+    // ✅ PERBAIKAN: Fungsi ini sekarang menampilkan nama pengguna
     function setupUserUI(user) {
         body.classList.add('user-logged-in');
         welcomeScreen.classList.add('visible');
         guestActions.style.display = 'none';
         userActions.style.display = 'flex';
-        profileInitial.textContent = user.email.charAt(0).toUpperCase();
+        profileInitial.textContent = user.username ? user.username.charAt(0).toUpperCase() : '?';
         userEmailDisplay.textContent = user.email;
+        if (welcomeUsernameSpan) {
+            welcomeUsernameSpan.textContent = `Hi ${user.username}, `;
+        }
     }
 
+    // ✅ PERBAIKAN: Fungsi ini sekarang mengambil nama pengguna
     async function checkAuthState() {
         try {
             const response = await fetch('/check_auth');
             const data = await response.json();
-            currentUser = data.logged_in ? { email: data.email } : null;
+            currentUser = data.logged_in ? { email: data.email, username: data.username } : null;
             if (currentUser) {
                 setupUserUI(currentUser);
             } else {
@@ -137,6 +130,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
+    // ... (Sisa kode tidak berubah) ...
     function toggleSidebar() {
         body.classList.toggle('sidebar-visible');
     }
@@ -234,7 +228,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     content = `<img src="${msg.imageData}" class="message-image" alt="Gambar terlampir"><br>` + content;
                 }
                 const timestamp = msg.timestamp && msg.timestamp._seconds ? new Date(msg.timestamp._seconds * 1000) : new Date();
-                appendMessage(content, msg.isUser ? 'user-message' : 'bot-message', false, timestamp);
+                appendMessage(content, msg.isUser ? 'user-message' : 'bot-message', false, timestamp, msg.text);
                 conversationHistory.push({ isUser: msg.isUser, text: msg.text });
             });
         } catch (error) {
@@ -259,41 +253,24 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    async function handleFormSubmit(e) {
-        if (e) e.preventDefault();
-        const userMessageText = userInput.value.trim();
-        
-        if (userMessageText === "" && !uploadedImageData) return;
-
+    async function submitAndGetResponse(userMessageText, imageToSend) {
         hideInitialPrompts();
 
-        let userHtmlContent = `<p>${userMessageText}</p>`;
-        if (uploadedImageData) {
-            userHtmlContent = `<img src="${uploadedImageData}" class="message-image" alt="Gambar terlampir"><br>` + userHtmlContent;
-        }
-
-        appendMessage(userHtmlContent, 'user-message', false, new Date());
-        
-        const userMessageData = { 
-            isUser: true, 
-            text: userMessageText, 
-            htmlContent: `<p>${userMessageText}</p>`,
-            imageData: uploadedImageData
-        };
-        
-        conversationHistory.push({ isUser: true, text: userMessageText });
-        
-        const imageToSend = uploadedImageData;
-        uploadedImageData = null;
-        imagePreviewContainer.style.display = 'none';
-        fileInput.value = '';
-        userInput.value = "";
-        userInput.focus();
-
-        const savedUserData = await saveMessageToDb(userMessageData);
-        if (savedUserData && savedUserData.conversationId) {
-            currentConversationId = savedUserData.conversationId;
-            updateClearChatButtonState();
+        const userMessages = document.querySelectorAll('.user-message');
+        if (userMessages.length > 0) {
+            let userMessageFound = false;
+            Array.from(userMessages).reverse().forEach(msg => {
+                if (userMessageFound) {
+                    const nextBotMsg = msg.nextElementSibling;
+                    if (nextBotMsg && nextBotMsg.classList.contains('bot-message')) {
+                        nextBotMsg.remove();
+                    }
+                    msg.remove();
+                }
+                if (msg.dataset.originalText === userMessageText) {
+                    userMessageFound = true;
+                }
+            });
         }
 
         const botMessageElement = createBotMessageElement();
@@ -337,6 +314,44 @@ document.addEventListener('DOMContentLoaded', () => {
             if(typingIndicator) typingIndicator.remove();
             botMessageElement.querySelector(".content-wrapper").innerHTML = "<p>Maaf, terjadi kesalahan.</p>";
         }
+    }
+
+    async function handleFormSubmit(e) {
+        if (e) e.preventDefault();
+        const userMessageText = userInput.value.trim();
+        
+        if (userMessageText === "" && !uploadedImageData) return;
+
+        let userHtmlContent = `<p>${userMessageText}</p>`;
+        if (uploadedImageData) {
+            userHtmlContent = `<img src="${uploadedImageData}" class="message-image" alt="Gambar terlampir"><br>` + userHtmlContent;
+        }
+
+        appendMessage(userHtmlContent, 'user-message', false, new Date(), userMessageText);
+        
+        const userMessageData = { 
+            isUser: true, 
+            text: userMessageText, 
+            htmlContent: `<p>${userMessageText}</p>`,
+            imageData: uploadedImageData
+        };
+        
+        conversationHistory.push({ isUser: true, text: userMessageText });
+        
+        const imageToSend = uploadedImageData;
+        uploadedImageData = null;
+        imagePreviewContainer.style.display = 'none';
+        fileInput.value = '';
+        userInput.value = "";
+        userInput.focus();
+
+        const savedUserData = await saveMessageToDb(userMessageData);
+        if (savedUserData && savedUserData.conversationId) {
+            currentConversationId = savedUserData.conversationId;
+            updateClearChatButtonState();
+        }
+
+        await submitAndGetResponse(userMessageText, imageToSend);
     }
 
     async function saveMessageToDb(messageData) {
@@ -521,6 +536,22 @@ document.addEventListener('DOMContentLoaded', () => {
             if (profileDropdown) profileDropdown.classList.toggle('show');
         });
     }
+    
+    if (logoutBtnLink) {
+        logoutBtnLink.addEventListener('click', (e) => {
+            e.preventDefault();
+            const logoutUrl = logoutBtnLink.href;
+            
+            if (logoutOverlay) {
+                logoutOverlay.classList.add('visible');
+            }
+
+            setTimeout(() => {
+                window.location.href = logoutUrl;
+            }, 2000);
+        });
+    }
+    
     window.addEventListener('click', (e) => {
         if (profileBtn && !profileBtn.contains(e.target) && profileDropdown) {
             profileDropdown.classList.remove('show');
@@ -565,9 +596,71 @@ document.addEventListener('DOMContentLoaded', () => {
         micBtn.style.display = "none";
     }
 
-    function appendMessage(content, className, isTextContent, timestamp) {
+    chatBox.addEventListener('click', (e) => {
+        if (e.target.closest('.edit-prompt-btn')) {
+            const editBtn = e.target.closest('.edit-prompt-btn');
+            const messageElement = editBtn.closest('.message');
+            const contentWrapper = messageElement.querySelector('.content-wrapper');
+            const originalText = messageElement.dataset.originalText;
+
+            contentWrapper.style.display = 'none';
+            editBtn.style.display = 'none';
+
+            const editArea = document.createElement('div');
+            editArea.className = 'edit-area';
+            editArea.innerHTML = `
+                <textarea>${originalText}</textarea>
+                <div class="edit-area-buttons">
+                    <button class="cancel-edit-btn">Batal</button>
+                    <button class="save-edit-btn">Simpan & Kirim</button>
+                </div>
+            `;
+            messageElement.appendChild(editArea);
+
+            const textarea = editArea.querySelector('textarea');
+            textarea.focus();
+            textarea.style.height = 'auto';
+            textarea.style.height = (textarea.scrollHeight) + 'px';
+
+            editArea.querySelector('.cancel-edit-btn').addEventListener('click', () => {
+                editArea.remove();
+                contentWrapper.style.display = 'block';
+            });
+
+            editArea.querySelector('.save-edit-btn').addEventListener('click', () => {
+                const newText = textarea.value.trim();
+                if (newText && newText !== originalText) {
+                    contentWrapper.innerHTML = `<p>${newText}</p>`;
+                    messageElement.dataset.originalText = newText;
+
+                    const messageIndex = Array.from(chatBox.children).indexOf(messageElement);
+                    if (conversationHistory[messageIndex]) {
+                        conversationHistory[messageIndex].text = newText;
+                    }
+
+                    let nextMsg = messageElement.nextElementSibling;
+                    while(nextMsg) {
+                        let toRemove = nextMsg;
+                        nextMsg = nextMsg.nextElementSibling;
+                        toRemove.remove();
+                    }
+                    
+                    submitAndGetResponse(newText, null);
+                }
+                editArea.remove();
+                contentWrapper.style.display = 'block';
+            });
+        }
+    });
+
+    function appendMessage(content, className, isTextContent, timestamp, originalText = '') {
         const messageElement = document.createElement("div");
         messageElement.className = `message ${className}`;
+        
+        if (className === 'user-message') {
+            messageElement.dataset.originalText = originalText;
+        }
+
         const contentWrapper = document.createElement("div");
         contentWrapper.className = "content-wrapper";
         if (isTextContent) {
@@ -579,6 +672,15 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         messageElement.appendChild(contentWrapper);
         appendTimestamp(messageElement, timestamp);
+        
+        if (className === 'user-message') {
+            const editBtn = document.createElement('button');
+            editBtn.className = 'edit-prompt-btn';
+            editBtn.innerHTML = '✏️';
+            editBtn.setAttribute('data-tooltip', 'Edit & kirim ulang');
+            messageElement.appendChild(editBtn);
+        }
+
         if (className === 'bot-message' && content && content.length > 1) {
             addCopyToBotMessage(messageElement);
         }
