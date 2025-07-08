@@ -16,11 +16,21 @@
     color: white;
     font-family: 'Inter', sans-serif;
 }
+
+.development-content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
 .development-content h1 {
     font-size: 3rem;
     font-weight: 700;
     text-shadow: 2px 2px 8px rgba(0,0,0,0.5);
     margin-bottom: 10px;
+    display: flex;
+    align-items: center;
+    gap: 15px; /* Jarak antara ikon dan teks */
+
 }
 .development-content p {
     font-size: 1.2rem;
@@ -34,6 +44,20 @@
     color: rgb(0, 177, 236);
     transition: 0.3s
 }
+
+/* ✅ PERBAIKAN: Gaya baru untuk ikon gerigi (emoji) */
+.dev-gear-icon {
+    display: inline-block; /* Agar bisa dianimasikan */
+    font-size: 2.5rem; /* Sesuaikan ukuran ikon */
+    animation: spin 4s linear infinite; /* Animasi putar lebih lambat */
+}
+
+@keyframes spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
 /* ... (Kode CSS dari atas tidak berubah) ... */
 :root {
     --primary-color: #4a90e2;
