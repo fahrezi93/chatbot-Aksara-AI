@@ -15,6 +15,8 @@
     text-align: center;
     color: white;
     font-family: 'Inter', sans-serif;
+    padding: 20px; /* Tambah padding biar ga mepet */
+    box-sizing: border-box;
 }
 
 .development-content {
@@ -27,14 +29,14 @@
     font-weight: 700;
     text-shadow: 2px 2px 8px rgba(0,0,0,0.5);
     margin-bottom: 10px;
-    display: flex;
-    align-items: center;
-    gap: 15px; /* Jarak antara ikon dan teks */
+    margin-top: 0; /* ✅ PERBAIKAN: Reset margin atas */
+
 
 }
 .development-content p {
     font-size: 1.2rem;
     text-shadow: 1px 1px 4px rgba(0,0,0,0.5);
+    max-width: 500px; /* Batasi lebar teks paragraf */
 }
 
 .development-content p a {
@@ -47,9 +49,10 @@
 
 /* ✅ PERBAIKAN: Gaya baru untuk ikon gerigi (emoji) */
 .dev-gear-icon {
-    display: inline-block; /* Agar bisa dianimasikan */
-    font-size: 2.5rem; /* Sesuaikan ukuran ikon */
-    animation: spin 4s linear infinite; /* Animasi putar lebih lambat */
+    display: inline-block;
+    font-size: 50px;
+    animation: spin 4s linear infinite;
+    margin-bottom: 20px;
 }
 
 @keyframes spin {
@@ -1004,5 +1007,16 @@ body.dark-mode .typing-indicator span { background-color: var(--text-color); }
 
     .edit-prompt-btn {
         left: -40px;
+    }
+
+    .development-content h1 {
+        font-size: 2rem;
+        gap: 10px;
+    }
+    .dev-gear-icon {
+        font-size: 64px;
+    }
+    .development-content p {
+        font-size: 1rem;
     }
 }
