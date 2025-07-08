@@ -91,15 +91,16 @@ def login():
             session['user_id'] = user_record.uid
             session['user_email'] = user_record.email
             
-            # ✅ PERBAIKAN: Ambil hanya nama depan
+            # --- PERUBAHAN DI SINI ---
             display_name = user_record.display_name
+            session['user_full_name'] = display_name or user_record.email.split('@')[0]
+
             if display_name:
-                # Ambil kata pertama dari nama lengkap
                 first_name = display_name.split(' ')[0]
                 session['user_name'] = first_name
             else:
-                # Jika tidak ada nama, gunakan bagian depan email
                 session['user_name'] = user_record.email.split('@')[0]
+            # --- AKHIR PERUBAHAN ---
 
             return jsonify({"status": "success", "redirect": url_for('index')})
         except Exception as e:
@@ -115,19 +116,28 @@ def register():
 def forgot_password():
     return render_template('forgot-password.html')
 
+@app.route('/profile')
+def profile():
+    if 'user_id' not in session:
+        return redirect(url_for('login'))
+    return render_template('profile.html')
+
 @app.route('/logout')
 def logout():
     session.clear()
-    return redirect(url_for('index'))
+    return redirect(url_for('login'))
 
 @app.route('/check_auth')
 def check_auth():
     if 'user_id' in session:
+        # --- PERUBAHAN DI SINI ---
         return jsonify({
             "logged_in": True, 
             "email": session.get('user_email'),
-            "username": session.get('user_name')
+            "username": session.get('user_name'),
+            "user_full_name": session.get('user_full_name')
         })
+        # --- AKHIR PERUBAHAN ---
     return jsonify({"logged_in": False})
 
 @app.route("/get_conversations")
@@ -266,6 +276,76 @@ def update_title(conversation_id):
         return jsonify({"status": "success", "message": "Title updated"})
     except Exception as e:
         print(f"Error updating title for {conversation_id}: {e}")
+        return jsonify({"status": "error", "message": str(e)}), 500
+
+@app.route('/update_username', methods=['POST'])
+def update_username():
+    if 'user_id' not in session:
+        return jsonify({"status": "error", "message": "Unauthorized"}), 401
+    
+    user_id = session['user_id']
+    data = request.json
+    new_username = data.get('new_username')
+
+    if not new_username:
+        return jsonify({"status": "error", "message": "Nama pengguna tidak boleh kosong"}), 400
+    
+    try:
+        auth.update_user(user_id, display_name=new_username)
+        session['user_name'] = new_username.split(' ')[0]
+        session['user_full_name'] = new_username # --- PERUBAHAN DI SINI ---
+        return jsonify({"status": "success"})
+    except Exception as e:
+        print(f"Error updating username for {user_id}: {e}")
+        return jsonify({"status": "error", "message": str(e)}), 500
+
+@app.route('/delete_account', methods=['DELETE'])
+def delete_account():
+    if 'user_id' not in session:
+        return jsonify({"status": "error", "message": "Unauthorized"}), 401
+    
+    user_id = session['user_id']
+    
+    try:
+        user_chats_ref = db.collection('chats').document(user_id)
+        conversations_ref = user_chats_ref.collection('conversations')
+        
+        docs = conversations_ref.stream()
+        for doc in docs:
+            messages_subcollection = doc.reference.collection('messages')
+            delete_collection(messages_subcollection, 50)
+        
+        delete_collection(conversations_ref, 50)
+        user_chats_ref.delete()
+        auth.delete_user(user_id)
+        session.clear()
+        
+        return jsonify({"status": "success", "message": "Akun berhasil dihapus."})
+    except Exception as e:
+        print(f"Error deleting account for {user_id}: {e}")
+        return jsonify({"status": "error", "message": str(e)}), 500
+
+@app.route('/submit_feedback', methods=['POST'])
+def submit_feedback():
+    data = request.json
+    feedback_text = data.get('feedback')
+
+    if not feedback_text:
+        return jsonify({"status": "error", "message": "Teks masukan tidak boleh kosong"}), 400
+
+    try:
+        feedback_data = {
+            'text': feedback_text,
+            'timestamp': firestore.SERVER_TIMESTAMP,
+            'user_id': session.get('user_id', 'guest'),
+            'user_email': session.get('user_email', 'guest')
+        }
+        
+        db.collection('feedback').add(feedback_data)
+        
+        return jsonify({"status": "success", "message": "Masukan berhasil dikirim"})
+    except Exception as e:
+        print(f"Error submitting feedback: {e}")
         return jsonify({"status": "error", "message": str(e)}), 500
 
 if __name__ == "__main__":

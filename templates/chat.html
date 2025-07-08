@@ -12,7 +12,13 @@
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
 </head>
 <body>
-    <!-- ... (kode dari atas tidak berubah) ... -->
+        <!-- ✅ LAYAR ON DEVELOPMENT BARU -->
+    <div id="development-overlay">
+        <div class="development-content">
+            <h1>On Development👨‍💻</h1>
+            <p>Mohon Maaf<br> Situs ini sedang dalam tahap pengembangan. Mohon kembali lagi nanti.</p>
+        </div>
+    </div>
     <div id="welcome-screen">
         <div class="welcome-content">
             <div class="welcome-icon">👋</div>
@@ -32,15 +38,25 @@
 
 
     <div id="app-wrapper">
+        <!-- --- PERBAIKAN STRUKTUR SIDEBAR --- -->
         <div id="sidebar">
-            <div class="sidebar-header">
-                <h3>Riwayat</h3>
-                <button id="new-chat-btn" data-tooltip="Obrolan baru">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+            <div class="sidebar-main-content">
+                <div class="sidebar-header">
+                    <h3>Riwayat</h3>
+                    <button id="new-chat-btn" data-tooltip="Obrolan baru">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+                    </button>
+                </div>
+                <div id="history-list"></div>
+            </div>
+            <div class="sidebar-footer">
+                <button id="feedback-btn" class="sidebar-footer-btn">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-message-square"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
+                    <span>Beri Masukan</span>
                 </button>
             </div>
-            <div id="history-list"></div>
         </div>
+        <!-- --- AKHIR PERBAIKAN --- -->
 
         <div id="chat-container">
             <div id="chat-header">
@@ -75,12 +91,18 @@
                             <button id="profile-btn" aria-label="Profil" data-tooltip="Profil">
                                 <span id="profile-initial">?</span>
                             </button>
+                            <!-- --- PERBAIKAN DROPDOWN PROFIL --- -->
                             <div id="profile-dropdown" class="dropdown-content">
-                                <div id="user-email-display"></div>
+                                <div id="user-info-display">
+                                    <div id="user-name-display"></div>
+                                    <div id="user-email-display-small"></div>
+                                </div>
+                                <a href="{{ url_for('profile') }}" class="dropdown-item">Edit Profil</a>
                                 <div class="dropdown-logout-section">
                                     <a id="logout-btn-link" href="/logout" class="logout-button">Logout</a>
                                 </div>
                             </div>
+                            <!-- --- AKHIR PERBAIKAN --- -->
                         </div>
                     </div>
                 </div>
@@ -89,7 +111,6 @@
             <div id="initial-prompts-container">
                 <div class="initial-prompts-header">
                     <div class="bot-avatar-large">🤖</div>
-                    <!-- ✅ PERBAIKAN: Tambahkan span untuk nama pengguna -->
                     <h1><span id="welcome-username"></span>Apa yang bisa saya bantu hari ini?</h1>
                 </div>
                 <div class="prompt-suggestions">
@@ -139,6 +160,22 @@
             <div id="modal-loader" class="modal-loader" style="display: none;"></div>
         </div>
     </div>
+
+    <div id="feedback-modal-overlay" class="modal-overlay" style="display: none;">
+        <div id="feedback-modal" class="custom-confirm-modal">
+            <h3>Saran & Masukan</h3>
+            <p>Kami sangat menghargai masukan Anda untuk membantu kami menjadi lebih baik.</p>
+            <form id="feedback-form">
+                <textarea id="feedback-textarea" placeholder="Tulis masukan Anda di sini..." required minlength="10"></textarea>
+                <div class="modal-buttons">
+                    <button type="button" id="cancel-feedback-btn">Batal</button>
+                    <button type="submit" id="submit-feedback-btn">Kirim</button>
+                </div>
+                <p id="feedback-message" class="message-text"></p>
+            </form>
+        </div>
+    </div>
+    
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore-compat.js"></script>
