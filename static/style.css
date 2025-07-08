@@ -26,6 +26,14 @@
     font-size: 1.2rem;
     text-shadow: 1px 1px 4px rgba(0,0,0,0.5);
 }
+
+.development-content p a {
+    color: white;
+}
+.development-content p a:hover {
+    color: rgb(0, 177, 236);
+    transition: 0.3s
+}
 /* ... (Kode CSS dari atas tidak berubah) ... */
 :root {
     --primary-color: #4a90e2;
