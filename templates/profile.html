@@ -10,7 +10,12 @@
 <body>
     <div class="auth-container profile-container">
         <div class="auth-box">
-            <a href="{{ url_for('index') }}" class="back-link">&larr; Kembali ke Chat</a>
+            <!-- PERUBAHAN DI SINI: Mengganti panah dengan ikon SVG -->
+            <a href="{{ url_for('index') }}" class="back-link">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
+                <span>Kembali ke Chat</span>
+            </a>
+            
             <h1>Profil Saya</h1>
             <p>Perbarui informasi akun Anda di bawah ini.</p>
 
@@ -44,7 +49,7 @@
 
             <!-- Zona Berbahaya -->
             <div class="danger-zone">
-                <h2>Zona Berbahaya</h2>
+                <h2>Hapus Akun</h2>
                 <p>Tindakan ini tidak dapat diurungkan. Harap berhati-hati.</p>
                 <button id="delete-account-btn" class="danger-btn">Hapus Akun Saya</button>
             </div>

@@ -250,14 +250,30 @@ body:not(.user-logged-in) #chat-container {
 }
 
 @keyframes wave-animation {
-  0% { transform: rotate(0deg); }
-  10% { transform: rotate(14deg); }
-  20% { transform: rotate(-8deg); }
-  30% { transform: rotate(14deg); }
-  40% { transform: rotate(-4deg); }
-  50% { transform: rotate(10deg); }
-  60% { transform: rotate(0deg); }
-  100% { transform: rotate(0deg); }
+  0% {
+    transform: rotate(0deg);
+  }
+  10% {
+    transform: rotate(14deg);
+  }
+  20% {
+    transform: rotate(-8deg);
+  }
+  30% {
+    transform: rotate(14deg);
+  }
+  40% {
+    transform: rotate(-4deg);
+  }
+  50% {
+    transform: rotate(10deg);
+  }
+  60% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(0deg);
+  }
 }
 
 @keyframes slideFadeIn {
@@ -289,7 +305,7 @@ body.loaded #chat-container {
   flex-direction: column;
   flex-shrink: 0;
   /* PERUBAHAN UTAMA: Menggunakan 'left' untuk transisi, bukan 'transform' */
-  transition: left 0.3s ease-in-out; 
+  transition: left 0.3s ease-in-out;
   z-index: 1100;
 }
 
@@ -318,9 +334,9 @@ body:not(.user-logged-in) #sidebar {
 }
 
 .sidebar-header-controls {
-    display: flex;
-    align-items: center;
-    gap: 8px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 
 #new-chat-btn {
@@ -347,22 +363,22 @@ body:not(.user-logged-in) #sidebar {
 }
 
 #close-sidebar-btn {
-    display: none; 
-    background: none;
-    border: 1px solid transparent;
-    color: var(--text-color);
-    border-radius: 50%;
-    width: 32px;
-    height: 32px;
-    cursor: pointer;
-    align-items: center;
-    justify-content: center;
-    transition: all 0.2s;
+  display: none;
+  background: none;
+  border: 1px solid transparent;
+  color: var(--text-color);
+  border-radius: 50%;
+  width: 32px;
+  height: 32px;
+  cursor: pointer;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
 }
 
 #close-sidebar-btn:hover {
-    background-color: var(--hover-bg-color);
-    color: var(--primary-color);
+  background-color: var(--hover-bg-color);
+  color: var(--primary-color);
 }
 
 #history-list {
@@ -1084,7 +1100,8 @@ body.dark-mode .typing-indicator span {
   line-height: 1;
 }
 
-#modal-overlay, #feedback-modal-overlay {
+#modal-overlay,
+#feedback-modal-overlay {
   position: fixed;
   top: 0;
   left: 0;
@@ -1100,23 +1117,25 @@ body.dark-mode .typing-indicator span {
   opacity: 0;
   visibility: hidden;
   transition: opacity 0.3s ease, visibility 0.3s ease;
-  padding: 0 20px; 
-  box-sizing: border-box; 
+  padding: 0 20px;
+  box-sizing: border-box;
 }
 
-#modal-overlay.visible, #feedback-modal-overlay.visible {
+#modal-overlay.visible,
+#feedback-modal-overlay.visible {
   opacity: 1;
   visibility: visible;
 }
 
-#custom-confirm-modal, #feedback-modal {
+#custom-confirm-modal,
+#feedback-modal {
   background-color: var(--container-bg);
   padding: 25px 30px;
   border-radius: 12px;
   box-shadow: 0 5px 20px rgba(0, 0, 0, 0.2);
   text-align: center;
   max-width: 400px;
-  width: 100%; 
+  width: 100%;
   opacity: 0;
   transform: scale(0.95);
   transition: opacity 0.3s ease, transform 0.3s ease;
@@ -1128,13 +1147,15 @@ body.dark-mode .typing-indicator span {
   opacity: 1;
   transform: scale(1);
 }
-#custom-confirm-modal h3, #feedback-modal h3 {
+#custom-confirm-modal h3,
+#feedback-modal h3 {
   margin-top: 0;
   margin-bottom: 10px;
   font-size: 1.4rem;
   color: var(--text-color);
 }
-#custom-confirm-modal p, #feedback-modal p {
+#custom-confirm-modal p,
+#feedback-modal p {
   margin-bottom: 25px;
   color: var(--welcome-text-color);
   line-height: 1.6;
@@ -1350,7 +1371,7 @@ body.dark-mode .typing-indicator span {
   }
 
   #close-sidebar-btn {
-      display: flex;
+    display: flex;
   }
 
   body.sidebar-visible #sidebar-overlay {
@@ -1364,7 +1385,7 @@ body.dark-mode .typing-indicator span {
 
   body.sidebar-visible #chat-container {
     /* Hapus transform agar tidak berkonflik */
-    transform: none; 
+    transform: none;
   }
 
   .prompt-suggestions {
