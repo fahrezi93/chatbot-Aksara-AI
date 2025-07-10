@@ -12,7 +12,7 @@
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
 </head>
 <body>
-        <!-- ✅ LAYAR ON DEVELOPMENT BARU -->
+    <!-- ✅ LAYAR ON DEVELOPMENT BARU
     <div id="development-overlay">
         <div class="development-content">
             <div class="dev-gear-icon">⚙️</div>
@@ -20,7 +20,8 @@
             <p>Mohon maaf yaa, saat ini kami masih mengembangkan beberapa fitur keren. <br>Jangan khawatir, kami akan segera kembali!</p>
             <p>Kalau ada kritik dan saran, kirim ke <a href="mailto:mohfahrezi93@gmail.com" target="_blank">Email</a> yaa...<br>Terima Kasih telah menggunakan Aksara AI</p>
         </div>
-    </div>
+    </div> -->
+
     <div id="welcome-screen">
         <div class="welcome-content">
             <div class="welcome-icon">👋</div>
@@ -40,14 +41,21 @@
 
 
     <div id="app-wrapper">
-        <!-- --- PERBAIKAN STRUKTUR SIDEBAR --- -->
+        <!-- --- STRUKTUR SIDEBAR --- -->
         <div id="sidebar">
             <div class="sidebar-main-content">
                 <div class="sidebar-header">
                     <h3>Riwayat</h3>
-                    <button id="new-chat-btn" data-tooltip="Obrolan baru">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
-                    </button>
+                    <!-- PERUBAHAN: Tombol dibungkus untuk penataan yang lebih baik -->
+                    <div class="sidebar-header-controls">
+                        <button id="new-chat-btn" data-tooltip="Obrolan baru">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+                        </button>
+                        <!-- PERUBAHAN: Tombol tutup (X) baru ditambahkan -->
+                        <button id="close-sidebar-btn" data-tooltip="Tutup">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                        </button>
+                    </div>
                 </div>
                 <div id="history-list"></div>
             </div>
@@ -58,7 +66,7 @@
                 </button>
             </div>
         </div>
-        <!-- --- AKHIR PERBAIKAN --- -->
+        <!-- --- AKHIR DARI STRUKTUR SIDEBAR --- -->
 
         <div id="chat-container">
             <div id="chat-header">
@@ -93,7 +101,6 @@
                             <button id="profile-btn" aria-label="Profil" data-tooltip="Profil">
                                 <span id="profile-initial">?</span>
                             </button>
-                            <!-- --- PERBAIKAN DROPDOWN PROFIL --- -->
                             <div id="profile-dropdown" class="dropdown-content">
                                 <div id="user-info-display">
                                     <div id="user-name-display"></div>
@@ -104,7 +111,6 @@
                                     <a id="logout-btn-link" href="/logout" class="logout-button">Logout</a>
                                 </div>
                             </div>
-                            <!-- --- AKHIR PERBAIKAN --- -->
                         </div>
                     </div>
                 </div>
@@ -163,7 +169,7 @@
         </div>
     </div>
 
-    <div id="feedback-modal-overlay" class="modal-overlay" style="display: none;">
+    <div id="feedback-modal-overlay" class="modal-overlay">
         <div id="feedback-modal" class="custom-confirm-modal">
             <h3>Saran & Masukan</h3>
             <p>Kami sangat menghargai masukan Anda untuk membantu kami menjadi lebih baik.</p>

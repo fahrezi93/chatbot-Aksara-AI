@@ -1,7 +1,9 @@
 document.addEventListener('DOMContentLoaded', () => {
     // Inisialisasi Firebase
     try {
-        firebase.initializeApp(firebaseConfig);
+        if (typeof firebase !== 'undefined' && typeof firebaseConfig !== 'undefined') {
+            firebase.initializeApp(firebaseConfig);
+        }
     } catch (e) {
         console.error("Error inisialisasi Firebase:", e);
         return;
@@ -12,6 +14,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- ELEMEN DOM ---
     const body = document.body;
+    const sidebar = document.getElementById('sidebar');
     const chatBox = document.getElementById('chat-box');
     const userInput = document.getElementById('user-input');
     const historyList = document.getElementById('history-list');
@@ -48,18 +51,50 @@ document.addEventListener('DOMContentLoaded', () => {
     const logoutBtnLink = document.getElementById('logout-btn-link');
     const logoutOverlay = document.getElementById('logout-overlay');
     const welcomeUsernameSpan = document.getElementById('welcome-username');
-    
-    // Elemen untuk modal feedback
     const feedbackBtn = document.getElementById('feedback-btn');
     const feedbackModalOverlay = document.getElementById('feedback-modal-overlay');
     const cancelFeedbackBtn = document.getElementById('cancel-feedback-btn');
     const feedbackForm = document.getElementById('feedback-form');
     const feedbackTextarea = document.getElementById('feedback-textarea');
     const feedbackMessage = document.getElementById('feedback-message');
-
+    const closeSidebarBtn = document.getElementById('close-sidebar-btn');
 
     let conversationHistory = [];
     let uploadedImageData = null;
+
+    // --- KODE INTI & FUNGSI ---
+
+    /*******************************************************
+     * PERBAIKAN UTAMA ADA DI SINI
+     *******************************************************/
+    
+    function openSidebar() {
+        body.classList.add('sidebar-visible');
+        document.body.style.overflow = 'hidden';
+    }
+
+    function closeSidebar() {
+        body.classList.remove('sidebar-visible');
+        document.body.style.overflow = '';
+    }
+
+    function setupSidebarControls() {
+        if (menuBtn) {
+            menuBtn.addEventListener('click', openSidebar);
+        }
+        if (sidebarOverlay) {
+            sidebarOverlay.addEventListener('click', closeSidebar);
+        }
+        if (closeSidebarBtn) {
+            closeSidebarBtn.addEventListener('click', closeSidebar);
+        }
+    }
+
+    setupSidebarControls();
+
+    /*******************************************************
+     * AKHIR DARI PERBAIKAN UTAMA
+     *******************************************************/
 
     const ALL_PROMPTS = [
         { title: "Buat Draf Email", subtitle: "untuk menindaklanjuti proposal kerjasama", full_prompt: "Buatkan saya draf email profesional untuk menindaklanjuti proposal kerjasama yang saya kirim minggu lalu." },
@@ -72,39 +107,8 @@ document.addEventListener('DOMContentLoaded', () => {
         { title: "Tulis Deskripsi Produk", subtitle: "untuk sebuah jam tangan pintar", full_prompt: "Tulis deskripsi produk yang menjual untuk sebuah jam tangan pintar dengan fitur monitor detak jantung dan GPS." },
         { title: "Buat Agenda Rapat", subtitle: "untuk kickoff proyek baru", full_prompt: "Buatkan agenda rapat yang efektif untuk kickoff proyek pengembangan website baru." },
         { title: "Ide Ice Breaking", subtitle: "untuk workshop online", full_prompt: "Berikan saya 3 ide ice breaking yang seru dan tidak canggung untuk workshop yang diadakan secara online." },
-        { title: "Tulis Puisi", subtitle: "tentang hujan di perkotaan", full_prompt: "Tuliskan sebuah puisi tentang suasana hujan di tengah hiruk pikuk perkotaan." },
-        { title: "Buat Cerita Pendek", subtitle: "tentang robot yang punya perasaan", full_prompt: "Buat cerita pendek tentang robot pembersih yang tiba-tiba bisa merasakan emosi." },
-        { title: "Ide Judul Artikel", subtitle: "tentang manfaat meditasi", full_prompt: "Berikan 5 ide judul artikel yang menarik (clickbait) tentang manfaat meditasi untuk pemula." },
-        { title: "Kembangkan Plot Cerita", subtitle: "dari premis: detektif di zaman Majapahit", full_prompt: "Saya punya premis: seorang detektif di era Kerajaan Majapahit. Bantu kembangkan plot ceritanya." },
-        { title: "Buat Lirik Lagu", subtitle: "bertema persahabatan jarak jauh", full_prompt: "Tolong buatkan lirik lagu pop yang menyentuh tentang persahabatan jarak jauh." },
-        { title: "Deskripsikan Lukisan", subtitle: "'The Starry Night' karya Van Gogh", full_prompt: "Deskripsikan lukisan 'The Starry Night' karya Vincent van Gogh seolah-olah saya belum pernah melihatnya." },
-        { title: "Buat Naskah Iklan", subtitle: "untuk produk minuman energi alami", full_prompt: "Tulis naskah singkat untuk iklan video berdurasi 30 detik yang mempromosikan minuman energi dari bahan alami." },
-        { title: "Tulis Dialog Film", subtitle: "antara pahlawan super dan musuhnya", full_prompt: "Tulis sebuah dialog tegang antara seorang pahlawan super yang idealis dengan musuh bebuyutannya yang sinis." },
-        { title: "Ide Slogan", subtitle: "untuk kampanye 'kurangi sampah plastik'", full_prompt: "Berikan 10 ide slogan yang kuat dan mudah diingat untuk kampanye 'kurangi sampah plastik'." },
-        { title: "Buat Sinopsis Novel", subtitle: "genre fantasi petualangan", full_prompt: "Tulis sinopsis singkat untuk sebuah novel fantasi tentang pencarian artefak kuno di dunia yang hilang." },
-        { title: "Jelaskan Konsep", subtitle: "tentang black hole dengan analogi sederhana", full_prompt: "Jelaskan konsep black hole (lubang hitam) menggunakan analogi yang mudah dipahami orang awam." },
-        { title: "Bandingkan Dua Tokoh", subtitle: "antara Soekarno dan Hatta", full_prompt: "Bandingkan gaya kepemimpinan dan peran antara Soekarno dan Mohammad Hatta dalam kemerdekaan Indonesia." },
-        { title: "Sejarah Singkat", subtitle: "penemuan internet", full_prompt: "Ceritakan sejarah singkat penemuan internet, mulai dari ARPANET hingga World Wide Web." },
-        { title: "Bagaimana Cara Kerja", subtitle: "vaksin mRNA?", full_prompt: "Jelaskan bagaimana cara kerja vaksin berbasis mRNA seperti Pfizer atau Moderna." },
-        { title: "Fakta Menarik", subtitle: "tentang lautan dalam", full_prompt: "Berikan saya 5 fakta menarik yang jarang diketahui tentang kehidupan di laut dalam." },
-        { title: "Proses Terjadinya", subtitle: "gerhana matahari total", full_prompt: "Jelaskan secara sederhana proses terjadinya gerhana matahari total." },
-        { title: "Apa itu Blockchain?", subtitle: "jelaskan untuk pemula", full_prompt: "Apa itu teknologi blockchain? Jelaskan cara kerjanya seperti untuk seorang pemula." },
-        { title: "Perbedaan Utama", subtitle: "antara sel hewan dan sel tumbuhan", full_prompt: "Apa saja perbedaan utama antara sel hewan dan sel tumbuhan? Jelaskan dalam bentuk tabel." },
-        { title: "Ringkas Teori", subtitle: "Relativitas Khusus Einstein", full_prompt: "Ringkas poin-poin utama dari Teori Relativitas Khusus yang dikemukakan oleh Albert Einstein." },
-        { title: "Siapa itu Ibnu Sina?", subtitle: "dan apa kontribusinya bagi dunia?", full_prompt: "Siapakah Ibnu Sina dan apa saja kontribusi terpentingnya bagi dunia kedokteran dan filsafat?" },
-        { title: "Rencana Perjalanan", subtitle: "hemat 3 hari di Bali", full_prompt: "Buatkan saya rencana perjalanan hemat selama 3 hari di Bali untuk backpacker." },
-        { title: "Rekomendasi Film", subtitle: "genre thriller psikologis", full_prompt: "Beri saya 5 rekomendasi film genre thriller psikologis yang menegangkan." },
-        { title: "Ide Resep Sehat", subtitle: "untuk sarapan di bawah 15 menit", full_prompt: "Berikan 3 ide resep sarapan sehat dan praktis yang bisa dibuat dalam waktu kurang dari 15 menit." },
-        { title: "Tips Berkebun", subtitle: "untuk pemula di lahan sempit", full_prompt: "Apa saja tips penting untuk mulai berkebun sayuran bagi pemula yang hanya punya balkon apartemen?" },
-        { title: "Buat Lelucon", subtitle: "tentang programmer", full_prompt: "Buatkan sebuah lelucon singkat tentang kehidupan seorang programmer." },
-        { title: "Rekomendasi Buku", subtitle: "novel fiksi ilmiah klasik", full_prompt: "Rekomendasikan 3 buku novel fiksi ilmiah klasik yang wajib dibaca." },
-        { title: "Rencana Latihan Fisik", subtitle: "di rumah tanpa alat", full_prompt: "Buatkan rencana latihan fisik sederhana selama 20 menit yang bisa dilakukan di rumah tanpa alat." },
-        { title: "Daftar Putar Lagu", subtitle: "untuk menemani saat hujan", full_prompt: "Buatkan saya daftar putar berisi 10 lagu yang cocok untuk didengarkan saat hujan." },
-        { title: "Ide Kado Ulang Tahun", subtitle: "untuk sahabat wanita yang suka traveling", full_prompt: "Berikan 5 ide kado ulang tahun yang unik dan bermanfaat untuk sahabat wanita yang hobi traveling." },
-        { title: "Review Singkat Game", subtitle: "'The Witcher 3'", full_prompt: "Tulis sebuah review singkat tentang game 'The Witcher 3: Wild Hunt' dari sudut pandang pemain baru." }
     ];
 
-    // --- MANAJEMEN UI & AUTH ---
     function setupGuestUI() {
         body.classList.remove('user-logged-in');
         welcomeScreen.classList.remove('visible');
@@ -159,10 +163,6 @@ document.addEventListener('DOMContentLoaded', () => {
         } finally {    
             body.classList.add('loaded');
         }
-    }
-
-    function toggleSidebar() {
-        body.classList.toggle('sidebar-visible');
     }
 
     function updateClearChatButtonState() {
@@ -265,8 +265,8 @@ document.addEventListener('DOMContentLoaded', () => {
             console.error(`Gagal memuat percakapan ${conversationId}:`, error);
         }
 
-        if (window.innerWidth <= 768) {
-            toggleSidebar();
+        if (window.innerWidth <= 768 && body.classList.contains('sidebar-visible')) {
+            closeSidebar();
         }
     }
     
@@ -279,7 +279,7 @@ document.addEventListener('DOMContentLoaded', () => {
         userInput.focus();
         updateClearChatButtonState();
         if (window.innerWidth <= 768 && body.classList.contains('sidebar-visible')) {
-            toggleSidebar();
+            closeSidebar();
         }
     }
 
@@ -518,8 +518,6 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    if (menuBtn) menuBtn.addEventListener('click', toggleSidebar);
-    if (sidebarOverlay) sidebarOverlay.addEventListener('click', toggleSidebar);
     if (clearChatBtn) {
         clearChatBtn.addEventListener("click", () => {
             if (!clearChatBtn.disabled) {
@@ -683,13 +681,10 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
     
-    // --- PERBAIKAN LOGIKA FEEDBACK ---
     function openFeedbackModal() {
         if (feedbackModalOverlay) {
-            // Mengubah style display untuk memunculkan modal
-            feedbackModalOverlay.style.display = 'flex';
+            feedbackModalOverlay.classList.add('visible');
             
-            // Reset form
             feedbackTextarea.value = '';
             feedbackMessage.textContent = '';
             feedbackMessage.className = 'message-text';
@@ -700,8 +695,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function closeFeedbackModal() {
         if (feedbackModalOverlay) {
-            // Mengubah style display untuk menyembunyikan modal
-            feedbackModalOverlay.style.display = 'none';
+            feedbackModalOverlay.classList.remove('visible');
         }
     }
 
@@ -715,7 +709,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
     if (feedbackModalOverlay) {
         feedbackModalOverlay.addEventListener('click', (e) => {
-            // Pastikan klik terjadi pada overlay, bukan pada modal di dalamnya
             if (e.target === feedbackModalOverlay) {
                 closeFeedbackModal();
             }
@@ -753,11 +746,10 @@ document.addEventListener('DOMContentLoaded', () => {
             } catch (error) {
                 feedbackMessage.textContent = error.message;
                 feedbackMessage.className = 'message-text error-text';
-                submitBtn.disabled = false; // Aktifkan kembali tombol jika terjadi error
+                submitBtn.disabled = false;
             }
         });
     }
-    // --- AKHIR PERBAIKAN ---
 
     function appendMessage(content, className, isTextContent, timestamp, originalText = '') {
         const messageElement = document.createElement("div");
