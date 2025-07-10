@@ -62,12 +62,6 @@ document.addEventListener('DOMContentLoaded', () => {
     let conversationHistory = [];
     let uploadedImageData = null;
 
-    // --- KODE INTI & FUNGSI ---
-
-    /*******************************************************
-     * PERBAIKAN UTAMA ADA DI SINI
-     *******************************************************/
-    
     function openSidebar() {
         body.classList.add('sidebar-visible');
         document.body.style.overflow = 'hidden';
@@ -91,10 +85,6 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     setupSidebarControls();
-
-    /*******************************************************
-     * AKHIR DARI PERBAIKAN UTAMA
-     *******************************************************/
 
     const ALL_PROMPTS = [
         { title: "Buat Draf Email", subtitle: "untuk menindaklanjuti proposal kerjasama", full_prompt: "Buatkan saya draf email profesional untuk menindaklanjuti proposal kerjasama yang saya kirim minggu lalu." },
