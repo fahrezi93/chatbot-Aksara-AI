@@ -329,6 +329,8 @@ def delete_account():
 def submit_feedback():
     data = request.json
     feedback_text = data.get('feedback')
+    user_id = session.get('user_id', 'guest')
+    user_email = session.get('user_email', 'guest')
 
     if not feedback_text:
         return jsonify({"status": "error", "message": "Teks masukan tidak boleh kosong"}), 400
@@ -337,12 +339,24 @@ def submit_feedback():
         feedback_data = {
             'text': feedback_text,
             'timestamp': firestore.SERVER_TIMESTAMP,
-            'user_id': session.get('user_id', 'guest'),
-            'user_email': session.get('user_email', 'guest')
+            'user_id': user_id,
+            'user_email': user_email
         }
-        
+
         db.collection('feedback').add(feedback_data)
         
+        google_script_url = os.getenv("GOOGLE_SCRIPT_URL")
+        if google_script_url:
+            try:
+                payload = {
+                    "timestamp": datetime.now().isoformat(),
+                    "email": user_email,
+                    "feedback": feedback_text
+                }
+                requests.post(google_script_url, json=payload, timeout=5)
+            except requests.exceptions.RequestException as e:
+                print(f"Peringatan: Gagal mengirim feedback ke Google Sheets: {e}")
+
         return jsonify({"status": "success", "message": "Masukan berhasil dikirim"})
     except Exception as e:
         print(f"Error submitting feedback: {e}")

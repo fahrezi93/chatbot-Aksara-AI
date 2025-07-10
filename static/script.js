@@ -66,6 +66,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const feedbackModalOverlay = document.getElementById(
     "feedback-modal-overlay"
   );
+  const feedbackUserEmail = document.getElementById("feedback-user-email");
   const cancelFeedbackBtn = document.getElementById("cancel-feedback-btn");
   const feedbackForm = document.getElementById("feedback-form");
   const feedbackTextarea = document.getElementById("feedback-textarea");
@@ -809,6 +810,12 @@ document.addEventListener("DOMContentLoaded", () => {
   function openFeedbackModal() {
     if (feedbackModalOverlay) {
       feedbackModalOverlay.classList.add("visible");
+
+      if (currentUser && currentUser.email) {
+        feedbackUserEmail.textContent = currentUser.email;
+      } else {
+        feedbackUserEmail.textContent = "Pengguna Tamu";
+      }
 
       feedbackTextarea.value = "";
       feedbackMessage.textContent = "";
