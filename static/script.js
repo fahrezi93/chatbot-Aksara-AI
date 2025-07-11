@@ -375,13 +375,11 @@ document.addEventListener("DOMContentLoaded", () => {
       const conversations = await response.json();
       historyList.innerHTML = "";
       if (conversations.length > 0) {
-        // ✅ PERUBAHAN DI SINI: Menambahkan 'index' untuk delay animasi
         conversations.forEach((conv, index) => {
           const historyItem = document.createElement("div");
           historyItem.className = "history-item";
           historyItem.dataset.conversationId = conv.id;
 
-          // ✅ PERUBAHAN DI SINI: Menambahkan delay animasi
           historyItem.style.animationDelay = `${index * 50}ms`;
 
           const titleContainer = document.createElement("span");
@@ -476,25 +474,6 @@ document.addEventListener("DOMContentLoaded", () => {
   async function submitAndGetResponse(userMessageText, imageToSend) {
     hideInitialPrompts();
 
-    const userMessages = document.querySelectorAll(".user-message");
-    if (userMessages.length > 0) {
-      let userMessageFound = false;
-      Array.from(userMessages)
-        .reverse()
-        .forEach((msg) => {
-          if (userMessageFound) {
-            const nextBotMsg = msg.nextElementSibling;
-            if (nextBotMsg && nextBotMsg.classList.contains("bot-message")) {
-              nextBotMsg.remove();
-            }
-            msg.remove();
-          }
-          if (msg.dataset.originalText === userMessageText) {
-            userMessageFound = true;
-          }
-        });
-    }
-
     const botMessageElement = createBotMessageElement();
     const typingIndicator = showTypingIndicator(botMessageElement);
     let fullResponseText = "";
@@ -540,15 +519,22 @@ document.addEventListener("DOMContentLoaded", () => {
       console.error("Error:", error);
       if (typingIndicator) typingIndicator.remove();
       botMessageElement.querySelector(".content-wrapper").innerHTML =
-        "<p>Maaf, terjadi kesalahan.</p>";
+        "<p>Maaf, terjadi kesalahan saat menghubungi AI.</p>";
     }
   }
 
+  // ✅ PERUBAHAN DI SINI: Memperbaiki logika penambahan pesan
   async function handleFormSubmit(e) {
     if (e) e.preventDefault();
     const userMessageText = userInput.value.trim();
 
     if (userMessageText === "" && !uploadedImageData) return;
+
+    // Jika ini adalah pesan pertama dalam percakapan baru, bersihkan chatBox
+    if (!currentConversationId) {
+        chatBox.innerHTML = "";
+        conversationHistory = [];
+    }
 
     let userHtmlContent = `<p>${userMessageText}</p>`;
     if (uploadedImageData) {
@@ -582,9 +568,14 @@ document.addEventListener("DOMContentLoaded", () => {
     userInput.focus();
 
     const savedUserData = await saveMessageToDb(userMessageData);
-    if (savedUserData && savedUserData.conversationId) {
+    if (savedUserData && savedUserData.conversationId && !currentConversationId) {
       currentConversationId = savedUserData.conversationId;
       updateClearChatButtonState();
+      await loadConversationsList(); // Muat ulang daftar riwayat
+      // Tandai item yang baru dibuat sebagai aktif
+      document.querySelectorAll(".history-item").forEach(item => {
+          item.classList.toggle("active", item.dataset.conversationId === currentConversationId);
+      });
     }
 
     await submitAndGetResponse(userMessageText, imageToSend);
@@ -603,9 +594,6 @@ document.addEventListener("DOMContentLoaded", () => {
       });
       const data = await response.json();
       if (data.status === "success") {
-        if (!currentConversationId && data.conversationId) {
-          loadConversationsList();
-        }
         return data;
       }
       return null;
