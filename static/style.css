@@ -387,6 +387,18 @@ body:not(.user-logged-in) #sidebar {
   padding: 10px;
 }
 
+/* ✅ PERUBAHAN DI SINI: Menambahkan Keyframe untuk animasi item */
+@keyframes fadeInItem {
+  from {
+    opacity: 0;
+    transform: translateX(-15px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
 .history-item {
   padding: 12px 15px;
   border-radius: 8px;
@@ -397,6 +409,9 @@ body:not(.user-logged-in) #sidebar {
   align-items: center;
   justify-content: space-between;
   position: relative;
+  /* ✅ PERUBAHAN DI SINI: Menerapkan animasi pada item */
+  opacity: 0; /* Mulai dari transparan */
+  animation: fadeInItem 0.4s ease-out forwards; /* Terapkan animasi */
 }
 
 .history-item:hover {

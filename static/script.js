@@ -275,10 +275,14 @@ document.addEventListener("DOMContentLoaded", () => {
       const conversations = await response.json();
       historyList.innerHTML = "";
       if (conversations.length > 0) {
-        conversations.forEach((conv) => {
+        // ✅ PERUBAHAN DI SINI: Menambahkan 'index' untuk delay animasi
+        conversations.forEach((conv, index) => {
           const historyItem = document.createElement("div");
           historyItem.className = "history-item";
           historyItem.dataset.conversationId = conv.id;
+
+          // ✅ PERUBAHAN DI SINI: Menambahkan delay animasi
+          historyItem.style.animationDelay = `${index * 50}ms`;
 
           const titleContainer = document.createElement("span");
           titleContainer.className = "history-title-container";
