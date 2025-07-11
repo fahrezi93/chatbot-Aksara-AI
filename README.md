@@ -70,8 +70,8 @@ Untuk menjalankan proyek ini di lingkungan lokal Anda, ikuti langkah-langkah ber
 
 1.  **Clone Repositori**
     ```bash
-    git clone [https://github.com/NAMA_USER_ANDA/NAMA_REPO_ANDA.git](https://github.com/NAMA_USER_ANDA/NAMA_REPO_ANDA.git)
-    cd NAMA_REPO_ANDA
+    git clone [https://github.com/fahrezi93/chatbot-Aksara-AI](https://github.com/fahrezi93/chatbot-Aksara-AI)
+    cd chatbot-Aksara-AI
     ```
 
 2.  **Buat dan Aktifkan Lingkungan Virtual (Virtual Environment)**

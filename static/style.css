@@ -823,13 +823,18 @@ body.dark-mode .moon-icon {
   border-radius: 12px;
   padding: 15px;
   cursor: pointer;
-  transition: background-color 0.2s, transform 0.2s;
+  transition: background-color 0.2s, transform 0.2s, border-color 0.2s, box-shadow 0.2s;
   text-align: left;
 }
+
+/* ✅ PERUBAHAN DI SINI: Efek hover dibuat lebih jelas */
 .prompt-card:hover {
-  background-color: var(--bot-msg-bg);
-  transform: translateY(-3px);
+  background-color: var(--hover-bg-color);
+  border-color: var(--primary-color);
+  transform: translateY(-5px);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.08);
 }
+
 .prompt-card h3 {
   margin: 0 0 5px 0;
   font-size: 1rem;
