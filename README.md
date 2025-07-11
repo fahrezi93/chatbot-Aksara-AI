@@ -1,4 +1,4 @@
-# Aksara AI - Chatbot Cerdas Berbasis Gemini
+# Aksara AI - Chatbot Cerdas
 
 ![Aksara AI Demo](https://firebasestorage.googleapis.com/v0/b/chatbot-gemini-bccf8.appspot.com/o/aksara-ai-cover.png?alt=media&token=8624a0d9-9b93-4e78-8370-d5a239f60b45)
 
@@ -6,7 +6,7 @@
 
 Proyek ini dibangun sebagai *Full-Functioning Web Application* yang menunjukkan integrasi antara frontend modern, backend yang kuat, layanan database cloud, dan API kecerdasan buatan.
 
-**[Link Deployment (Vercel)](https://URL_DEPLOYMENT_ANDA)**
+**[Link Deployment (Vercel)](https://aksara-ai.vercel.app/)**
 
 ---
 

@@ -74,7 +74,8 @@
                     <button id="menu-btn" aria-label="Buka Riwayat" data-tooltip="Menu">
                         <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
                     </button>
-                    <div class="bot-avatar">🤖</div>
+                    <!-- ✅ PERUBAHAN DI SINI: Mengganti emoji dengan logo -->
+                    <img src="{{ url_for('static', filename='Aksara AI Logo.png') }}" alt="Aksara AI Logo" class="bot-avatar-logo">
                     <div class="bot-info">
                         <h2>Aksara AI</h2>
                         <p>Online</p>
@@ -118,7 +119,8 @@
 
             <div id="initial-prompts-container">
                 <div class="initial-prompts-header">
-                    <div class="bot-avatar-large">🤖</div>
+                    <!-- ✅ PERUBAHAN DI SINI: Mengganti emoji dengan logo -->
+                    <img src="{{ url_for('static', filename='Aksara AI Logo Warna.png') }}" alt="Aksara AI Logo" class="bot-avatar-large-logo">
                     <h1><span id="welcome-username"></span>Apa yang bisa saya bantu hari ini?</h1>
                 </div>
                 <div class="prompt-suggestions">

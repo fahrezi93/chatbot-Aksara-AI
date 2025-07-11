@@ -161,6 +161,106 @@ document.addEventListener("DOMContentLoaded", () => {
       full_prompt:
         "Berikan saya 3 ide ice breaking yang seru dan tidak canggung untuk workshop yang diadakan secara online.",
     },
+    {
+        title: "Rekomendasi Film",
+        subtitle: "genre thriller psikologis",
+        full_prompt: "Beri saya 5 rekomendasi film dengan genre thriller psikologis yang menegangkan."
+    },
+    {
+        title: "Ide Hadiah Ulang Tahun",
+        subtitle: "untuk sahabat perempuan",
+        full_prompt: "Berikan beberapa ide hadiah ulang tahun yang unik dan berkesan untuk sahabat perempuan."
+    },
+    {
+        title: "Rekomendasi Buku",
+        subtitle: "tentang pengembangan diri",
+        full_prompt: "Rekomendasikan 3 buku tentang pengembangan diri yang wajib dibaca tahun ini."
+    },
+    {
+        title: "Ide Konten Media Sosial",
+        subtitle: "untuk bisnis kuliner",
+        full_prompt: "Buatkan 7 ide konten media sosial yang menarik untuk bisnis kuliner selama seminggu."
+    },
+    {
+        title: "Rekomendasi Tempat Wisata",
+        subtitle: "di Yogyakarta untuk keluarga",
+        full_prompt: "Berikan rekomendasi tempat wisata di Yogyakarta yang cocok untuk liburan keluarga dengan anak-anak."
+    },
+    {
+        title: "Ide Resep Masakan",
+        subtitle: "sehat dan praktis untuk sarapan",
+        full_prompt: "Beri saya 5 ide resep masakan yang sehat, enak, dan praktis untuk sarapan."
+    },
+    {
+        title: "Rekomendasi Lagu",
+        subtitle: "untuk menemani kerja fokus",
+        full_prompt: "Buatkan playlist atau berikan rekomendasi lagu instrumental yang bisa membantu saya fokus saat bekerja."
+    },
+    {
+        title: "Ide Proyek Sampingan",
+        subtitle: "untuk programmer",
+        full_prompt: "Apa saja ide proyek sampingan yang bagus untuk seorang programmer untuk menambah portofolio?"
+    },
+    {
+        title: "Rekomendasi Podcast",
+        subtitle: "topik bisnis dan startup",
+        full_prompt: "Rekomendasikan 5 podcast berbahasa Indonesia tentang bisnis dan startup."
+    },
+    {
+        title: "Ide Dekorasi Kamar",
+        subtitle: "dengan budget terbatas",
+        full_prompt: "Berikan ide-ide kreatif untuk mendekorasi kamar tidur agar lebih estetis dengan budget yang terbatas."
+    },
+    {
+        title: "Bikinin Caption IG",
+        subtitle: "buat foto OOTD yang aesthetic",
+        full_prompt: "Bikinin caption Instagram yang aesthetic buat foto OOTD terbaru aku dong."
+    },
+    {
+        title: "Jelasin Istilah Gaul",
+        subtitle: "arti 'FOMO', 'YOLO', 'TFL'",
+        full_prompt: "Jelasin dong arti dari istilah gaul 'FOMO', 'YOLO', sama 'TFL'. Kasih contoh kalimatnya juga ya."
+    },
+    {
+        title: "Rekomendasi Game Mabar",
+        subtitle: "yang seru buat main bareng",
+        full_prompt: "Rekomendasiin game mobile yang seru buat mabar sama temen-temen dong."
+    },
+    {
+        title: "Ide Konten TikTok",
+        subtitle: "yang lagi viral sekarang",
+        full_prompt: "Kasih beberapa ide konten TikTok yang lagi viral dong, bisa tema komedi atau dance challenge."
+    },
+    {
+        title: "Bikinin Playlist Lofi",
+        subtitle: "buat nemenin nugas",
+        full_prompt: "Tolong buatin playlist Spotify buat nemenin nugas, genrenya lofi hip hop yang chill."
+    },
+    {
+        title: "Tips Public Speaking",
+        subtitle: "biar ngga gugup di depan kelas",
+        full_prompt: "Gimana sih caranya biar percaya diri dan ngga gugup pas presentasi di depan kelas? Kasih tipsnya dong."
+    },
+    {
+        title: "Belajar Investasi 101",
+        subtitle: "yang gampang dimengerti",
+        full_prompt: "Jelasin cara mulai investasi buat pemula dong, yang paling gampang dan risikonya kecil. Mulai dari mana ya?"
+    },
+    {
+        title: "Rekomendasi Outfit Konser",
+        subtitle: "yang simpel tapi keren",
+        full_prompt: "Kasih rekomendasi outfit buat nonton konser yang simpel tapi tetep keliatan keren dong."
+    },
+    {
+        title: "Cara Atasi Insecure",
+        subtitle: "kasih kata-kata motivasi",
+        full_prompt: "Lagi ngerasa insecure banget nih, kasih kata-kata motivasi atau cara buat ngatasinnya dong."
+    },
+    {
+        title: "Ide Kado Wisuda Low Budget",
+        subtitle: "tapi tetep berkesan",
+        full_prompt: "Ide kado wisuda buat sahabat yang low budget tapi tetep berkesan dan personal apa ya?"
+    }
   ];
 
   function setupGuestUI() {

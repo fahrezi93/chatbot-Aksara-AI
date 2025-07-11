@@ -549,9 +549,14 @@ body:not(.user-logged-in) #sidebar {
   align-items: center;
   gap: 15px;
 }
-.bot-avatar {
-  font-size: 2.5rem;
+
+/* ✅ PERUBAHAN DI SINI: Menghapus gaya untuk .bot-avatar dan menambahkan untuk logo */
+.bot-avatar-logo {
+  width: 40px;
+  height: 40px;
+  border-radius: 8px;
 }
+
 .bot-info h2 {
   margin: 0;
   font-size: 1.2rem;
@@ -759,18 +764,15 @@ body.dark-mode .moon-icon {
 .initial-prompts-header {
   margin-bottom: 40px;
 }
-.bot-avatar-large {
-  font-size: 3.5rem;
-  background-color: var(--primary-color);
-  color: white;
-  width: 70px;
-  height: 70px;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+
+/* ✅ PERUBAHAN DI SINI: Menghapus gaya untuk .bot-avatar-large dan menambahkan untuk logo */
+.bot-avatar-large-logo {
+  width: 80px;
+  height: 80px;
   margin: 0 auto 20px;
+  border-radius: 12px;
 }
+
 .initial-prompts-header h1 {
   font-size: 1.8rem;
   font-weight: 600;
@@ -785,13 +787,14 @@ body.dark-mode .moon-icon {
   max-width: 600px;
 }
 
-#initial-prompts-container .bot-avatar-large,
+/* ✅ PERUBAHAN DI SINI: Mengganti selector animasi */
+#initial-prompts-container .bot-avatar-large-logo,
 #initial-prompts-container .initial-prompts-header h1,
 #initial-prompts-container .prompt-card {
   opacity: 0;
 }
 
-#initial-prompts-container.visible .bot-avatar-large {
+#initial-prompts-container.visible .bot-avatar-large-logo {
   animation: scaleIn 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94) 0.2s forwards;
 }
 #initial-prompts-container.visible .initial-prompts-header h1 {
@@ -1424,9 +1427,13 @@ body.dark-mode .typing-indicator span {
   .header-content {
     gap: 10px;
   }
-  .bot-avatar {
-    font-size: 2.2rem;
+  
+  /* ✅ PERUBAHAN DI SINI: Menyesuaikan ukuran logo di mobile */
+  .bot-avatar-logo {
+    width: 36px;
+    height: 36px;
   }
+
   #input-area {
     padding: 8px 10px;
   }
