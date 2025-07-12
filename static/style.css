@@ -138,10 +138,13 @@ body:not(.user-logged-in) #chat-container {
 .welcome-content {
   max-width: 500px;
 }
+
 .welcome-icon {
   font-size: 4rem;
   margin-bottom: 1rem;
+  animation: wave-animation 2.5s ease-in-out infinite;
 }
+
 .welcome-content h1 {
   font-size: 2.5rem;
   font-weight: 700;
@@ -198,7 +201,7 @@ body:not(.user-logged-in) #chat-container {
   opacity: 0;
 }
 #welcome-screen.visible .welcome-icon {
-  animation: scaleIn 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94) 0.2s both;
+  animation: wave-animation 2.5s ease-in-out infinite, scaleIn 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94) 0.2s both;
 }
 #welcome-screen.visible .welcome-content h1 {
   animation: fadeInUp 0.6s ease-out 0.4s both;
@@ -407,8 +410,30 @@ body:not(.user-logged-in) #sidebar {
   align-items: center;
   justify-content: space-between;
   position: relative;
-  opacity: 0;
+  opacity: 0; 
   animation: fadeInItem 0.4s ease-out forwards;
+}
+
+.history-placeholder {
+  padding: 40px 15px;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 15px;
+  opacity: 0.7;
+}
+
+.history-placeholder svg {
+    width: 40px;
+    height: 40px;
+    color: var(--welcome-text-color);
+}
+
+.history-placeholder span {
+    color: var(--welcome-text-color);
+    font-style: italic;
+    font-weight: 500;
 }
 
 .history-item:hover {
@@ -417,12 +442,6 @@ body:not(.user-logged-in) #sidebar {
 .history-item.active {
   background-color: var(--primary-color);
   color: white;
-}
-.history-placeholder {
-  padding: 15px;
-  font-style: italic;
-  color: var(--welcome-text-color);
-  text-align: center;
 }
 
 .history-title-container {
@@ -737,6 +756,26 @@ body.dark-mode .moon-icon {
   flex-direction: column;
   gap: 12px;
   position: relative;
+}
+
+@keyframes spinner-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.loading-spinner {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 50px;
+  height: 50px;
+  margin-left: -25px;
+  margin-top: -25px;
+  border: 5px solid var(--hover-bg-color);
+  border-top: 5px solid var(--primary-color);
+  border-radius: 50%;
+  animation: spinner-spin 1s linear infinite;
 }
 
 #initial-prompts-container {
@@ -1376,7 +1415,7 @@ body.dark-mode .typing-indicator span {
     position: fixed;
     top: 0;
     height: 100%;
-    left: -260px; 
+    left: -260px;
     transform: none;
   }
 
@@ -1462,4 +1501,4 @@ body.dark-mode .typing-indicator span {
   .development-content p {
     font-size: 1rem;
   }
-}
+} 

@@ -395,8 +395,12 @@ document.addEventListener("DOMContentLoaded", () => {
           historyList.appendChild(historyItem);
         });
       } else {
-        historyList.innerHTML =
-          '<p class="history-placeholder">Belum ada riwayat.</p>';
+        historyList.innerHTML = `
+            <div class="history-placeholder">
+                <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="feather feather-message-square"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
+                <span>Mulai percakapan pertamamu!</span>
+            </div>
+        `;
       }
     } catch (error) {
       console.error("Gagal memuat daftar percakapan:", error);
@@ -408,7 +412,7 @@ document.addEventListener("DOMContentLoaded", () => {
     hideInitialPrompts();
     currentConversationId = conversationId;
     conversationHistory = [];
-    chatBox.innerHTML = '<div class="loading-spinner"></div>';
+    chatBox.innerHTML = '<div class="loading-spinner"></div>'; // Tampilkan spinner
 
     document.querySelectorAll(".history-item").forEach((item) => {
       item.classList.toggle(
@@ -966,7 +970,6 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-
   function createMessageElement(msgData) {
     const { htmlContent, imageData, isUser, timestamp, text } = msgData;
     const className = isUser ? "user-message" : "bot-message";
@@ -989,7 +992,8 @@ document.addEventListener("DOMContentLoaded", () => {
     contentWrapper.innerHTML = fullContent;
     
     messageElement.appendChild(contentWrapper);
-    appendTimestamp(messageElement, new Date(timestamp._seconds * 1000 || Date.now()));
+    const date = timestamp && timestamp._seconds ? new Date(timestamp._seconds * 1000) : new Date();
+    appendTimestamp(messageElement, date);
 
     if (isUser) {
       const editBtn = document.createElement("button");
