@@ -12,7 +12,7 @@
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
 </head>
 <body>
-    <!-- ✅ LAYAR ON DEVELOPMENT BARU -->
+    <!-- LAYAR ON DEVELOPMENT -->
     <!-- <div id="development-overlay">
         <div class="development-content">
             <div class="dev-gear-icon">⚙️</div>
@@ -46,12 +46,10 @@
             <div class="sidebar-main-content">
                 <div class="sidebar-header">
                     <h3>Riwayat</h3>
-                    <!-- PERUBAHAN: Tombol dibungkus untuk penataan yang lebih baik -->
                     <div class="sidebar-header-controls">
                         <button id="new-chat-btn" data-tooltip="Obrolan baru">
                             <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
                         </button>
-                        <!-- PERUBAHAN: Tombol tutup (X) baru ditambahkan -->
                         <button id="close-sidebar-btn" data-tooltip="Tutup">
                             <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
                         </button>
@@ -74,7 +72,6 @@
                     <button id="menu-btn" aria-label="Buka Riwayat" data-tooltip="Menu">
                         <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
                     </button>
-                    <!-- ✅ PERUBAHAN DI SINI: Nama file diperbarui -->
                     <img src="{{ url_for('static', filename='Aksara-AI-Logo.png') }}" alt="Aksara AI Logo" class="bot-avatar-logo">
                     <div class="bot-info">
                         <h2>Aksara AI</h2>
@@ -119,17 +116,14 @@
 
             <div id="initial-prompts-container">
                 <div class="initial-prompts-header">
-                    <!-- ✅ PERUBAHAN DI SINI: Nama file diperbarui -->
                     <img src="{{ url_for('static', filename='Aksara-AI-Logo-Warna.png') }}" alt="Aksara AI Logo" class="bot-avatar-large-logo">
                     <h1><span id="welcome-username"></span>Apa yang bisa saya bantu hari ini?</h1>
                 </div>
                 <div class="prompt-suggestions">
-                    <!-- Konten prompt akan diisi oleh JavaScript -->
                 </div>
             </div>
             
             <div id="chat-box">
-                <!-- Konten chat akan muncul di sini -->
             </div>
 
             <button id="scroll-to-bottom-btn" aria-label="Scroll ke bawah">
@@ -176,7 +170,7 @@
             <h3>Saran & Masukan</h3>
                 <div class="feedback-user-info">
                     <span>Masukan dari:</span>
-                    <strong id="feedback-user-email"></strong> <!-- Dikosongkan, akan diisi oleh JS -->
+                    <strong id="feedback-user-email"></strong>
                 </div>
             <p>Kami sangat menghargai masukan Anda untuk membantu kami menjadi lebih baik.</p>
             <form id="feedback-form">

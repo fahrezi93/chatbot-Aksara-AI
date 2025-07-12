@@ -176,9 +176,8 @@ button[type="submit"]:disabled {
   height: 20px;
 }
 
-/* --- PERUBAHAN GAYA UNTUK TOMBOL KEMBALI --- */
 .back-link {
-  display: flex; /* Menggunakan flex agar ikon dan teks sejajar */
+  display: flex;
   align-items: center;
   gap: 8px;
   margin-bottom: 25px;
@@ -186,12 +185,12 @@ button[type="submit"]:disabled {
   text-decoration: none;
   font-weight: 600;
   font-size: 0.95rem;
-  padding: 8px 12px; /* Disesuaikan agar tidak terlalu lebar */
+  padding: 8px 12px;
   border-radius: 8px;
-  background-color: transparent; /* Dibuat transparan */
+  background-color: transparent;
   transition: background-color 0.2s, color 0.2s, transform 0.2s;
-  width: fit-content; /* Lebar tombol sesuai kontennya saja */
-  margin-right: auto; /* Mendorong tombol ke kiri */
+  width: fit-content;
+  margin-right: auto;
 }
 
 .back-link:hover {

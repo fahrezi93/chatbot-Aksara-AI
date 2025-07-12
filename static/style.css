@@ -304,7 +304,6 @@ body.loaded #chat-container {
   display: flex;
   flex-direction: column;
   flex-shrink: 0;
-  /* PERUBAHAN UTAMA: Menggunakan 'left' untuk transisi, bukan 'transform' */
   transition: left 0.3s ease-in-out;
   z-index: 1100;
 }
@@ -387,7 +386,6 @@ body:not(.user-logged-in) #sidebar {
   padding: 10px;
 }
 
-/* ✅ PERUBAHAN DI SINI: Menambahkan Keyframe untuk animasi item */
 @keyframes fadeInItem {
   from {
     opacity: 0;
@@ -409,9 +407,8 @@ body:not(.user-logged-in) #sidebar {
   align-items: center;
   justify-content: space-between;
   position: relative;
-  /* ✅ PERUBAHAN DI SINI: Menerapkan animasi pada item */
-  opacity: 0; /* Mulai dari transparan */
-  animation: fadeInItem 0.4s ease-out forwards; /* Terapkan animasi */
+  opacity: 0;
+  animation: fadeInItem 0.4s ease-out forwards;
 }
 
 .history-item:hover {
@@ -550,7 +547,6 @@ body:not(.user-logged-in) #sidebar {
   gap: 15px;
 }
 
-/* ✅ PERUBAHAN DI SINI: Menghapus gaya untuk .bot-avatar dan menambahkan untuk logo */
 .bot-avatar-logo {
   width: 40px;
   height: 40px;
@@ -765,7 +761,6 @@ body.dark-mode .moon-icon {
   margin-bottom: 40px;
 }
 
-/* ✅ PERUBAHAN DI SINI: Menghapus gaya untuk .bot-avatar-large dan menambahkan untuk logo */
 .bot-avatar-large-logo {
   width: 80px;
   height: 80px;
@@ -787,7 +782,6 @@ body.dark-mode .moon-icon {
   max-width: 600px;
 }
 
-/* ✅ PERUBAHAN DI SINI: Mengganti selector animasi */
 #initial-prompts-container .bot-avatar-large-logo,
 #initial-prompts-container .initial-prompts-header h1,
 #initial-prompts-container .prompt-card {
@@ -827,7 +821,6 @@ body.dark-mode .moon-icon {
   text-align: left;
 }
 
-/* ✅ PERUBAHAN DI SINI: Efek hover dibuat lebih jelas */
 .prompt-card:hover {
   background-color: var(--hover-bg-color);
   border-color: var(--primary-color);
@@ -1367,7 +1360,7 @@ body.dark-mode .typing-indicator span {
 @media (max-width: 768px) {
   body {
     position: relative;
-    overflow-x: hidden; /* Mencegah scroll horizontal */
+    overflow-x: hidden;
   }
   body:not(.user-logged-in) #app-wrapper {
     align-items: stretch;
@@ -1379,17 +1372,16 @@ body.dark-mode .typing-indicator span {
     box-shadow: none;
   }
 
-  /* PERUBAHAN UTAMA: Menggunakan 'left' untuk posisi */
   #sidebar {
     position: fixed;
     top: 0;
     height: 100%;
-    left: -260px; /* Sembunyi di luar layar */
-    transform: none; /* Hapus transform */
+    left: -260px; 
+    transform: none;
   }
 
   body.sidebar-visible #sidebar {
-    left: 0; /* Tampilkan di layar */
+    left: 0;
     box-shadow: 4px 0px 15px rgba(0, 0, 0, 0.2);
   }
 
@@ -1407,7 +1399,6 @@ body.dark-mode .typing-indicator span {
   }
 
   body.sidebar-visible #chat-container {
-    /* Hapus transform agar tidak berkonflik */
     transform: none;
   }
 
@@ -1433,7 +1424,6 @@ body.dark-mode .typing-indicator span {
     gap: 10px;
   }
   
-  /* ✅ PERUBAHAN DI SINI: Menyesuaikan ukuran logo di mobile */
   .bot-avatar-logo {
     width: 36px;
     height: 36px;

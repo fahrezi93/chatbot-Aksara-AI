@@ -69,7 +69,6 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function sendTokenToBackend(idToken) {
-        // ✅ PERBAIKAN: Kirim sebagai JSON
         return fetch('/login', {
             method: 'POST',
             headers: {
@@ -106,21 +105,18 @@ document.addEventListener('DOMContentLoaded', () => {
     if (registerForm) {
         registerForm.addEventListener('submit', (e) => {
             e.preventDefault();
-            // ✅ AMBIL NILAI USERNAME
             const username = document.getElementById('username').value;
             const email = document.getElementById('email').value;
             const password = passwordInput.value;
 
             auth.createUserWithEmailAndPassword(email, password)
                 .then((userCredential) => {
-                    // ✅ SETELAH BERHASIL, UPDATE PROFIL DENGAN NAMA PENGGUNA
                     const user = userCredential.user;
                     return user.updateProfile({
                         displayName: username
                     });
                 })
                 .then(() => {
-                    // Setelah profil diupdate, baru arahkan ke login
                     window.location.href = '/login';
                 })
                 .catch(handleError);

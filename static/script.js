@@ -408,7 +408,7 @@ document.addEventListener("DOMContentLoaded", () => {
     hideInitialPrompts();
     currentConversationId = conversationId;
     conversationHistory = [];
-    chatBox.innerHTML = "";
+    chatBox.innerHTML = '<div class="loading-spinner"></div>';
 
     document.querySelectorAll(".history-item").forEach((item) => {
       item.classList.toggle(
@@ -421,28 +421,21 @@ document.addEventListener("DOMContentLoaded", () => {
     try {
       const response = await fetch(`/get_conversation/${conversationId}`);
       const messages = await response.json();
+      
+      const fragment = document.createDocumentFragment();
       messages.forEach((msg) => {
-        let content = msg.htmlContent;
-        if (msg.imageData) {
-          content =
-            `<img src="${msg.imageData}" class="message-image" alt="Gambar terlampir"><br>` +
-            content;
-        }
-        const timestamp =
-          msg.timestamp && msg.timestamp._seconds
-            ? new Date(msg.timestamp._seconds * 1000)
-            : new Date();
-        appendMessage(
-          content,
-          msg.isUser ? "user-message" : "bot-message",
-          false,
-          timestamp,
-          msg.text
-        );
+        const messageElement = createMessageElement(msg);
+        fragment.appendChild(messageElement);
         conversationHistory.push({ isUser: msg.isUser, text: msg.text });
       });
+
+      chatBox.innerHTML = ""; 
+      chatBox.appendChild(fragment);
+      scrollToBottom();
+
     } catch (error) {
       console.error(`Gagal memuat percakapan ${conversationId}:`, error);
+      chatBox.innerHTML = "<p>Gagal memuat percakapan.</p>";
     }
 
     if (
@@ -472,8 +465,6 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   async function submitAndGetResponse(userMessageText, imageToSend) {
-    hideInitialPrompts();
-
     const botMessageElement = createBotMessageElement();
     const typingIndicator = showTypingIndicator(botMessageElement);
     let fullResponseText = "";
@@ -523,14 +514,14 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
-  // ✅ PERUBAHAN DI SINI: Memperbaiki logika penambahan pesan
   async function handleFormSubmit(e) {
     if (e) e.preventDefault();
     const userMessageText = userInput.value.trim();
 
     if (userMessageText === "" && !uploadedImageData) return;
 
-    // Jika ini adalah pesan pertama dalam percakapan baru, bersihkan chatBox
+    hideInitialPrompts();
+
     if (!currentConversationId) {
         chatBox.innerHTML = "";
         conversationHistory = [];
@@ -571,8 +562,7 @@ document.addEventListener("DOMContentLoaded", () => {
     if (savedUserData && savedUserData.conversationId && !currentConversationId) {
       currentConversationId = savedUserData.conversationId;
       updateClearChatButtonState();
-      await loadConversationsList(); // Muat ulang daftar riwayat
-      // Tandai item yang baru dibuat sebagai aktif
+      await loadConversationsList(); 
       document.querySelectorAll(".history-item").forEach(item => {
           item.classList.toggle("active", item.dataset.conversationId === currentConversationId);
       });
@@ -976,6 +966,46 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
+
+  function createMessageElement(msgData) {
+    const { htmlContent, imageData, isUser, timestamp, text } = msgData;
+    const className = isUser ? "user-message" : "bot-message";
+    
+    const messageElement = document.createElement("div");
+    messageElement.className = `message ${className}`;
+
+    if (isUser) {
+      messageElement.dataset.originalText = text;
+    }
+
+    const contentWrapper = document.createElement("div");
+    contentWrapper.className = "content-wrapper";
+    
+    let fullContent = "";
+    if (imageData) {
+        fullContent += `<img src="${imageData}" class="message-image" alt="Gambar terlampir"><br>`;
+    }
+    fullContent += htmlContent;
+    contentWrapper.innerHTML = fullContent;
+    
+    messageElement.appendChild(contentWrapper);
+    appendTimestamp(messageElement, new Date(timestamp._seconds * 1000 || Date.now()));
+
+    if (isUser) {
+      const editBtn = document.createElement("button");
+      editBtn.className = "edit-prompt-btn";
+      editBtn.innerHTML = "✏️";
+      editBtn.setAttribute("data-tooltip", "Edit & kirim ulang");
+      messageElement.appendChild(editBtn);
+    }
+
+    if (!isUser && htmlContent && htmlContent.length > 1) {
+      addCopyToBotMessage(messageElement);
+    }
+    
+    return messageElement;
+  }
+
   function appendMessage(
     content,
     className,
@@ -1016,6 +1046,7 @@ document.addEventListener("DOMContentLoaded", () => {
     chatBox.appendChild(messageElement);
     scrollToBottom();
   }
+
   function createBotMessageElement() {
     const messageElement = document.createElement("div");
     messageElement.className = "message bot-message";

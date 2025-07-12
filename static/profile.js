@@ -51,16 +51,13 @@ document.addEventListener('DOMContentLoaded', () => {
     auth.onAuthStateChanged(user => {
         if (user) {
             currentUser = user;
-            // Isi form dengan data yang ada
             usernameInput.value = user.displayName || '';
             emailInput.value = user.email || '';
         } else {
-            // Jika tidak ada user, redirect ke halaman login
             window.location.href = '/login';
         }
     });
 
-    // --- EVENT LISTENER UPDATE NAMA ---
     if (updateNameForm) {
         updateNameForm.addEventListener('submit', async (e) => {
             e.preventDefault();
@@ -96,7 +93,6 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // --- EVENT LISTENER UPDATE EMAIL ---
     if (updateEmailForm) {
         updateEmailForm.addEventListener('submit', async (e) => {
             e.preventDefault();
@@ -110,11 +106,9 @@ document.addEventListener('DOMContentLoaded', () => {
             showMessage(emailMessage, 'Memverifikasi dan menyimpan...');
 
             try {
-                // Re-autentikasi pengguna untuk keamanan
                 const credential = firebase.auth.EmailAuthProvider.credential(currentUser.email, password);
                 await currentUser.reauthenticateWithCredential(credential);
 
-                // Jika berhasil, update email
                 await currentUser.updateEmail(newEmail);
                 showMessage(emailMessage, 'Email berhasil diperbarui! Silakan cek inbox Anda untuk verifikasi.');
 
@@ -128,7 +122,6 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // --- EVENT LISTENER HAPUS AKUN ---
     if (deleteAccountBtn) {
         deleteAccountBtn.addEventListener('click', () => {
             deleteModal.style.display = 'flex';
@@ -156,7 +149,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 const credential = firebase.auth.EmailAuthProvider.credential(currentUser.email, password);
                 await currentUser.reauthenticateWithCredential(credential);
 
-                // Kirim request ke backend untuk menghapus data
                 const response = await fetch('/delete_account', {
                     method: 'DELETE'
                 });
