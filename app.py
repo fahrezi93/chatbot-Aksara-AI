@@ -33,7 +33,9 @@ try:
         else:
             raise ValueError("Kredensial Firebase tidak ditemukan.")
             
-    firebase_admin.initialize_app(cred)
+    if not firebase_admin._apps:
+        firebase_admin.initialize_app(cred)
+        
     db = firestore.client()
 
     # Inisialisasi Gemini
@@ -91,7 +93,6 @@ def login():
             session['user_id'] = user_record.uid
             session['user_email'] = user_record.email
             
-            # --- PERUBAHAN DI SINI ---
             display_name = user_record.display_name
             session['user_full_name'] = display_name or user_record.email.split('@')[0]
 
@@ -100,7 +101,6 @@ def login():
                 session['user_name'] = first_name
             else:
                 session['user_name'] = user_record.email.split('@')[0]
-            # --- AKHIR PERUBAHAN ---
 
             return jsonify({"status": "success", "redirect": url_for('index')})
         except Exception as e:
@@ -130,14 +130,12 @@ def logout():
 @app.route('/check_auth')
 def check_auth():
     if 'user_id' in session:
-        # --- PERUBAHAN DI SINI ---
         return jsonify({
             "logged_in": True, 
             "email": session.get('user_email'),
             "username": session.get('user_name'),
             "user_full_name": session.get('user_full_name')
         })
-        # --- AKHIR PERUBAHAN ---
     return jsonify({"logged_in": False})
 
 @app.route("/get_conversations")
@@ -293,7 +291,7 @@ def update_username():
     try:
         auth.update_user(user_id, display_name=new_username)
         session['user_name'] = new_username.split(' ')[0]
-        session['user_full_name'] = new_username # --- PERUBAHAN DI SINI ---
+        session['user_full_name'] = new_username
         return jsonify({"status": "success"})
     except Exception as e:
         print(f"Error updating username for {user_id}: {e}")
