@@ -14,14 +14,11 @@ import io
 import base64
 from datetime import datetime
 
-# --- KONFIGURASI ---
 load_dotenv()
 app = Flask(__name__)
 app.secret_key = os.getenv("FLASK_SECRET_KEY", "ganti-dengan-kunci-rahasia-yang-kuat")
 
-# --- INISIALISASI SEMUA LAYANAN ---
 try:
-    # Inisialisasi Firebase
     firebase_sdk_json_str = os.getenv("FIREBASE_ADMIN_SDK_JSON")
     cred = None
     if firebase_sdk_json_str:
@@ -38,7 +35,6 @@ try:
         
     db = firestore.client()
 
-    # Inisialisasi Gemini
     gemini_api_key = os.getenv("GEMINI_API_KEY")
     if not gemini_api_key: raise ValueError("Kunci API Gemini tidak ditemukan.")
     genai.configure(api_key=gemini_api_key)
@@ -61,7 +57,6 @@ try:
         system_instruction=system_instruction
     )
 
-
 except Exception as e:
     print(f"Error saat inisialisasi: {e}")
     exit()
@@ -74,8 +69,6 @@ def delete_collection(coll_ref, batch_size):
         deleted += 1
     if deleted >= batch_size:
         return delete_collection(coll_ref, batch_size)
-
-# --- ROUTES ---
 
 @app.route("/")
 def index():
@@ -125,7 +118,7 @@ def profile():
 @app.route('/logout')
 def logout():
     session.clear()
-    return redirect(url_for('login'))
+    return redirect(url_for('index'))
 
 @app.route('/check_auth')
 def check_auth():
