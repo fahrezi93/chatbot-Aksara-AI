@@ -1,7 +1,7 @@
 import os
 import requests
 import json
-from flask import Flask, render_template, request, Response, jsonify, session, redirect, url_for
+from flask import Flask, render_template, request, Response, jsonify, session, redirect, url_for, send_from_directory
 from dotenv import load_dotenv
 import google.generativeai as genai
 import markdown
@@ -73,6 +73,10 @@ def delete_collection(coll_ref, batch_size):
 @app.route("/")
 def index():
     return render_template('chat.html')
+
+@app.route('/google54e4da985dedde82.html')
+def google_verification():
+    return send_from_directory('.', 'google54e4da985dedde82.html')
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
