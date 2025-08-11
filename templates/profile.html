@@ -5,18 +5,27 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="icon" type="image/png" href="{{ url_for('static', filename='Aksara-AI-Logo.png') }}">
     <title>Edit Profil - Aksara AI</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="{{ url_for('static', filename='auth.css') }}">
 </head>
 <body>
-    <div class="auth-container profile-container">
+    <div class="auth-container profile-page">
+        <header class="auth-header">
+            <img src="{{ url_for('static', filename='Aksara-AI-Logo-Warna.png') }}" alt="Aksara AI Logo">
+            <span>Aksara AI</span>
+        </header>
         <div class="auth-box">
             <a href="{{ url_for('index') }}" class="back-link">
                 <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
                 <span>Kembali ke Chat</span>
             </a>
             
-            <h1>Profil Saya</h1>
-            <p>Perbarui informasi akun Anda di bawah ini.</p>
+            <div class="auth-box-header" style="text-align: left; margin-bottom: 24px;">
+                <h1>Profil Saya</h1>
+                <p>Perbarui informasi akun Anda di bawah ini.</p>
+            </div>
 
             <!-- Form Update Nama Pengguna -->
             <form id="update-name-form">
@@ -24,7 +33,7 @@
                     <label for="username">Nama Pengguna</label>
                     <input type="text" id="username" required>
                 </div>
-                <button type="submit">Simpan Nama</button>
+                <button type="submit" class="btn-primary" style="margin-top: 0;">Simpan Nama</button>
                 <p id="name-message" class="message-text"></p>
             </form>
 
@@ -40,7 +49,7 @@
                     <label for="current-password-email">Password Saat Ini (untuk verifikasi)</label>
                     <input type="password" id="current-password-email" required>
                 </div>
-                <button type="submit">Simpan Email</button>
+                <button type="submit" class="btn-primary" style="margin-top: 0;">Simpan Email</button>
                 <p id="email-message" class="message-text"></p>
             </form>
             

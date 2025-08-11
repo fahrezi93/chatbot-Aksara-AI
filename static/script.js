@@ -1,23 +1,9 @@
 document.addEventListener("DOMContentLoaded", () => {
-  // Inisialisasi Firebase
-  try {
-    if (
-      typeof firebase !== "undefined" &&
-      typeof firebaseConfig !== "undefined"
-    ) {
-      firebase.initializeApp(firebaseConfig);
-    }
-  } catch (e) {
-    console.error("Error inisialisasi Firebase:", e);
-    return;
-  }
-
-  let currentUser = null;
-  let currentConversationId = null;
-
   // --- ELEMEN DOM ---
   const body = document.body;
   const sidebar = document.getElementById("sidebar");
+  const headerMenuToggle = document.getElementById("header-menu-toggle");
+  const chatArea = document.getElementById("chat-area");
   const chatBox = document.getElementById("chat-box");
   const userInput = document.getElementById("user-input");
   const historyList = document.getElementById("history-list");
@@ -45,12 +31,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const modalOverlay = document.getElementById("modal-overlay");
   const confirmDeleteBtn = document.getElementById("confirm-delete-btn");
   const cancelBtn = document.getElementById("cancel-btn");
-  const menuBtn = document.getElementById("menu-btn");
-  const sidebarOverlay = document.getElementById("sidebar-overlay");
   const micBtn = document.getElementById("mic-btn");
-  const scrollToBottomBtn = document.getElementById("scroll-to-bottom-btn");
-  const modalButtons = document.querySelector(".modal-buttons");
-  const modalLoader = document.getElementById("modal-loader");
   const uploadBtn = document.getElementById("upload-btn");
   const fileInput = document.getElementById("file-input");
   const imagePreviewContainer = document.getElementById(
@@ -58,10 +39,9 @@ document.addEventListener("DOMContentLoaded", () => {
   );
   const imagePreview = document.getElementById("image-preview");
   const removePreviewBtn = document.getElementById("remove-preview-btn");
-  const sendBtn = document.getElementById("send-btn");
   const logoutBtnLink = document.getElementById("logout-btn-link");
   const logoutOverlay = document.getElementById("logout-overlay");
-  const welcomeUsernameSpan = document.getElementById("welcome-username");
+  const chatTitle = document.getElementById("chat-title");
   const feedbackBtn = document.getElementById("feedback-btn");
   const feedbackModalOverlay = document.getElementById(
     "feedback-modal-overlay"
@@ -71,36 +51,29 @@ document.addEventListener("DOMContentLoaded", () => {
   const feedbackForm = document.getElementById("feedback-form");
   const feedbackTextarea = document.getElementById("feedback-textarea");
   const feedbackMessage = document.getElementById("feedback-message");
-  const closeSidebarBtn = document.getElementById("close-sidebar-btn");
+  const searchHistoryInput = document.getElementById("search-history-input");
 
+  let currentUser = null;
+  let currentConversationId = null;
   let conversationHistory = [];
   let uploadedImageData = null;
 
-  function openSidebar() {
-    body.classList.add("sidebar-visible");
-    document.body.style.overflow = "hidden";
-  }
-
-  function closeSidebar() {
-    body.classList.remove("sidebar-visible");
-    document.body.style.overflow = "";
-  }
-
-  function setupSidebarControls() {
-    if (menuBtn) {
-      menuBtn.addEventListener("click", openSidebar);
-    }
-    if (sidebarOverlay) {
-      sidebarOverlay.addEventListener("click", closeSidebar);
-    }
-    if (closeSidebarBtn) {
-      closeSidebarBtn.addEventListener("click", closeSidebar);
-    }
-  }
-
-  setupSidebarControls();
-
   const ALL_PROMPTS = [
+    {
+      title: "Resep Kue Lebaran",
+      subtitle: "10 Resep kue lebaran praktis dan murah",
+      full_prompt: "Berikan 10 resep kue lebaran yang praktis dan murah",
+    },
+    {
+      title: "Ide Konten TikTok",
+      subtitle: "Konten TikTok yang lagi viral sekarang",
+      full_prompt: "Berikan ide konten TikTok yang sedang viral saat ini",
+    },
+    {
+      title: "Rekomendasi Film",
+      subtitle: "Genre Film Action Indonesia",
+      full_prompt: "Rekomendasikan film action dari Indonesia",
+    },
     {
       title: "Buat Draf Email",
       subtitle: "untuk menindaklanjuti proposal kerjasama",
@@ -120,12 +93,6 @@ document.addEventListener("DOMContentLoaded", () => {
         "Berikan 10 ide nama brand yang menarik untuk produk fashion yang ramah lingkungan.",
     },
     {
-      title: "Susun Rencana Proyek",
-      subtitle: "untuk peluncuran aplikasi mobile",
-      full_prompt:
-        "Bantu saya menyusun kerangka rencana proyek untuk peluncuran aplikasi mobile, mulai dari riset hingga pemasaran.",
-    },
-    {
       title: "Latihan Wawancara Kerja",
       subtitle: "untuk posisi Digital Marketing",
       full_prompt:
@@ -138,173 +105,280 @@ document.addEventListener("DOMContentLoaded", () => {
         "Buatkan saya contoh jadwal mingguan yang seimbang antara pekerjaan full-time dan rutinitas olahraga 3 kali seminggu.",
     },
     {
-      title: "Analisis SWOT",
-      subtitle: "untuk ide bisnis kedai kopi",
+      title: "Jelaskan Konsep Sulit",
+      subtitle: "seperti menjelaskan kepada anak 10 tahun",
       full_prompt:
-        "Lakukan analisis SWOT (Strengths, Weaknesses, Opportunities, Threats) untuk ide bisnis kedai kopi di area perkantoran.",
+        "Jelaskan konsep 'blockchain' seolah-olah saya adalah anak berusia 10 tahun.",
     },
     {
-      title: "Tulis Deskripsi Produk",
-      subtitle: "untuk sebuah jam tangan pintar",
+      title: "Buat Puisi",
+      subtitle: "tentang senja di tepi pantai",
       full_prompt:
-        "Tulis deskripsi produk yang menjual untuk sebuah jam tangan pintar dengan fitur monitor detak jantung dan GPS.",
+        "Buatkan saya sebuah puisi singkat tentang indahnya senja di tepi pantai.",
     },
     {
-      title: "Buat Agenda Rapat",
-      subtitle: "untuk kickoff proyek baru",
+      title: "Rencana Perjalanan",
+      subtitle: "ke Yogyakarta selama 3 hari 2 malam",
       full_prompt:
-        "Buatkan agenda rapat yang efektif untuk kickoff proyek pengembangan website baru.",
+        "Buatkan rencana perjalanan (itinerary) hemat untuk liburan ke Yogyakarta selama 3 hari 2 malam.",
     },
     {
-      title: "Ide Ice Breaking",
-      subtitle: "untuk workshop online",
+      title: "Terjemahkan & Perbaiki",
+      subtitle: "kalimat bahasa Inggris ini",
       full_prompt:
-        "Berikan saya 3 ide ice breaking yang seru dan tidak canggung untuk workshop yang diadakan secara online.",
+        "Terjemahkan kalimat ini ke Bahasa Inggris dan perbaiki grammarnya: 'Saya suka makan nasi goreng dan saya pikir itu adalah makanan terbaik di dunia.'",
     },
     {
-        title: "Rekomendasi Film",
-        subtitle: "genre thriller psikologis",
-        full_prompt: "Beri saya 5 rekomendasi film dengan genre thriller psikologis yang menegangkan."
+      title: "Ide Hadiah Ulang Tahun",
+      subtitle: "untuk sahabat perempuan budget 200 ribu",
+      full_prompt:
+        "Berikan 5 ide hadiah ulang tahun yang unik untuk sahabat perempuan dengan budget di bawah 200 ribu rupiah.",
     },
     {
-        title: "Ide Hadiah Ulang Tahun",
-        subtitle: "untuk sahabat perempuan",
-        full_prompt: "Berikan beberapa ide hadiah ulang tahun yang unik dan berkesan untuk sahabat perempuan."
+      title: "Tulis Caption Instagram",
+      subtitle: "untuk foto liburan di gunung",
+      full_prompt:
+        "Buatkan 3 pilihan caption Instagram yang menarik untuk foto liburan di gunung.",
     },
     {
-        title: "Rekomendasi Buku",
-        subtitle: "tentang pengembangan diri",
-        full_prompt: "Rekomendasikan 3 buku tentang pengembangan diri yang wajib dibaca tahun ini."
+      title: "Analisis SWOT Sederhana",
+      subtitle: "untuk bisnis kedai kopi kecil",
+      full_prompt:
+        "Lakukan analisis SWOT (Strengths, Weaknesses, Opportunities, Threats) sederhana untuk bisnis kedai kopi kecil di lingkungan perumahan.",
     },
     {
-        title: "Ide Konten Media Sosial",
-        subtitle: "untuk bisnis kuliner",
-        full_prompt: "Buatkan 7 ide konten media sosial yang menarik untuk bisnis kuliner selama seminggu."
+      title: "Buat Cerita Pendek",
+      subtitle: "dengan 3 kata kunci: kucing, malam, misteri",
+      full_prompt:
+        "Buat sebuah cerita pendek (sekitar 200 kata) yang mengandung kata kunci: kucing, malam, dan misteri.",
     },
     {
-        title: "Rekomendasi Tempat Wisata",
-        subtitle: "di Yogyakarta untuk keluarga",
-        full_prompt: "Berikan rekomendasi tempat wisata di Yogyakarta yang cocok untuk liburan keluarga dengan anak-anak."
+      title: "Ide Menu Sarapan Sehat",
+      subtitle: "selama satu minggu",
+      full_prompt: "Berikan ide menu sarapan sehat dan praktis untuk 7 hari.",
     },
     {
-        title: "Ide Resep Masakan",
-        subtitle: "sehat dan praktis untuk sarapan",
-        full_prompt: "Beri saya 5 ide resep masakan yang sehat, enak, dan praktis untuk sarapan."
+      title: "Bandingkan Dua Produk",
+      subtitle: "iPhone 15 vs Samsung S24",
+      full_prompt:
+        "Bandingkan kelebihan dan kekurangan antara iPhone 15 dan Samsung Galaxy S24 dalam bentuk tabel.",
     },
     {
-        title: "Rekomendasi Lagu",
-        subtitle: "untuk menemani kerja fokus",
-        full_prompt: "Buatkan playlist atau berikan rekomendasi lagu instrumental yang bisa membantu saya fokus saat bekerja."
+      title: "Buat Script Video Pendek",
+      subtitle: "tentang tips menabung untuk pemula",
+      full_prompt:
+        "Buatkan script singkat untuk video Reels/Shorts berdurasi 30 detik tentang tips menabung untuk pemula.",
     },
     {
-        title: "Ide Proyek Sampingan",
-        subtitle: "untuk programmer",
-        full_prompt: "Apa saja ide proyek sampingan yang bagus untuk seorang programmer untuk menambah portofolio?"
+      title: "Jelaskan Istilah Coding",
+      subtitle: "apa itu API?",
+      full_prompt:
+        "Jelaskan apa itu API (Application Programming Interface) dengan analogi yang mudah dipahami oleh orang non-teknis.",
     },
     {
-        title: "Rekomendasi Podcast",
-        subtitle: "topik bisnis dan startup",
-        full_prompt: "Rekomendasikan 5 podcast berbahasa Indonesia tentang bisnis dan startup."
+      title: "Konversi Resep",
+      subtitle: "dari 4 porsi menjadi 8 porsi",
+      full_prompt:
+        "Saya punya resep bolu untuk 4 porsi. Tolong konversikan semua takarannya agar bisa dibuat untuk 8 porsi.",
     },
     {
-        title: "Ide Dekorasi Kamar",
-        subtitle: "dengan budget terbatas",
-        full_prompt: "Berikan ide-ide kreatif untuk mendekorasi kamar tidur agar lebih estetis dengan budget yang terbatas."
+      title: "Tips Belajar Efektif",
+      subtitle: "untuk persiapan ujian",
+      full_prompt:
+        "Berikan 7 tips belajar yang efektif untuk persiapan menghadapi ujian.",
     },
     {
-        title: "Bikinin Caption IG",
-        subtitle: "buat foto OOTD yang aesthetic",
-        full_prompt: "Bikinin caption Instagram yang aesthetic buat foto OOTD terbaru aku dong."
+      title: "Buat Dialog",
+      subtitle: "antara penjual dan pembeli di pasar",
+      full_prompt:
+        "Buatkan contoh dialog tawar-menawar antara penjual buah dan pembeli di pasar tradisional.",
     },
     {
-        title: "Jelasin Istilah Gaul",
-        subtitle: "arti 'FOMO', 'YOLO', 'TFL'",
-        full_prompt: "Jelasin dong arti dari istilah gaul 'FOMO', 'YOLO', sama 'TFL'. Kasih contoh kalimatnya juga ya."
+      title: "Rekomendasi Buku",
+      subtitle: "novel fiksi ilmiah untuk pemula",
+      full_prompt:
+        "Rekomendasikan 3 buku novel fiksi ilmiah yang bagus untuk pembaca pemula di genre ini.",
     },
     {
-        title: "Rekomendasi Game Mabar",
-        subtitle: "yang seru buat main bareng",
-        full_prompt: "Rekomendasiin game mobile yang seru buat mabar sama temen-temen dong."
+      title: "Ide Dekorasi Kamar",
+      subtitle: "dengan gaya minimalis dan budget terbatas",
+      full_prompt:
+        "Berikan ide-ide dekorasi kamar tidur dengan gaya minimalis yang tidak memakan banyak biaya.",
     },
     {
-        title: "Ide Konten TikTok",
-        subtitle: "yang lagi viral sekarang",
-        full_prompt: "Kasih beberapa ide konten TikTok yang lagi viral dong, bisa tema komedi atau dance challenge."
+      title: "Buat Slogan Iklan",
+      subtitle: "untuk produk minuman energi herbal",
+      full_prompt:
+        "Buatkan 5 pilihan slogan iklan yang catchy untuk produk minuman energi dari bahan herbal.",
     },
     {
-        title: "Bikinin Playlist Lofi",
-        subtitle: "buat nemenin nugas",
-        full_prompt: "Tolong buatin playlist Spotify buat nemenin nugas, genrenya lofi hip hop yang chill."
+      title: "Latihan Soal Matematika",
+      subtitle: "untuk tingkat SMP",
+      full_prompt:
+        "Berikan 5 soal latihan matematika tentang aljabar sederhana untuk siswa SMP beserta jawabannya.",
     },
     {
-        title: "Tips Public Speaking",
-        subtitle: "biar ngga gugup di depan kelas",
-        full_prompt: "Gimana sih caranya biar percaya diri dan ngga gugup pas presentasi di depan kelas? Kasih tipsnya dong."
+      title: "Analisis Puisi",
+      subtitle: "karya Chairil Anwar 'Aku'",
+      full_prompt:
+        "Berikan analisis singkat mengenai makna dari puisi 'Aku' karya Chairil Anwar.",
     },
     {
-        title: "Belajar Investasi 101",
-        subtitle: "yang gampang dimengerti",
-        full_prompt: "Jelasin cara mulai investasi buat pemula dong, yang paling gampang dan risikonya kecil. Mulai dari mana ya?"
+      title: "Jelaskan Peribahasa",
+      subtitle: "arti dari 'Air susu dibalas dengan air tuba'",
+      full_prompt:
+        "Apa arti dari peribahasa 'Air susu dibalas dengan air tuba' dan berikan contoh penggunaannya dalam kalimat.",
     },
     {
-        title: "Rekomendasi Outfit Konser",
-        subtitle: "yang simpel tapi keren",
-        full_prompt: "Kasih rekomendasi outfit buat nonton konser yang simpel tapi tetep keliatan keren dong."
+      title: "Rekomendasi Channel YouTube",
+      subtitle: "untuk belajar tentang sejarah Indonesia",
+      full_prompt:
+        "Rekomendasikan beberapa channel YouTube yang bagus untuk belajar tentang sejarah Indonesia.",
     },
-    {
-        title: "Cara Atasi Insecure",
-        subtitle: "kasih kata-kata motivasi",
-        full_prompt: "Lagi ngerasa insecure banget nih, kasih kata-kata motivasi atau cara buat ngatasinnya dong."
-    },
-    {
-        title: "Ide Kado Wisuda Low Budget",
-        subtitle: "tapi tetep berkesan",
-        full_prompt: "Ide kado wisuda buat sahabat yang low budget tapi tetep berkesan dan personal apa ya?"
-    }
   ];
 
+  // Fungsi deteksi mode mobile/desktop
+  function isMobile() {
+    return window.innerWidth <= 768;
+  }
+
+  function setSidebarState() {
+    // In guest mode, always hide the sidebar and its toggle
+    if (body.classList.contains('guest-mode') || !currentUser) {
+      if (sidebar) sidebar.style.display = 'none';
+      if (headerMenuToggle) headerMenuToggle.style.display = 'none';
+      body.classList.remove('sidebar-open');
+      return;
+    }
+
+    if (isMobile()) {
+      // Mobile: sidebar overlay, default tertutup
+      sidebar.classList.add('expanded');
+      sidebar.classList.remove('collapsed');
+      body.classList.remove('sidebar-collapsed');
+      if (!body.classList.contains('sidebar-open')) {
+        sidebar.style.display = 'none';
+      } else {
+        sidebar.style.display = 'flex';
+      }
+    } else {
+      // Desktop: sidebar collapsed/expanded
+      sidebar.style.display = 'flex';
+      if (sidebar.classList.contains('collapsed')) {
+        body.classList.add('sidebar-collapsed');
+        body.classList.remove('sidebar-open');
+      } else {
+        body.classList.remove('sidebar-collapsed');
+        body.classList.remove('sidebar-open');
+      }
+    }
+  }
+
+  function toggleSidebar() {
+    if (isMobile()) {
+      // Mobile: show/hide overlay
+      body.classList.toggle('sidebar-open');
+      setSidebarState();
+    } else {
+      // Desktop: collapsed/expanded
+      sidebar.classList.toggle('collapsed');
+      sidebar.classList.toggle('expanded');
+      setSidebarState();
+    }
+  }
+
+  function closeSidebar() {
+    if (isMobile()) {
+      body.classList.remove('sidebar-open');
+      setSidebarState();
+    } else {
+      sidebar.classList.add('collapsed');
+      sidebar.classList.remove('expanded');
+      setSidebarState();
+    }
+  }
+
+  function filterHistory() {
+    const searchTerm = searchHistoryInput.value.toLowerCase();
+    const historyItems = historyList.querySelectorAll('.history-item');
+    let hasVisibleItems = false;
+
+    historyItems.forEach(item => {
+      const itemText = item.textContent.toLowerCase();
+      const isVisible = itemText.includes(searchTerm);
+      item.style.display = isVisible ? 'block' : 'none';
+      if (isVisible) {
+        hasVisibleItems = true;
+      }
+    });
+
+    let noResultEl = historyList.querySelector('.no-history-result');
+    if (!hasVisibleItems && searchTerm) {
+      if (!noResultEl) {
+        noResultEl = document.createElement('p');
+        noResultEl.className = 'no-history-result';
+        noResultEl.style.padding = '20px';
+        noResultEl.style.textAlign = 'center';
+        noResultEl.style.color = 'var(--text-color-light)';
+        noResultEl.textContent = 'Tidak ada hasil ditemukan.';
+        historyList.appendChild(noResultEl);
+      }
+    } else if (noResultEl) {
+      noResultEl.remove();
+    }
+  }
+
+  function updateClearChatButtonState() {
+    if (clearChatBtn) {
+      clearChatBtn.disabled = !currentConversationId;
+    }
+  }
+
   function setupGuestUI() {
-    body.classList.remove("user-logged-in");
-    welcomeScreen.classList.remove("visible");
-    guestActions.style.display = "flex";
-    userActions.style.display = "none";
-    chatBox.innerHTML = "";
+    body.classList.add("guest-mode");
+    if (welcomeScreen) welcomeScreen.style.display = "none";
+    if (guestActions) guestActions.style.display = "flex";
+    if (userActions) userActions.style.display = "none";
+    if (chatBox) chatBox.innerHTML = "";
     appendMessage(
-      "<p>Selamat datang! Silakan <a href='/login'>masuk</a> atau <a href='/register'>daftar</a> untuk menyimpan riwayat obrolan Anda.</p>",
-      "bot-message",
-      false,
-      new Date()
+      "<p>Selamat datang di Aksara AI. Silakan <a href='/login'>masuk</a> atau <a href='/register'>daftar</a> untuk menyimpan riwayat obrolan dan mengakses semua fitur.</p>",
+      "bot-message"
     );
     conversationHistory = [];
-    updateClearChatButtonState();
     hideInitialPrompts();
+    if (sidebar) sidebar.style.display = "none";
+    if(headerMenuToggle) headerMenuToggle.style.display = "none";
+    updateClearChatButtonState();
+    // Sembunyikan tombol new chat di guest mode
+    if (newChatBtn) newChatBtn.style.display = "none";
+    // Jika ingin sembunyikan fitur lain, tambahkan di sini
   }
 
   function setupUserUI(user) {
-    body.classList.add("user-logged-in");
-    welcomeScreen.classList.add("visible");
-    guestActions.style.display = "none";
-    userActions.style.display = "flex";
+    body.classList.remove("guest-mode");
+    if (sidebar) sidebar.style.display = "flex";
+    if (headerMenuToggle) headerMenuToggle.style.display = "flex";
+    if (welcomeScreen) welcomeScreen.classList.add("visible");
+    if (guestActions) guestActions.style.display = "none";
+    if (userActions) userActions.style.display = "flex";
 
-    const nameToUse = user.user_full_name || user.email;
+    const nameToUse = user.user_full_name || user.username;
     const initial = nameToUse ? nameToUse.charAt(0).toUpperCase() : "?";
 
-    profileInitial.textContent = initial;
-    if (userNameDisplay) {
-      userNameDisplay.textContent = nameToUse;
-    }
-    if (userEmailDisplaySmall) {
-      userEmailDisplaySmall.textContent = user.email;
-    }
+    if (profileInitial) profileInitial.textContent = initial;
+    if (userNameDisplay) userNameDisplay.textContent = nameToUse;
+    if (userEmailDisplaySmall) userEmailDisplaySmall.textContent = user.email;
 
-    if (welcomeUsernameSpan) {
-      welcomeUsernameSpan.textContent = `Hi ${user.username}, `;
-    }
+    document.querySelectorAll(".initial-prompts-header h1").forEach((el) => {
+      const username = user.username || 'Pengguna';
+      el.textContent = `Hi ${username}, Apa yang bisa saya bantu hari ini?`;
+    });
   }
 
   async function checkAuthState() {
     try {
       const response = await fetch("/check_auth");
+      if (!response.ok) throw new Error("Auth check failed");
       const data = await response.json();
       currentUser = data.logged_in
         ? {
@@ -322,17 +396,7 @@ document.addEventListener("DOMContentLoaded", () => {
       console.error("Gagal memeriksa status autentikasi:", error);
       setupGuestUI();
     } finally {
-      body.classList.add("loaded");
-    }
-  }
-
-  function updateClearChatButtonState() {
-    if (clearChatBtn) {
-      clearChatBtn.disabled = !currentConversationId;
-      clearChatBtn.style.opacity = currentConversationId ? "1" : "0.5";
-      clearChatBtn.style.cursor = currentConversationId
-        ? "pointer"
-        : "not-allowed";
+      body.classList.add("app-loaded");
     }
   }
 
@@ -346,61 +410,41 @@ document.addEventListener("DOMContentLoaded", () => {
   function showInitialPrompts() {
     if (initialPromptsContainer && promptSuggestionsContainer) {
       shuffleArray(ALL_PROMPTS);
-      const selectedPrompts = ALL_PROMPTS.slice(0, 4);
-
+      const selectedPrompts = ALL_PROMPTS.slice(0, 3);
       promptSuggestionsContainer.innerHTML = "";
       selectedPrompts.forEach((prompt) => {
         promptSuggestionsContainer.innerHTML += `
-                    <div class="prompt-card" data-prompt="${prompt.full_prompt}">
-                        <h3>${prompt.title}</h3>
-                        <p>${prompt.subtitle}</p>
-                    </div>
-                `;
+                  <div class="prompt-card" data-prompt="${prompt.full_prompt}" tabindex="0" role="button">
+                      <h3>${prompt.title}</h3>
+                      <p>${prompt.subtitle}</p>
+                  </div>`;
       });
-
-      initialPromptsContainer.classList.add("visible");
+      if (chatArea) chatArea.classList.add("initial-chat-layout");
     }
   }
 
   function hideInitialPrompts() {
-    if (initialPromptsContainer) {
-      initialPromptsContainer.classList.remove("visible");
-    }
+    if (chatArea) chatArea.classList.remove("initial-chat-layout");
   }
 
   async function loadConversationsList() {
-    if (!currentUser) return;
+    if (!currentUser || !historyList) return;
     try {
       const response = await fetch("/get_conversations");
       const conversations = await response.json();
       historyList.innerHTML = "";
       if (conversations.length > 0) {
-        conversations.forEach((conv, index) => {
+        conversations.forEach((conv) => {
           const historyItem = document.createElement("div");
           historyItem.className = "history-item";
           historyItem.dataset.conversationId = conv.id;
-
-          historyItem.style.animationDelay = `${index * 50}ms`;
-
-          const titleContainer = document.createElement("span");
-          titleContainer.className = "history-title-container";
-          titleContainer.textContent = conv.title;
-
-          const editBtn = document.createElement("button");
-          editBtn.className = "edit-title-btn";
-          editBtn.innerHTML = "✏️";
-
-          historyItem.appendChild(titleContainer);
-          historyItem.appendChild(editBtn);
+          historyItem.setAttribute("tabindex", "0");
+          historyItem.setAttribute("role", "button");
+          historyItem.textContent = conv.title || "Obrolan tanpa judul";
           historyList.appendChild(historyItem);
         });
       } else {
-        historyList.innerHTML = `
-            <div class="history-placeholder">
-                <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="feather feather-message-square"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
-                <span>Mulai percakapan pertamamu!</span>
-            </div>
-        `;
+        historyList.innerHTML = `<p style="padding: 20px; text-align: center; color: var(--text-color-light); opacity: 0.7;">Tidak ada riwayat.</p>`;
       }
     } catch (error) {
       console.error("Gagal memuat daftar percakapan:", error);
@@ -408,11 +452,12 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   async function loadConversation(conversationId) {
-    if (!currentUser) return;
+    if (!currentUser || currentConversationId === conversationId) return;
+
     hideInitialPrompts();
     currentConversationId = conversationId;
     conversationHistory = [];
-    chatBox.innerHTML = '<div class="loading-spinner"></div>'; // Tampilkan spinner
+    if (chatBox) chatBox.innerHTML = '<div class="loading-spinner"></div>';
 
     document.querySelectorAll(".history-item").forEach((item) => {
       item.classList.toggle(
@@ -420,55 +465,107 @@ document.addEventListener("DOMContentLoaded", () => {
         item.dataset.conversationId === conversationId
       );
     });
+
+    const activeItem = historyList.querySelector(`.history-item.active`);
+    if (chatTitle)
+      chatTitle.textContent = activeItem ? activeItem.textContent : "Memuat...";
     updateClearChatButtonState();
 
     try {
       const response = await fetch(`/get_conversation/${conversationId}`);
-      const messages = await response.json();
-      
+      const data = await response.json();
+
+      if (chatBox) chatBox.innerHTML = "";
       const fragment = document.createDocumentFragment();
-      messages.forEach((msg) => {
-        const messageElement = createMessageElement(msg);
+      data.forEach((msg) => {
+        const messageElement = createMessageElement(msg, false); // No animation on load
         fragment.appendChild(messageElement);
         conversationHistory.push({ isUser: msg.isUser, text: msg.text });
       });
-
-      chatBox.innerHTML = ""; 
       chatBox.appendChild(fragment);
-      scrollToBottom();
-
+      scrollToBottom(false);
     } catch (error) {
       console.error(`Gagal memuat percakapan ${conversationId}:`, error);
-      chatBox.innerHTML = "<p>Gagal memuat percakapan.</p>";
+      if (chatBox) chatBox.innerHTML = "<p>Gagal memuat percakapan.</p>";
     }
 
-    if (
-      window.innerWidth <= 768 &&
-      body.classList.contains("sidebar-visible")
-    ) {
-      closeSidebar();
-    }
+    closeSidebar();
   }
 
   function startNewChat() {
     currentConversationId = null;
     conversationHistory = [];
-    chatBox.innerHTML = "";
+    if (chatBox) chatBox.innerHTML = "";
     showInitialPrompts();
     document
       .querySelectorAll(".history-item")
       .forEach((item) => item.classList.remove("active"));
-    userInput.focus();
+    if (userInput) userInput.focus();
+    if (chatTitle) chatTitle.textContent = "Obrolan Baru";
     updateClearChatButtonState();
-    if (
-      window.innerWidth <= 768 &&
-      body.classList.contains("sidebar-visible")
-    ) {
-      closeSidebar();
+    closeSidebar();
+  }
+
+  async function handleFormSubmit(e) {
+    if (e) e.preventDefault();
+    const userMessageText = chatTextarea ? chatTextarea.value.trim() : '';
+    if (userMessageText === '' && !uploadedImageData) return;
+
+    hideInitialPrompts();
+    if (!currentConversationId) {
+      conversationHistory = [];
+    }
+
+    let userHtmlContent = `<p>${userMessageText.replace(/\n/g, "<br>")}</p>`;
+    if (uploadedImageData) {
+      userHtmlContent =
+        `<img src="${uploadedImageData}" class="message-image" alt="Gambar terlampir"><br>` +
+        userHtmlContent;
+    }
+
+    appendMessage(userHtmlContent, "user-message slide-in-right");
+
+    const userMessageData = {
+      isUser: true,
+      text: userMessageText,
+      htmlContent: `<p>${userMessageText}</p>`,
+      imageData: uploadedImageData,
+    };
+    conversationHistory.push({ isUser: true, text: userMessageText });
+
+    const imageToSend = uploadedImageData;
+    resetInputArea();
+
+    try {
+      const savedUserData = await saveMessageToDb(userMessageData);
+      if (
+        savedUserData &&
+        savedUserData.conversationId &&
+        !currentConversationId
+      ) {
+        currentConversationId = savedUserData.conversationId;
+        if (chatTitle)
+          chatTitle.textContent = savedUserData.title || "Obrolan Baru";
+        await loadConversationsList();
+        document.querySelectorAll(".history-item").forEach((item) => {
+          item.classList.toggle(
+            "active",
+            item.dataset.conversationId === currentConversationId
+          );
+        });
+      }
+      updateClearChatButtonState();
+      await streamBotResponse(userMessageText, imageToSend);
+    } catch (error) {
+      console.error("Error during message handling:", error);
+      appendMessage(
+        "<p>Maaf, terjadi kesalahan saat memproses pesan Anda.</p>",
+        "bot-message"
+      );
     }
   }
 
-  async function submitAndGetResponse(userMessageText, imageToSend) {
+  async function streamBotResponse(userMessageText, imageToSend) {
     const botMessageElement = createBotMessageElement();
     const typingIndicator = showTypingIndicator(botMessageElement);
     let fullResponseText = "";
@@ -481,15 +578,16 @@ document.addEventListener("DOMContentLoaded", () => {
           message: userMessageText,
           history: conversationHistory.slice(0, -1),
           imageData: imageToSend,
+          conversationId: currentConversationId,
         }),
       });
 
-      if (!response.ok)
-        throw new Error("Gagal mendapatkan respons dari server.");
-      typingIndicator.remove();
+      if (!response.ok) throw new Error(`Server error: ${response.statusText}`);
+      if (typingIndicator) typingIndicator.remove();
 
       const reader = response.body.getReader();
       const decoder = new TextDecoder();
+
       while (true) {
         const { value, done } = await reader.read();
         if (done) break;
@@ -507,72 +605,29 @@ document.addEventListener("DOMContentLoaded", () => {
         text: fullResponseText,
         htmlContent: finalHtml,
       };
+      conversationHistory.push(botMessageData);
       await saveMessageToDb(botMessageData);
-      conversationHistory.push({ isUser: false, text: fullResponseText });
       addCopyToBotMessage(botMessageElement);
     } catch (error) {
-      console.error("Error:", error);
+      console.error("Error streaming response:", error);
       if (typingIndicator) typingIndicator.remove();
-      botMessageElement.querySelector(".content-wrapper").innerHTML =
-        "<p>Maaf, terjadi kesalahan saat menghubungi AI.</p>";
+      if (botMessageElement)
+        botMessageElement.querySelector(
+          ".content-wrapper"
+        ).innerHTML = `<p>Maaf, terjadi kesalahan. Coba lagi nanti. (${error.message})</p>`;
     }
   }
 
-  async function handleFormSubmit(e) {
-    if (e) e.preventDefault();
-    const userMessageText = userInput.value.trim();
-
-    if (userMessageText === "" && !uploadedImageData) return;
-
-    hideInitialPrompts();
-
-    if (!currentConversationId) {
-        chatBox.innerHTML = "";
-        conversationHistory = [];
-    }
-
-    let userHtmlContent = `<p>${userMessageText}</p>`;
-    if (uploadedImageData) {
-      userHtmlContent =
-        `<img src="${uploadedImageData}" class="message-image" alt="Gambar terlampir"><br>` +
-        userHtmlContent;
-    }
-
-    appendMessage(
-      userHtmlContent,
-      "user-message",
-      false,
-      new Date(),
-      userMessageText
-    );
-
-    const userMessageData = {
-      isUser: true,
-      text: userMessageText,
-      htmlContent: `<p>${userMessageText}</p>`,
-      imageData: uploadedImageData,
-    };
-
-    conversationHistory.push({ isUser: true, text: userMessageText });
-
-    const imageToSend = uploadedImageData;
+  function resetInputArea() {
     uploadedImageData = null;
-    imagePreviewContainer.style.display = "none";
-    fileInput.value = "";
-    userInput.value = "";
-    userInput.focus();
-
-    const savedUserData = await saveMessageToDb(userMessageData);
-    if (savedUserData && savedUserData.conversationId && !currentConversationId) {
-      currentConversationId = savedUserData.conversationId;
-      updateClearChatButtonState();
-      await loadConversationsList(); 
-      document.querySelectorAll(".history-item").forEach(item => {
-          item.classList.toggle("active", item.dataset.conversationId === currentConversationId);
-      });
+    if (imagePreviewContainer) imagePreviewContainer.style.display = "none";
+    if (fileInput) fileInput.value = "";
+    if (chatTextarea) {
+      chatTextarea.value = "";
+      chatTextarea.style.height = 'auto';
+      chatTextarea.focus();
+      if (sendBtn) sendBtn.disabled = true;
     }
-
-    await submitAndGetResponse(userMessageText, imageToSend);
   }
 
   async function saveMessageToDb(messageData) {
@@ -586,326 +641,116 @@ document.addEventListener("DOMContentLoaded", () => {
           messageData: messageData,
         }),
       });
-      const data = await response.json();
-      if (data.status === "success") {
-        return data;
-      }
-      return null;
+      return await response.json();
     } catch (error) {
       console.error("Gagal menyimpan pesan:", error);
       return null;
     }
   }
 
-  if (chatForm) chatForm.addEventListener("submit", handleFormSubmit);
-  if (startChatBtn) {
-    startChatBtn.addEventListener("click", () => {
-      welcomeScreen.classList.remove("visible");
-      if (currentUser) {
-        loadConversationsList();
-        startNewChat();
-      }
-    });
-  }
-  if (newChatBtn) newChatBtn.addEventListener("click", startNewChat);
-
-  if (uploadBtn) {
-    uploadBtn.addEventListener("click", () => fileInput.click());
-  }
-  if (fileInput) {
-    fileInput.addEventListener("change", (event) => {
-      const file = event.target.files[0];
-      if (file && file.type.startsWith("image/")) {
-        const reader = new FileReader();
-        reader.onload = (e) => {
-          uploadedImageData = e.target.result;
-          imagePreview.src = uploadedImageData;
-          imagePreviewContainer.style.display = "block";
-        };
-        reader.readAsDataURL(file);
-      }
-    });
-  }
-  if (removePreviewBtn) {
-    removePreviewBtn.addEventListener("click", () => {
-      uploadedImageData = null;
-      imagePreviewContainer.style.display = "none";
-      fileInput.value = "";
-    });
-  }
-
-  if (historyList) {
-    historyList.addEventListener("click", (e) => {
-      const historyItem = e.target.closest(".history-item");
-      if (!historyItem) return;
-
-      const convId = historyItem.dataset.conversationId;
-
-      if (e.target.classList.contains("edit-title-btn")) {
-        e.stopPropagation();
-        const titleContainer = historyItem.querySelector(
-          ".history-title-container"
-        );
-
-        let input = historyItem.querySelector(".history-title-input");
-        if (!input) {
-          input = document.createElement("input");
-          input.type = "text";
-          input.className = "history-title-input";
-          historyItem.insertBefore(input, titleContainer);
-        }
-
-        input.value = titleContainer.textContent;
-        titleContainer.style.display = "none";
-        input.style.display = "block";
-        input.focus();
-
-        const saveTitle = async () => {
-          const newTitle = input.value.trim();
-          if (newTitle && newTitle !== titleContainer.textContent) {
-            try {
-              const response = await fetch(`/update_title/${convId}`, {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ title: newTitle }),
-              });
-              if (response.ok) {
-                titleContainer.textContent = newTitle;
-              }
-            } catch (error) {
-              console.error("Gagal update judul:", error);
-            }
-          }
-          input.style.display = "none";
-          titleContainer.style.display = "block";
-        };
-
-        input.addEventListener("blur", saveTitle, { once: true });
-        input.addEventListener("keydown", (event) => {
-          if (event.key === "Enter") {
-            input.blur();
-          } else if (event.key === "Escape") {
-            input.style.display = "none";
-            titleContainer.style.display = "block";
-            input.removeEventListener("blur", saveTitle);
-          }
-        });
-      } else {
-        if (convId) loadConversation(convId);
-      }
-    });
-  }
-
-  if (initialPromptsContainer) {
-    initialPromptsContainer.addEventListener("click", (e) => {
-      const promptCard = e.target.closest(".prompt-card");
-      if (promptCard) {
-        const promptText = promptCard.dataset.prompt;
-        userInput.value = promptText;
-        handleFormSubmit(new Event("submit"));
-      }
-    });
-  }
-
-  if (clearChatBtn) {
-    clearChatBtn.addEventListener("click", () => {
-      if (!clearChatBtn.disabled) {
-        modalLoader.style.display = "none";
-        modalButtons.style.display = "flex";
-        modalOverlay.classList.add("visible");
-      }
-    });
-  }
-  if (confirmDeleteBtn) {
-    confirmDeleteBtn.addEventListener("click", async () => {
-      if (!currentConversationId || !currentUser) {
-        modalOverlay.classList.remove("visible");
-        return;
-      }
-      modalLoader.style.display = "block";
-      modalButtons.style.display = "none";
-      try {
-        const response = await fetch(
-          `/delete_conversation/${currentConversationId}`,
-          {
-            method: "DELETE",
-          }
-        );
-        const data = await response.json();
-        if (response.ok && data.status === "success") {
-          const historyItemToRemove = historyList.querySelector(
-            `[data-conversation-id="${currentConversationId}"]`
-          );
-          if (historyItemToRemove) {
-            historyItemToRemove.remove();
-          }
-          startNewChat();
-        } else {
-          console.error("Gagal menghapus percakapan:", data.message);
-        }
-      } catch (error) {
-        console.error("Error saat fetch hapus:", error);
-      } finally {
-        modalOverlay.classList.remove("visible");
-      }
-    });
-  }
-  if (cancelBtn)
-    cancelBtn.addEventListener("click", () =>
-      modalOverlay.classList.remove("visible")
-    );
-  if (modalOverlay)
-    modalOverlay.addEventListener("click", (e) => {
-      if (e.target === modalOverlay) modalOverlay.classList.remove("visible");
-    });
-  if (profileBtn) {
-    profileBtn.addEventListener("click", (e) => {
-      e.stopPropagation();
-      if (profileDropdown) profileDropdown.classList.toggle("show");
-    });
-  }
-
-  if (logoutBtnLink) {
-    logoutBtnLink.addEventListener("click", (e) => {
-      e.preventDefault();
-      const logoutUrl = logoutBtnLink.href;
-
-      if (logoutOverlay) {
-        logoutOverlay.classList.add("visible");
-      }
-
-      setTimeout(() => {
-        window.location.href = logoutUrl;
-      }, 2000);
-    });
-  }
-
-  window.addEventListener("click", (e) => {
-    if (profileBtn && !profileBtn.contains(e.target) && profileDropdown) {
-      profileDropdown.classList.remove("show");
+  function createMessageElement(msgData, withAnimation = true) {
+    const { htmlContent, imageData, isUser } = msgData;
+    let className = isUser ? "user-message" : "bot-message";
+    if (withAnimation) {
+        className += isUser ? ' slide-in-right' : ' slide-in-left';
     }
-  });
-  if (themeToggleButtons) {
-    const savedTheme = localStorage.getItem("theme");
-    if (savedTheme) {
-      body.classList.add(savedTheme);
+
+    const messageElement = document.createElement("div");
+    messageElement.className = `message ${className}`;
+
+    const contentWrapper = document.createElement("div");
+    contentWrapper.className = "content-wrapper";
+
+    let fullContent = "";
+    if (imageData) {
+      fullContent += `<img src="${imageData}" class="message-image" alt="Gambar terlampir"><br>`;
     }
-    themeToggleButtons.forEach((btn) => {
-      btn.addEventListener("click", () => {
-        body.classList.toggle("dark-mode");
-        localStorage.setItem(
-          "theme",
-          body.classList.contains("dark-mode") ? "dark-mode" : ""
-        );
-      });
-    });
-  }
-  if (chatBox && scrollToBottomBtn) {
-    chatBox.addEventListener("scroll", () => {
-      const isScrolledUp =
-        chatBox.scrollHeight - chatBox.scrollTop > chatBox.clientHeight + 200;
-      scrollToBottomBtn.classList.toggle("visible", isScrolledUp);
-    });
-    scrollToBottomBtn.addEventListener("click", () => scrollToBottom(true));
-  }
-  const SpeechRecognition =
-    window.SpeechRecognition || window.webkitSpeechRecognition;
-  if (SpeechRecognition && micBtn) {
-    const recognition = new SpeechRecognition();
-    recognition.continuous = false;
-    recognition.lang = "id-ID";
-    recognition.interimResults = false;
-    micBtn.addEventListener("click", () => {
-      micBtn.classList.contains("recording")
-        ? recognition.stop()
-        : recognition.start();
-    });
-    recognition.onstart = () => micBtn.classList.add("recording");
-    recognition.onend = () => micBtn.classList.remove("recording");
-    recognition.onresult = (event) => {
-      userInput.value = event.results[0][0].transcript;
-      handleFormSubmit(new Event("submit", { bubbles: true }));
-    };
-    recognition.onerror = (event) =>
-      console.error("Speech recognition error:", event.error);
-  } else if (micBtn) {
-    micBtn.style.display = "none";
+    fullContent += htmlContent;
+    contentWrapper.innerHTML = fullContent;
+    messageElement.appendChild(contentWrapper);
+
+    if (!isUser && htmlContent) {
+      addCopyToBotMessage(messageElement);
+    }
+    return messageElement;
   }
 
-  chatBox.addEventListener("click", (e) => {
-    if (e.target.closest(".edit-prompt-btn")) {
-      const editBtn = e.target.closest(".edit-prompt-btn");
-      const messageElement = editBtn.closest(".message");
-      const contentWrapper = messageElement.querySelector(".content-wrapper");
-      const originalText = messageElement.dataset.originalText;
+  function appendMessage(content, className) {
+    if (!chatBox) return;
+    const messageElement = document.createElement("div");
+    messageElement.className = `message ${className}`;
 
-      contentWrapper.style.display = "none";
-      editBtn.style.display = "none";
+    const contentWrapper = document.createElement("div");
+    contentWrapper.className = "content-wrapper";
+    contentWrapper.innerHTML = content;
+    messageElement.appendChild(contentWrapper);
 
-      const editArea = document.createElement("div");
-      editArea.className = "edit-area";
-      editArea.innerHTML = `
-                <textarea>${originalText}</textarea>
-                <div class="edit-area-buttons">
-                    <button class="cancel-edit-btn">Batal</button>
-                    <button class="save-edit-btn">Simpan & Kirim</button>
-                </div>
-            `;
-      messageElement.appendChild(editArea);
+    if (className.includes("bot-message") && content) {
+      addCopyToBotMessage(messageElement);
+    }
+    chatBox.appendChild(messageElement);
+    scrollToBottom();
+  }
 
-      const textarea = editArea.querySelector("textarea");
-      textarea.focus();
-      textarea.style.height = "auto";
-      textarea.style.height = textarea.scrollHeight + "px";
+  function createBotMessageElement() {
+    const messageElement = document.createElement("div");
+    messageElement.className = "message bot-message slide-in-left";
+    const contentWrapper = document.createElement("div");
+    contentWrapper.className = "content-wrapper";
+    messageElement.appendChild(contentWrapper);
+    if (chatBox) chatBox.appendChild(messageElement);
+    scrollToBottom();
+    return messageElement;
+  }
 
-      editArea
-        .querySelector(".cancel-edit-btn")
-        .addEventListener("click", () => {
-          editArea.remove();
-          contentWrapper.style.display = "block";
-        });
+  function showTypingIndicator(botMessageElement) {
+    const indicator = document.createElement("div");
+    indicator.className = "typing-indicator";
+    indicator.innerHTML = `<span></span><span></span><span></span>`;
+    botMessageElement.querySelector(".content-wrapper").appendChild(indicator);
+    scrollToBottom();
+    return indicator;
+  }
 
-      editArea.querySelector(".save-edit-btn").addEventListener("click", () => {
-        const newText = textarea.value.trim();
-        if (newText && newText !== originalText) {
-          contentWrapper.innerHTML = `<p>${newText}</p>`;
-          messageElement.dataset.originalText = newText;
+  function addCopyToBotMessage(botMessageElement) {
+    const copyBtn = document.createElement("button");
+    copyBtn.className = "copy-btn";
+    copyBtn.setAttribute("aria-label", "Salin pesan");
+    copyBtn.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>`;
+    copyBtn.addEventListener("click", () => {
+      const contentToCopy =
+        botMessageElement.querySelector(".content-wrapper").innerText;
+      navigator.clipboard.writeText(contentToCopy);
+    });
+    botMessageElement.appendChild(copyBtn);
+  }
 
-          const messageIndex = Array.from(chatBox.children).indexOf(
-            messageElement
-          );
-          if (conversationHistory[messageIndex]) {
-            conversationHistory[messageIndex].text = newText;
-          }
-
-          let nextMsg = messageElement.nextElementSibling;
-          while (nextMsg) {
-            let toRemove = nextMsg;
-            nextMsg = nextMsg.nextElementSibling;
-            toRemove.remove();
-          }
-
-          submitAndGetResponse(newText, null);
-        }
-        editArea.remove();
-        contentWrapper.style.display = "block";
+  function scrollToBottom(smooth = true) {
+    if (chatBox) {
+      chatBox.scrollTo({
+        top: chatBox.scrollHeight,
+        behavior: smooth ? "smooth" : "auto",
       });
     }
-  });
+  }
+
+  function autoResizeTextarea() {
+    if (!userInput) return;
+    userInput.style.height = "auto";
+    const maxHeight = 150;
+    userInput.style.height = Math.min(userInput.scrollHeight, maxHeight) + "px";
+  }
 
   function openFeedbackModal() {
     if (feedbackModalOverlay) {
       feedbackModalOverlay.classList.add("visible");
-
       if (currentUser && currentUser.email) {
         feedbackUserEmail.textContent = currentUser.email;
       } else {
         feedbackUserEmail.textContent = "Pengguna Tamu";
       }
-
       feedbackTextarea.value = "";
       feedbackMessage.textContent = "";
-      feedbackMessage.className = "message-text";
       const submitBtn = document.getElementById("submit-feedback-btn");
       if (submitBtn) submitBtn.disabled = false;
     }
@@ -917,21 +762,169 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
-  if (feedbackBtn) {
-    feedbackBtn.addEventListener("click", openFeedbackModal);
-  }
+  // --- EVENT LISTENERS ---
+  if (headerMenuToggle) headerMenuToggle.addEventListener("click", toggleSidebar);
+  if (chatForm) chatForm.addEventListener("submit", handleFormSubmit);
+  if (newChatBtn) newChatBtn.addEventListener("click", startNewChat);
 
-  if (cancelFeedbackBtn) {
-    cancelFeedbackBtn.addEventListener("click", closeFeedbackModal);
-  }
-
-  if (feedbackModalOverlay) {
-    feedbackModalOverlay.addEventListener("click", (e) => {
-      if (e.target === feedbackModalOverlay) {
-        closeFeedbackModal();
+  if (startChatBtn) {
+    startChatBtn.addEventListener("click", () => {
+      if (welcomeScreen) welcomeScreen.classList.remove("visible");
+      if (currentUser) {
+        loadConversationsList();
+        startNewChat();
       }
     });
   }
+
+  if (historyList) {
+    historyList.addEventListener("click", (e) => {
+      const historyItem = e.target.closest(".history-item");
+      if (historyItem) loadConversation(historyItem.dataset.conversationId);
+    });
+  }
+
+  if (promptSuggestionsContainer) {
+    promptSuggestionsContainer.addEventListener("click", (e) => {
+      const promptCard = e.target.closest(".prompt-card");
+      if (promptCard && userInput) {
+        userInput.value = promptCard.dataset.prompt;
+        handleFormSubmit();
+      }
+    });
+  }
+
+  if (clearChatBtn) {
+    clearChatBtn.addEventListener("click", () => {
+      if (!clearChatBtn.disabled && modalOverlay)
+        modalOverlay.classList.add("visible");
+    });
+  }
+
+  if (confirmDeleteBtn) {
+    confirmDeleteBtn.addEventListener("click", async () => {
+      if (!currentConversationId || !currentUser) return;
+      try {
+        const response = await fetch(
+          `/delete_conversation/${currentConversationId}`,
+          { method: "DELETE" }
+        );
+        if (response.ok) {
+          startNewChat();
+          loadConversationsList();
+        }
+      } catch (error) {
+        console.error("Gagal menghapus percakapan:", error);
+      } finally {
+        if (modalOverlay) modalOverlay.classList.remove("visible");
+      }
+    });
+  }
+
+  if (cancelBtn)
+    cancelBtn.addEventListener("click", () =>
+      modalOverlay.classList.remove("visible")
+    );
+  if (modalOverlay)
+    modalOverlay.addEventListener("click", (e) => {
+      if (e.target === modalOverlay) modalOverlay.classList.remove("visible");
+    });
+
+  // Hapus event lama:
+  // if (userInput) { ... }
+  // if (userInput) { ... }
+  // if (userInput) { ... }
+
+  if (uploadBtn) uploadBtn.addEventListener("click", () => fileInput.click());
+  if (fileInput) {
+    fileInput.addEventListener("change", (event) => {
+      const file = event.target.files[0];
+      if (file && file.type.startsWith("image/")) {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          uploadedImageData = e.target.result;
+          if (imagePreview) imagePreview.src = uploadedImageData;
+          if (imagePreviewContainer)
+            imagePreviewContainer.style.display = "block";
+        };
+        reader.readAsDataURL(file);
+      }
+    });
+  }
+
+  if (removePreviewBtn) {
+    removePreviewBtn.addEventListener("click", resetInputArea);
+  }
+
+  document.addEventListener("click", (e) => {
+    if (
+      profileDropdown &&
+      profileDropdown.classList.contains("show") &&
+      profileBtn &&
+      !profileBtn.contains(e.target) &&
+      !profileDropdown.contains(e.target)
+    ) {
+      profileDropdown.classList.remove("show");
+    }
+
+    if (
+        sidebar &&
+        sidebar.classList.contains('expanded') &&
+        !sidebar.contains(e.target) &&
+        !headerMenuToggle.contains(e.target)
+    ) {
+        closeSidebar();
+    }
+  });
+
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape") {
+      closeSidebar();
+      if (profileDropdown) profileDropdown.classList.remove("show");
+      if (modalOverlay) modalOverlay.classList.remove("visible");
+      if (feedbackModalOverlay)
+        feedbackModalOverlay.classList.remove("visible");
+    }
+  });
+
+  if (profileBtn) {
+    profileBtn.addEventListener("click", (e) => {
+      e.stopPropagation();
+      if (profileDropdown) profileDropdown.classList.toggle("show");
+    });
+  }
+
+  if (logoutBtnLink) {
+    logoutBtnLink.addEventListener("click", (e) => {
+      e.preventDefault();
+      if (logoutOverlay) logoutOverlay.classList.add("visible");
+      setTimeout(() => {
+        window.location.href = logoutBtnLink.href;
+      }, 1500);
+    });
+  }
+
+  if (themeToggleButtons) {
+    themeToggleButtons.forEach((btn) => {
+      btn.addEventListener("click", () => {
+        const isDarkMode = body.classList.toggle("dark-mode");
+        localStorage.setItem("theme", isDarkMode ? "dark-mode" : "");
+      });
+    });
+  }
+  const savedTheme = localStorage.getItem("theme");
+  if (savedTheme === "dark-mode") {
+    body.classList.add("dark-mode");
+  }
+
+  // --- FEEDBACK LOGIC ---
+  if (feedbackBtn) feedbackBtn.addEventListener("click", openFeedbackModal);
+  if (cancelFeedbackBtn)
+    cancelFeedbackBtn.addEventListener("click", closeFeedbackModal);
+  if (feedbackModalOverlay)
+    feedbackModalOverlay.addEventListener("click", (e) => {
+      if (e.target === feedbackModalOverlay) closeFeedbackModal();
+    });
 
   if (feedbackForm) {
     feedbackForm.addEventListener("submit", async (e) => {
@@ -942,7 +935,6 @@ document.addEventListener("DOMContentLoaded", () => {
       const submitBtn = document.getElementById("submit-feedback-btn");
       submitBtn.disabled = true;
       feedbackMessage.textContent = "Mengirim...";
-      feedbackMessage.className = "message-text";
 
       try {
         const response = await fetch("/submit_feedback", {
@@ -951,159 +943,153 @@ document.addEventListener("DOMContentLoaded", () => {
           body: JSON.stringify({ feedback: feedbackText }),
         });
         const data = await response.json();
-
         if (response.ok) {
           feedbackMessage.textContent =
             "Terima kasih! Masukan Anda telah terkirim.";
-          feedbackMessage.className = "message-text success-text";
-          setTimeout(() => {
-            closeFeedbackModal();
-          }, 2000);
+          setTimeout(closeFeedbackModal, 2000);
         } else {
           throw new Error(data.message || "Gagal mengirim masukan.");
         }
       } catch (error) {
         feedbackMessage.textContent = error.message;
-        feedbackMessage.className = "message-text error-text";
         submitBtn.disabled = false;
       }
     });
   }
 
-  function createMessageElement(msgData) {
-    const { htmlContent, imageData, isUser, timestamp, text } = msgData;
-    const className = isUser ? "user-message" : "bot-message";
-    
-    const messageElement = document.createElement("div");
-    messageElement.className = `message ${className}`;
+  // --- SPEECH RECOGNITION ---
+  const SpeechRecognition =
+    window.SpeechRecognition || window.webkitSpeechRecognition;
+  if (SpeechRecognition && micBtn) {
+    const recognition = new SpeechRecognition();
+    recognition.continuous = false;
+    recognition.lang = "id-ID";
+    recognition.interimResults = false;
 
-    if (isUser) {
-      messageElement.dataset.originalText = text;
-    }
-
-    const contentWrapper = document.createElement("div");
-    contentWrapper.className = "content-wrapper";
-    
-    let fullContent = "";
-    if (imageData) {
-        fullContent += `<img src="${imageData}" class="message-image" alt="Gambar terlampir"><br>`;
-    }
-    fullContent += htmlContent;
-    contentWrapper.innerHTML = fullContent;
-    
-    messageElement.appendChild(contentWrapper);
-    const date = timestamp && timestamp._seconds ? new Date(timestamp._seconds * 1000) : new Date();
-    appendTimestamp(messageElement, date);
-
-    if (isUser) {
-      const editBtn = document.createElement("button");
-      editBtn.className = "edit-prompt-btn";
-      editBtn.innerHTML = "✏️";
-      editBtn.setAttribute("data-tooltip", "Edit & kirim ulang");
-      messageElement.appendChild(editBtn);
-    }
-
-    if (!isUser && htmlContent && htmlContent.length > 1) {
-      addCopyToBotMessage(messageElement);
-    }
-    
-    return messageElement;
-  }
-
-  function appendMessage(
-    content,
-    className,
-    isTextContent,
-    timestamp,
-    originalText = ""
-  ) {
-    const messageElement = document.createElement("div");
-    messageElement.className = `message ${className}`;
-
-    if (className === "user-message") {
-      messageElement.dataset.originalText = originalText;
-    }
-
-    const contentWrapper = document.createElement("div");
-    contentWrapper.className = "content-wrapper";
-    if (isTextContent) {
-      const p = document.createElement("p");
-      p.textContent = content;
-      contentWrapper.appendChild(p);
-    } else {
-      contentWrapper.innerHTML = content;
-    }
-    messageElement.appendChild(contentWrapper);
-    appendTimestamp(messageElement, timestamp);
-
-    if (className === "user-message") {
-      const editBtn = document.createElement("button");
-      editBtn.className = "edit-prompt-btn";
-      editBtn.innerHTML = "✏️";
-      editBtn.setAttribute("data-tooltip", "Edit & kirim ulang");
-      messageElement.appendChild(editBtn);
-    }
-
-    if (className === "bot-message" && content && content.length > 1) {
-      addCopyToBotMessage(messageElement);
-    }
-    chatBox.appendChild(messageElement);
-    scrollToBottom();
-  }
-
-  function createBotMessageElement() {
-    const messageElement = document.createElement("div");
-    messageElement.className = "message bot-message";
-    const contentWrapper = document.createElement("div");
-    contentWrapper.className = "content-wrapper";
-    messageElement.appendChild(contentWrapper);
-    appendTimestamp(messageElement, new Date());
-    chatBox.appendChild(messageElement);
-    scrollToBottom();
-    return messageElement;
-  }
-  function showTypingIndicator(botMessageElement) {
-    const indicator = document.createElement("div");
-    indicator.className = "typing-indicator";
-    indicator.innerHTML = `<span></span><span></span><span></span>`;
-    botMessageElement.querySelector(".content-wrapper").appendChild(indicator);
-    scrollToBottom();
-    return indicator;
-  }
-  function appendTimestamp(messageElement, timestamp) {
-    const timeString =
-      timestamp.getHours().toString().padStart(2, "0") +
-      ":" +
-      timestamp.getMinutes().toString().padStart(2, "0");
-    const timestampElement = document.createElement("span");
-    timestampElement.className = "message-timestamp";
-    timestampElement.textContent = timeString;
-    messageElement.appendChild(timestampElement);
-  }
-  function addCopyToBotMessage(botMessageElement) {
-    const copyBtn = document.createElement("button");
-    copyBtn.className = "copy-btn";
-    copyBtn.setAttribute("aria-label", "Salin pesan");
-    copyBtn.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>`;
-    copyBtn.addEventListener("click", () => {
-      const contentToCopy =
-        botMessageElement.querySelector(".content-wrapper").innerText;
-      navigator.clipboard.writeText(contentToCopy).then(() => {
-        copyBtn.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>`;
-        setTimeout(() => {
-          copyBtn.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>`;
-        }, 1500);
-      });
+    micBtn.addEventListener("click", () => {
+      if (micBtn.classList.contains("recording")) {
+        recognition.stop();
+      } else {
+        recognition.start();
+      }
     });
-    botMessageElement.appendChild(copyBtn);
-  }
-  function scrollToBottom(smooth = false) {
-    if (smooth) {
-      chatBox.scrollTo({ top: chatBox.scrollHeight, behavior: "smooth" });
-    } else {
-      chatBox.scrollTop = chatBox.scrollHeight;
-    }
+
+    recognition.onstart = () => micBtn.classList.add("recording");
+    recognition.onend = () => micBtn.classList.remove("recording");
+    recognition.onresult = (event) => {
+      userInput.value = event.results[0][0].transcript;
+      autoResizeTextarea();
+      handleFormSubmit(new Event("submit", { bubbles: true }));
+    };
+    recognition.onerror = (event) => {
+      console.error("Speech recognition error:", event.error);
+      micBtn.classList.remove("recording");
+    };
+  } else if (micBtn) {
+    micBtn.style.display = "none";
   }
 
+  // --- TOOLTIP LOGIC ---
+  let tooltipElement;
+  function showTooltip(e) {
+    const triggerElement = e.target.closest("[data-tooltip]");
+    if (!triggerElement) return;
+
+    hideTooltip();
+
+    const tooltipText = triggerElement.dataset.tooltip;
+    tooltipElement = document.createElement("div");
+    tooltipElement.className = "tooltip-text";
+    tooltipElement.textContent = tooltipText;
+    document.body.appendChild(tooltipElement);
+
+    const triggerRect = triggerElement.getBoundingClientRect();
+    const tooltipRect = tooltipElement.getBoundingClientRect();
+    let top, left;
+
+    left = triggerRect.left + triggerRect.width / 2 - tooltipRect.width / 2;
+
+    if (triggerRect.top < tooltipRect.height + 15) {
+      tooltipElement.classList.add("tooltip-bottom");
+      top = triggerRect.bottom + 8;
+    } else {
+      tooltipElement.classList.remove("tooltip-bottom");
+      top = triggerRect.top - tooltipRect.height - 8;
+    }
+
+    tooltipElement.style.left = `${Math.max(5, left)}px`;
+    tooltipElement.style.top = `${top}px`;
+  }
+  function hideTooltip() {
+    if (tooltipElement) {
+      tooltipElement.remove();
+      tooltipElement = null;
+    }
+  }
+  document.addEventListener("mouseover", showTooltip);
+  document.addEventListener("mouseout", hideTooltip);
+  document.addEventListener("focusin", showTooltip);
+  document.addEventListener("focusout", hideTooltip);
+  window.addEventListener("scroll", hideTooltip, true);
+
+  // --- EVENT LISTENER PENCARIAN ---
+  if (searchHistoryInput) {
+    searchHistoryInput.addEventListener('input', filterHistory);
+  }
+
+  // --- TEXTAREA, SUBMIT, DAN PROMPT SUGGESTION FIX ---
+  const chatTextarea = document.querySelector('textarea[name="user-input"]');
+  const sendBtn = document.getElementById('send-btn');
+
+  // Auto-resize
+  if (chatTextarea) {
+    chatTextarea.addEventListener('input', function() {
+      this.style.height = 'auto';
+      this.style.height = (this.scrollHeight) + 'px';
+      if (sendBtn) sendBtn.disabled = !this.value.trim();
+    });
+    // Enter = submit, Shift+Enter = newline
+    chatTextarea.addEventListener('keydown', function(e) {
+      if (e.key === 'Enter' && !e.shiftKey) {
+        e.preventDefault();
+        if (chatForm) chatForm.requestSubmit();
+      }
+    });
+    // Inisialisasi tombol kirim
+    if (sendBtn) sendBtn.disabled = !chatTextarea.value.trim();
+  }
+
+  // Event submit form
+  if (chatForm) {
+    chatForm.addEventListener('submit', function(e) {
+      e.preventDefault();
+      const textarea = chatForm.querySelector('textarea[name="user-input"]');
+      const value = textarea ? textarea.value.trim() : '';
+      if (value) {
+        if (typeof handleFormSubmit === 'function') {
+          handleFormSubmit(e);
+        } else {
+          textarea.value = '';
+          textarea.style.height = 'auto';
+        }
+      }
+    });
+  }
+
+  // Prompt suggestion click: isi textarea dan kirim
+  if (promptSuggestionsContainer) {
+    promptSuggestionsContainer.addEventListener('click', (e) => {
+      const promptCard = e.target.closest('.prompt-card');
+      if (promptCard && chatTextarea) {
+        chatTextarea.value = promptCard.dataset.prompt || promptCard.innerText;
+        chatTextarea.dispatchEvent(new Event('input'));
+        if (chatForm) chatForm.requestSubmit();
+      }
+    });
+  }
+
+  // --- INITIALIZATION ---
   checkAuthState();
+  updateClearChatButtonState();
+  setSidebarState(); // Set sidebar state on load
 });

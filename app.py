@@ -1,4 +1,5 @@
 import os
+import time
 import requests
 import json
 from flask import Flask, render_template, request, Response, jsonify, session, redirect, url_for, send_from_directory
@@ -82,11 +83,44 @@ def google_verification():
 def login():
     if request.method == 'POST':
         try:
-            id_token = request.form.get('id_token') or request.json.get('id_token')
-            decoded_token = auth.verify_id_token(id_token)
-            
-            user_record = auth.get_user(decoded_token['uid'])
+            id_token = request.json.get('id_token')
+            if not id_token:
+                return jsonify({"status": "error", "message": "Token tidak ditemukan."}), 400
 
+            # Verifikasi token Firebase dari klien dengan retry kecil untuk clock skew
+            last_error = None
+            for attempt in range(3):
+                try:
+                    decoded_token = auth.verify_id_token(id_token)
+                    break
+                except auth.InvalidIdTokenError as e:
+                    last_error = e
+                    # Jika token dianggap "terlalu awal", tunggu sebentar dan coba lagi
+                    if "Token used too early" in str(e) and attempt < 2:
+                        time.sleep(1)
+                        continue
+                    raise
+                except Exception as e:
+                    last_error = e
+                    if "Token used too early" in str(e) and attempt < 2:
+                        time.sleep(1)
+                        continue
+                    raise
+
+            uid = decoded_token['uid']
+            
+            user_record = auth.get_user(uid)
+
+            # Pastikan dokumen user ada di Firestore
+            user_doc_ref = db.collection('users').document(uid)
+            if not user_doc_ref.get().exists:
+                user_doc_ref.set({
+                    'email': user_record.email,
+                    'displayName': user_record.display_name or user_record.email.split('@')[0],
+                    'created_at': firestore.SERVER_TIMESTAMP
+                }, merge=True)
+            
+            # Set session di server
             session['user_id'] = user_record.uid
             session['user_email'] = user_record.email
             
@@ -100,10 +134,20 @@ def login():
                 session['user_name'] = user_record.email.split('@')[0]
 
             return jsonify({"status": "success", "redirect": url_for('index')})
+        except auth.InvalidIdTokenError as e:
+            # Mengembalikan pesan error yang lebih spesifik jika token tidak valid
+            print(f"Login error (InvalidIdTokenError): {e}")
+            return jsonify({"status": "error", "message": "Token tidak valid atau kedaluwarsa. Silakan coba lagi."}), 401
         except Exception as e:
             print(f"Login error: {e}")
-            return jsonify({"status": "error", "message": str(e)}), 401
+            # Cek jika error adalah karena clock skew
+            if "Token used too early" in str(e):
+                return jsonify({"status": "error", "message": "Jam di server tidak sinkron. Coba lagi sebentar."}), 401
+            return jsonify({"status": "error", "message": str(e)}), 500
+            
+    # Untuk metode GET, tampilkan halaman login
     return render_template('login.html')
+
 
 @app.route('/register')
 def register():

@@ -55,10 +55,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function handleError(error, element = errorMessageElement) {
         console.error("Firebase Auth Error:", error);
-        if (element) {
-            element.textContent = getFriendlyErrorMessage(error.code);
-            element.className = 'message-text error-text';
-        }
+        if (!element) return;
+        const friendly = getFriendlyErrorMessage(error && error.code);
+        const serverMessage = error && error.message ? error.message : '';
+        element.textContent = serverMessage || friendly;
+        element.className = 'message-text error-text';
     }
 
     function showSuccessMessage(message, element = messageElement) {
@@ -71,22 +72,31 @@ document.addEventListener('DOMContentLoaded', () => {
     function sendTokenToBackend(idToken) {
         return fetch('/login', {
             method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
+            headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ id_token: idToken })
         })
-        .then(response => {
+        .then(async (response) => {
             if (!response.ok) {
-                throw new Error(`Server error: ${response.statusText}`);
+                let message = response.statusText;
+                try {
+                    const data = await response.json();
+                    message = data && data.message ? data.message : message;
+                } catch (_) {
+                    // ignore JSON parse errors
+                }
+                const err = new Error(message);
+                err.code = `http-${response.status}`;
+                throw err;
             }
             return response.json();
         })
-        .then(data => {
+        .then((data) => {
             if (data.status === 'success') {
                 window.location.href = data.redirect;
             } else {
-                throw new Error(data.message || "Gagal memverifikasi di server.");
+                const err = new Error(data.message || 'Gagal memverifikasi di server.');
+                err.code = 'server';
+                throw err;
             }
         });
     }

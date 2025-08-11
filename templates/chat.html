@@ -1,163 +1,174 @@
 <!DOCTYPE html>
-<html lang="id">
+<html lang="id" class="">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="google-site-verification" content="U7tooEPc2ve-dEgWlGF-td7LdSkzf101bfO1t1e3OME" />
     <title>Aksara AI</title>
     <link rel="icon" type="image/png" href="{{ url_for('static', filename='Aksara-AI-Logo.png') }}">
-    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
 </head>
 <body>
-    <!-- LAYAR ON DEVELOPMENT -->
-    <!-- <div id="development-overlay">
-        <div class="development-content">
-            <div class="dev-gear-icon">⚙️</div>
-            <h1>On Development</h1>
-            <p>Mohon maaf yaa, saat ini kami masih mengembangkan beberapa fitur keren. <br>Jangan khawatir, kami akan segera kembali!</p>
-            <p>Kalau ada kritik dan saran, kirim ke <a href="mailto:mohfahrezi93@gmail.com" target="_blank">Email</a> yaa...<br>Terima Kasih telah menggunakan Aksara AI</p>
-        </div>
-    </div> -->
-
+    <!-- Welcome screen for logged-in users -->
     <div id="welcome-screen">
         <div class="welcome-content">
             <div class="welcome-icon">👋</div>
-            <h1>Selamat Datang di Aksara AI</h1>
-            <p>Senang bertemu lagi, Klik untuk memulai percakapan.</p>
+            <h1>Selamat Datang Kembali!</h1>
+            <p><span id="welcome-username"></span>Klik untuk memulai percakapan baru.</p>
             <button id="start-chat-btn">Mulai Chat</button>
         </div>
     </div>
 
+    <!-- Logout screen -->
     <div id="logout-overlay">
         <div class="logout-content">
             <div class="logout-icon">👋</div>
             <h1>Sampai jumpa!</h1>
-            <p>Jangan lupa balik lagi yaa...</p>
+            <p>Anda telah berhasil keluar. Jangan lupa balik lagi ya!</p>
         </div>
     </div>
 
-
     <div id="app-wrapper">
-        <!-- --- STRUKTUR SIDEBAR --- -->
-        <div id="sidebar">
-            <div class="sidebar-main-content">
-                <div class="sidebar-header">
-                    <h3>Riwayat</h3>
-                    <div class="sidebar-header-controls">
-                        <button id="new-chat-btn" data-tooltip="Obrolan baru">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+        <!-- --- SIDEBAR (History Panel) --- -->
+        <aside id="sidebar" class="expanded">
+            <div class="sidebar-content">
+                <div class="sidebar-top">
+                    <div class="sidebar-header">
+                        <div class="logo-group">
+                             <img src="{{ url_for('static', filename='Aksara-AI-Logo.png') }}" alt="Logo" class="sidebar-logo logo-dark"/>
+                            <img src="{{ url_for('static', filename='Aksara-AI-Logo-Warna.png') }}" alt="Logo" class="sidebar-logo logo-light"/>
+                            <span class="sidebar-text">Aksara AI</span>
+                        </div>
+                        <!-- Tambahkan tombol hamburger di dalam sidebar-header -->
+                        <button class="header-menu-btn" id="header-menu-toggle" aria-label="Buka atau Tutup Sidebar" aria-expanded="true">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
                         </button>
-                        <button id="close-sidebar-btn" data-tooltip="Tutup">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
-                        </button>
+                    </div>
+
+                    <button id="new-chat-btn" class="sidebar-btn">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+                        <span class="sidebar-text">Obrolan Baru</span>
+                    </button>
+                    <div class="history-section">
+                        <div class="history-header">
+                            <span class="sidebar-text">Riwayat</span>
+                        </div>
+                        <div class="search-history-wrapper">
+                             <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+                             <input type="text" id="search-history-input" placeholder="Cari..." aria-label="Search conversation history">
+                        </div>
+                        <div id="history-list" role="list">
+                            <!-- History items will be populated by JS -->
+                        </div>
                     </div>
                 </div>
-                <div id="history-list"></div>
-            </div>
-            <div class="sidebar-footer">
-                <button id="feedback-btn" class="sidebar-footer-btn">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-message-square"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
-                    <span>Beri Masukan</span>
-                </button>
-            </div>
-        </div>
-        <!-- --- AKHIR DARI STRUKTUR SIDEBAR --- -->
-
-        <div id="chat-container">
-            <div id="chat-header">
-                <div class="header-content">
-                    <button id="menu-btn" aria-label="Buka Riwayat" data-tooltip="Menu">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
+                <div class="sidebar-bottom">
+                    <button id="feedback-btn" class="sidebar-btn">
+                         <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
+                        <span class="sidebar-text">Beri Masukan</span>
                     </button>
-                    <img src="{{ url_for('static', filename='Aksara-AI-Logo.png') }}" alt="Aksara AI Logo" class="bot-avatar-logo">
-                    <div class="bot-info">
-                        <h2>Aksara AI</h2>
-                        <p>Online</p>
-                    </div>
+                </div>
+            </div>
+        </aside>
+
+        <!-- --- MAIN CHAT CONTAINER --- -->
+        <main id="chat-container">
+            <header id="chat-header">
+                <div class="header-left">
+            <button class="header-menu-btn" id="header-menu-toggle" aria-label="Buka atau Tutup Sidebar" aria-expanded="false">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
+                    </button>
+            <h2 id="chat-title">Obrolan Baru</h2>
                 </div>
                 <div class="header-actions">
-                    <div id="guest-actions">
-                        <button id="theme-toggle-guest" class="theme-toggle-btn" aria-label="Ganti Tema" data-tooltip="Ganti tema">
-                            <svg class="sun-icon" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>
-                            <svg class="moon-icon" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
-                        </button>
+                    <!-- Guest Actions -->
+                    <div id="guest-actions" style="display: none;">
                         <a href="/login" class="header-btn">Masuk</a>
                         <a href="/register" class="header-btn primary">Daftar</a>
                     </div>
+                    <!-- User Actions -->
                     <div id="user-actions" style="display: none;">
-                        <button id="clear-chat-btn" aria-label="Hapus Obrolan" data-tooltip="Hapus obrolan">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+                        <button id="clear-chat-btn" class="header-icon-btn" aria-label="Hapus Obrolan" data-tooltip="Hapus obrolan saat ini">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
                         </button>
-                        <button id="theme-toggle-user" class="theme-toggle-btn" aria-label="Ganti Tema" data-tooltip="Ganti tema">
-                            <svg class="sun-icon" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>
-                            <svg class="moon-icon" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
+                        <button class="header-icon-btn theme-toggle-btn" aria-label="Ganti Tema" data-tooltip="Ganti tema">
+                            <svg class="sun-icon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>
+                            <svg class="moon-icon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
                         </button>
                         <div class="profile-menu">
-                            <button id="profile-btn" aria-label="Profil" data-tooltip="Profil">
+                            <button id="profile-btn" aria-label="Profil" data-tooltip="Akun">
                                 <span id="profile-initial">?</span>
                             </button>
                             <div id="profile-dropdown" class="dropdown-content">
                                 <div id="user-info-display">
-                                    <div id="user-name-display"></div>
-                                    <div id="user-email-display-small"></div>
+                                    <div id="user-name-display">Nama Pengguna</div>
+                                    <div id="user-email-display-small">email@pengguna.com</div>
                                 </div>
-                                <a href="{{ url_for('profile') }}" class="dropdown-item">Edit Profil</a>
+                                <a href="{{ url_for('profile') }}" class="dropdown-item">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+                                    Edit Profil
+                                </a>
                                 <div class="dropdown-logout-section">
-                                    <a id="logout-btn-link" href="/logout" class="logout-button">Logout</a>
+                                    <a id="logout-btn-link" href="/logout" class="logout-button">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
+                                        Keluar
+                                    </a>
                                 </div>
                             </div>
                         </div>
                     </div>
                 </div>
-            </div>
+            </header>
 
-            <div id="initial-prompts-container">
-                <div class="initial-prompts-header">
-                    <img src="{{ url_for('static', filename='Aksara-AI-Logo-Warna.png') }}" alt="Aksara AI Logo" class="bot-avatar-large-logo">
-                    <h1><span id="welcome-username"></span>Apa yang bisa saya bantu hari ini?</h1>
+            <div id="chat-area">
+                <div id="initial-prompts-container">
+                    <div class="initial-prompts-header">
+                         <img src="{{ url_for('static', filename='Aksara-AI-Logo-Warna.png') }}" alt="Aksara AI Logo" class="bot-avatar-large-logo logo-light">
+                         <img src="{{ url_for('static', filename='Aksara-AI-Logo.png') }}" alt="Aksara AI Logo" class="bot-avatar-large-logo logo-dark">
+                        <h1>Hi Fahrezi, Apa yang bisa saya bantu hari ini?</h1>
+                    </div>
+                    <div class="prompt-suggestions">
+                        <!-- Prompt cards will be populated by JS -->
+                    </div>
                 </div>
-                <div class="prompt-suggestions">
-                </div>
-            </div>
-            
-            <div id="chat-box">
-            </div>
+                <div id="chat-box" role="log" aria-live="polite"></div>
 
-            <button id="scroll-to-bottom-btn" aria-label="Scroll ke bawah">
-                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><polyline points="19 12 12 19 5 12"></polyline></svg>
-            </button>
-            
-            <div id="input-area">
-                <div id="image-preview-container" style="display: none;">
-                    <img id="image-preview" src="#" alt="Pratinjau Gambar"/>
-                    <button id="remove-preview-btn">&times;</button>
+                <div id="input-area-wrapper">
+                    <div id="input-area">
+                         <div id="image-preview-container" style="display: none;">
+                            <img id="image-preview" src="#" alt="Pratinjau Gambar"/>
+                            <button id="remove-preview-btn" aria-label="Hapus gambar">×</button>
+                        </div>
+                        <form id="chat-form" novalidate>
+                            <button type="button" id="upload-btn" class="input-area-btn" aria-label="Lampirkan file" data-tooltip="Lampirkan Gambar">
+                                 <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"></path></svg>
+                            </button>
+                            <input type="file" id="file-input" accept="image/*" style="display: none;" aria-label="Upload image file">
+                            <!-- Ganti textarea agar tidak ada class/id yang diberi style khusus -->
+                            <textarea name="user-input" placeholder="Ketik atau Lampirkan Gambar..." rows="1" aria-label="Type your message"></textarea>
+                            <button type="button" id="mic-btn" class="input-area-btn" aria-label="Gunakan suara" data-tooltip="Gunakan Suara">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path><path d="M19 10v2a7 7 0 0 1-14 0v-2"></path><line x1="12" y1="19" x2="12" y2="23"></line></svg>
+                            </button>
+                            <button type="submit" id="send-btn" class="input-area-btn primary" aria-label="Kirim Pesan">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
+                            </button>
+                        </form>
+                    </div>
+                    <p class="disclaimer">Aksara AI can make mistake. so please check the answers again</p>
                 </div>
-                <form id="chat-form">
-                    <input type="file" id="file-input" accept="image/*" style="display: none;">
-                    <button type="button" id="upload-btn" class="input-area-btn" aria-label="Lampirkan file" data-tooltip="Lampirkan file">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"></path></svg>
-                    </button>
-                    <button type="button" id="mic-btn" class="input-area-btn" aria-label="Gunakan suara" data-tooltip="Gunakan suara">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path><path d="M19 10v2a7 7 0 0 1-14 0v-2"></path><line x1="12" y1="19" x2="12" y2="23"></line></svg>
-                    </button>
-                    <input type="text" id="user-input" placeholder="Ketik atau lampirkan gambar..." autocomplete="off">
-                    <button type="submit" id="send-btn" class="input-area-btn primary" aria-label="Kirim Pesan" data-tooltip="Kirim">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
-                    </button>
-                </form>
             </div>
-        </div>
+        </main>
     </div>
     
-    <div id="sidebar-overlay"></div>
-    <div id="modal-overlay">
-        <div id="custom-confirm-modal">
+    <!-- Modals -->
+    <div id="modal-overlay" class="modal-overlay">
+        <div id="custom-confirm-modal" class="modal-box">
             <h3>Hapus Obrolan Ini?</h3>
-            <p>Apakah Anda yakin ingin menghapus percakapan ini secara permanen?</p>
+            <p>Tindakan ini tidak dapat diurungkan. Seluruh riwayat percakapan ini akan dihapus permanen.</p>
             <div class="modal-buttons">
                 <button id="cancel-btn">Batal</button>
                 <button id="confirm-delete-btn">Hapus</button>
@@ -165,17 +176,17 @@
             <div id="modal-loader" class="modal-loader" style="display: none;"></div>
         </div>
     </div>
-
+    
     <div id="feedback-modal-overlay" class="modal-overlay">
-        <div id="feedback-modal" class="custom-confirm-modal">
+        <div id="feedback-modal" class="modal-box">
             <h3>Saran & Masukan</h3>
-                <div class="feedback-user-info">
-                    <span>Masukan dari:</span>
-                    <strong id="feedback-user-email"></strong>
-                </div>
+             <div class="feedback-user-info">
+                <span>Masukan dari:</span>
+                <strong id="feedback-user-email"></strong>
+            </div>
             <p>Kami sangat menghargai masukan Anda untuk membantu kami menjadi lebih baik.</p>
             <form id="feedback-form">
-                <textarea id="feedback-textarea" placeholder="Tulis masukan Anda di sini..." required minlength="10"></textarea>
+                <textarea id="feedback-textarea" placeholder="Tulis masukan Anda di sini..." required minlength="10" aria-label="Feedback message"></textarea>
                 <div class="modal-buttons">
                     <button type="button" id="cancel-feedback-btn">Batal</button>
                     <button type="submit" id="submit-feedback-btn">Kirim</button>
@@ -184,11 +195,12 @@
             </form>
         </div>
     </div>
-    
+
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore-compat.js"></script>
     <script src="{{ url_for('static', filename='firebase-config.js') }}"></script>
     <script src="{{ url_for('static', filename='script.js') }}"></script>
+
 </body>
 </html>
