@@ -2,7 +2,7 @@ document.addEventListener("DOMContentLoaded", () => {
   // --- ELEMEN DOM ---
   const body = document.body;
   const sidebar = document.getElementById("sidebar");
-  const headerMenuToggle = document.getElementById("header-menu-toggle");
+  const headerMenuButtons = document.querySelectorAll(".header-menu-btn");
   const chatArea = document.getElementById("chat-area");
   const chatBox = document.getElementById("chat-box");
   const userInput = document.getElementById("user-input");
@@ -246,7 +246,7 @@ document.addEventListener("DOMContentLoaded", () => {
     // In guest mode, always hide the sidebar and its toggle
     if (body.classList.contains('guest-mode') || !currentUser) {
       if (sidebar) sidebar.style.display = 'none';
-      if (headerMenuToggle) headerMenuToggle.style.display = 'none';
+      // Tombol hamburger disembunyikan di guest via CSS; tidak perlu force inline style
       body.classList.remove('sidebar-open');
       return;
     }
@@ -256,11 +256,8 @@ document.addEventListener("DOMContentLoaded", () => {
       sidebar.classList.add('expanded');
       sidebar.classList.remove('collapsed');
       body.classList.remove('sidebar-collapsed');
-      if (!body.classList.contains('sidebar-open')) {
-        sidebar.style.display = 'none';
-      } else {
-        sidebar.style.display = 'flex';
-      }
+      // Biarkan sidebar selalu ada; animasi diatur dengan transform
+      sidebar.style.display = 'flex';
     } else {
       // Desktop: sidebar collapsed/expanded
       sidebar.style.display = 'flex';
@@ -278,7 +275,7 @@ document.addEventListener("DOMContentLoaded", () => {
     if (isMobile()) {
       // Mobile: show/hide overlay
       body.classList.toggle('sidebar-open');
-      setSidebarState();
+      // Biarkan CSS transform mengatur animasi; tidak perlu mengubah display
     } else {
       // Desktop: collapsed/expanded
       sidebar.classList.toggle('collapsed');
@@ -290,7 +287,6 @@ document.addEventListener("DOMContentLoaded", () => {
   function closeSidebar() {
     if (isMobile()) {
       body.classList.remove('sidebar-open');
-      setSidebarState();
     } else {
       sidebar.classList.add('collapsed');
       sidebar.classList.remove('expanded');
@@ -347,7 +343,6 @@ document.addEventListener("DOMContentLoaded", () => {
     conversationHistory = [];
     hideInitialPrompts();
     if (sidebar) sidebar.style.display = "none";
-    if(headerMenuToggle) headerMenuToggle.style.display = "none";
     updateClearChatButtonState();
     // Sembunyikan tombol new chat di guest mode
     if (newChatBtn) newChatBtn.style.display = "none";
@@ -357,7 +352,7 @@ document.addEventListener("DOMContentLoaded", () => {
   function setupUserUI(user) {
     body.classList.remove("guest-mode");
     if (sidebar) sidebar.style.display = "flex";
-    if (headerMenuToggle) headerMenuToggle.style.display = "flex";
+    // Biarkan CSS yang mengatur visibilitas hamburger antara desktop vs mobile
     if (welcomeScreen) welcomeScreen.classList.add("visible");
     if (guestActions) guestActions.style.display = "none";
     if (userActions) userActions.style.display = "flex";
@@ -763,7 +758,7 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   // --- EVENT LISTENERS ---
-  if (headerMenuToggle) headerMenuToggle.addEventListener("click", toggleSidebar);
+  headerMenuButtons.forEach(btn => btn.addEventListener("click", toggleSidebar));
   if (chatForm) chatForm.addEventListener("submit", handleFormSubmit);
   if (newChatBtn) newChatBtn.addEventListener("click", startNewChat);
 
@@ -871,7 +866,7 @@ document.addEventListener("DOMContentLoaded", () => {
         sidebar &&
         sidebar.classList.contains('expanded') &&
         !sidebar.contains(e.target) &&
-        !headerMenuToggle.contains(e.target)
+        !Array.from(headerMenuButtons).some(btn => btn.contains(e.target))
     ) {
         closeSidebar();
     }
