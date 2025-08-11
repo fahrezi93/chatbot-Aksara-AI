@@ -109,6 +109,8 @@ body.guest-mode #chat-container {
   height: 100%;
   padding: 12px;
   overflow: hidden;
+  /* Pastikan content tidak bergerak */
+  position: relative;
 }
 
 .sidebar-header {
@@ -119,6 +121,12 @@ body.guest-mode #chat-container {
   padding: 12px 4px;
   margin-bottom: 8px;
   flex-shrink: 0;
+  /* Pastikan header tidak bergerak */
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  background: var(--sidebar-bg);
+  height: 56px; /* Tinggi tetap */
 }
 
 .logo-group {
@@ -189,21 +197,26 @@ body.dark-mode .logo-light { display: none; }
 }
 
 .history-section {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
+  /* Gunakan grid layout yang lebih stabil */
+  display: grid;
+  grid-template-rows: auto auto 1fr;
   margin-top: 12px;
-  overflow: hidden;
+  height: calc(100vh - 200px); /* Tinggi tetap */
+  min-height: 400px; /* Minimum height */
+  /* Jadikan container ini yang melakukan scroll agar sticky bekerja benar */
+  overflow-y: auto;
 }
 
 #history-list {
-  flex: 1;
-  overflow-y: auto;
+  /* Biarkan parent yang melakukan scroll */
+  overflow: visible;
   padding-right: 4px;
-  /* Kunci tinggi minimum agar header/hamburger tidak ikut bergeser saat hasil kosong */
-  min-height: 200px;
+  /* Tinggi minimum yang lebih besar */
+  min-height: 300px;
   /* Cegah layout shift saat scrollbar muncul/hilang */
   scrollbar-gutter: stable both-edges;
+  /* Beri sedikit jarak di bawah search agar item tidak tertutup saat awal */
+  margin-top: 8px;
 }
 
 .history-header {
@@ -214,18 +227,25 @@ body.dark-mode .logo-light { display: none; }
   text-transform: uppercase;
   letter-spacing: 0.5px;
   white-space: nowrap;
+  /* Pastikan header tidak bergerak */
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  background: var(--sidebar-bg);
 }
 
 .search-history-wrapper {
   position: sticky;
-  top: 0;
-  z-index: 1;
+  top: 32px; /* Di bawah history-header */
+  z-index: 9;
   background: var(--sidebar-bg);
-  height: 48px; /* beri tinggi tetap */
+  height: 48px; /* Tinggi tetap */
   display: flex;
   align-items: center;
   margin-bottom: 12px;
   padding: 4px 0;
+  /* Pastikan tidak bergerak */
+  flex-shrink: 0;
 }
 
 .search-history-wrapper svg {
@@ -687,7 +707,7 @@ body.dark-mode .bot-avatar-large-logo.logo-light { display: none; }
   animation: typing 1.4s infinite ease-in-out both;
 }
 .typing-indicator span:nth-child(2) { animation-delay: 0.2s; }
-.typing-indicator span:nth-child(3) { animation-delay: 0.4s; }
+.typing-indicator span:nth-child(3) { animation-delay: 0.6s; }
 @keyframes typing {
   0%, 80%, 100% { transform: scale(0); }
   40% { transform: scale(1); }
@@ -768,42 +788,157 @@ textarea[name="user-input"]:focus {
     left: 0;
     top: 0;
     height: 100%;
-    /* Lebar responsif: pakai vw sebagai fallback, override dengan lvw agar tidak mengecil saat keyboard muncul */
-    width: 80vw;              /* fallback */
+    width: 320px;
+    min-width: 320px;
     max-width: 320px;
-    min-width: 280px;
-    width: min(320px, 80lvw); /* di browser yang mendukung, tidak terpengaruh virtual keyboard */
-    z-index: 10000; /* cukup tinggi, di atas overlay */
+    z-index: 10000;
     background: var(--sidebar-bg);
     transform: translateX(-100%);
-    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    transition: transform 0.5s cubic-bezier(0.4, 0, 0.2, 1);
     box-shadow: 2px 0 16px rgba(0,0,0,0.08);
-    display: flex;              /* pastikan tampil saat di-dorong masuk */
+    display: flex;
     flex-direction: column;
+    overflow: hidden; /* Cegah content overflow */
   }
+  
   body.sidebar-open #sidebar {
     transform: translateX(0);
   }
+  
   /* Overlay background saat sidebar terbuka */
   body.sidebar-open::before {
     content: '';
     position: fixed;
-    z-index: 9000; /* di bawah sidebar */
+    z-index: 9000;
     left: 0; top: 0; right: 0; bottom: 0;
     background: rgba(0,0,0,0.45); 
     pointer-events: auto;
-    transition: background 0.3s;
+    transition: background 0.5s;
   }
+  
   #chat-container {
     margin-left: 0 !important;
-    position: relative; /* pastikan tidak membuat stacking lebih tinggi dari overlay */
+    position: relative;
     z-index: 1;
+    width: 100% !important;
+    overflow-x: hidden !important;
   }
 
-  #sidebar.collapsed { width: min(320px, 80lvw); }
-  #sidebar.collapsed .sidebar-text { opacity: 1 !important; visibility: visible !important; width: auto !important; }
-  #sidebar.collapsed .logo-group { display: flex !important; }
-  #sidebar.collapsed .history-section { display: flex !important; }
+  /* Sidebar content mobile */
+  .sidebar-content {
+    padding: 8px;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+  
+  .sidebar-header {
+    padding: 12px 8px;
+    flex-shrink: 0;
+    height: 56px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border-bottom: 1px solid var(--neutral-border);
+  }
+  
+  .logo-group {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-size: 1.1rem;
+    font-weight: 700;
+  }
+  
+  .sidebar-logo {
+    width: 28px;
+    height: 28px;
+    flex-shrink: 0;
+  }
+  
+  /* Sembunyikan hamburger menu di mobile */
+  .sidebar-header .header-menu-btn {
+    display: none !important;
+  }
+  
+  /* History section mobile */
+  .history-section {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    margin-top: 8px;
+    overflow: hidden;
+    position: relative;
+  }
+  
+  .history-header {
+    padding: 8px 4px;
+    font-weight: 700;
+    font-size: 0.8rem;
+    color: var(--text-color-light);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+  
+  .search-history-wrapper {
+    padding: 8px 0;
+    margin-bottom: 8px;
+    flex-shrink: 0;
+    position: sticky;
+    top: 32px; /* tetap di bawah judul RIWAYAT */
+    z-index: 10;
+    background: var(--sidebar-bg);
+  }
+  
+  .search-history-wrapper svg {
+    position: absolute;
+    left: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    height: 18px;
+    width: 18px;
+    color: var(--text-color-light);
+    pointer-events: none;
+  }
+  
+  #search-history-input {
+    width: 100%;
+    height: 40px;
+    padding: 8px 12px 8px 40px;
+    border: 1px solid var(--neutral-border);
+    border-radius: 8px;
+    font-size: 0.9rem;
+    box-sizing: border-box;
+    background-color: var(--background-color-main);
+  }
+  
+  #history-list {
+    flex: 1;
+    overflow-y: auto;
+    min-height: 200px;
+    padding-right: 4px;
+  }
+  
+  /* Sidebar buttons mobile */
+  #new-chat-btn, .sidebar-btn {
+    margin-bottom: 8px;
+    padding: 12px 16px;
+    border-radius: 12px;
+    font-size: 0.9rem;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  
+  .sidebar-bottom {
+    margin-top: auto;
+    padding: 8px 0;
+    border-top: 1px solid var(--neutral-border);
+    flex-shrink: 0;
+  }
 }
 
 /* Sidebar collapsed/expanded di desktop */
@@ -811,12 +946,20 @@ textarea[name="user-input"]:focus {
   #sidebar {
     transform: translateX(0);
     transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    /* Pastikan sidebar desktop tetap besar */
+    width: 280px !important;
+    min-width: 280px !important;
+    max-width: 280px !important;
   }
   #sidebar.collapsed {
-    width: 80px;
+    width: 80px !important;
+    min-width: 80px !important;
+    max-width: 80px !important;
   }
   #sidebar.expanded {
-    width: 280px;
+    width: 280px !important;
+    min-width: 280px !important;
+    max-width: 280px !important;
   }
   body.sidebar-collapsed #chat-container {
     margin-left: 80px;
@@ -830,6 +973,20 @@ textarea[name="user-input"]:focus {
 @media (min-width: 769px) {
   #chat-header .header-menu-btn { display: none !important; }
   #sidebar .header-menu-btn { display: flex !important; }
+  
+  /* Pastikan sidebar desktop tidak terpengaruh CSS mobile */
+  body:not(.guest-mode) #sidebar {
+    width: 280px !important;
+    min-width: 280px !important;
+    max-width: 280px !important;
+    transform: translateX(0) !important;
+  }
+  
+  body:not(.guest-mode) #sidebar.collapsed {
+    width: 80px !important;
+    min-width: 80px !important;
+    max-width: 80px !important;
+  }
 }
 
 /* Hamburger di sidebar-header */
@@ -839,21 +996,9 @@ textarea[name="user-input"]:focus {
 
 /* Aturan mobile: hamburger hanya di header, sidebar off-canvas */
 @media (max-width: 768px) {
-  #sidebar { display: flex; }
-  /* Pastikan konten tidak melebihi layar */
-  #chat-container {
-    margin-left: 0;
-    width: 100%;
-    overflow-x: hidden;
-  }
   /* Tampilkan hamburger di header, sembunyikan yang di sidebar */
   #chat-header .header-menu-btn { display: flex !important; }
   #sidebar .header-menu-btn { display: none !important; }
-  /* Rapikan isi sidebar di mobile */
-  .sidebar-content { padding: 12px 8px; }
-  .sidebar-header { padding: 12px 8px; }
-  #new-chat-btn, .sidebar-btn { margin-bottom: 8px; }
-  #history-list { max-height: calc(100vh - 180px); overflow-y: auto; }
 }
 
 .input-area-btn {
@@ -1437,35 +1582,69 @@ textarea[name="user-input"]:focus {
 }
 
 @media (max-width: 768px) {
-  #chat-container {
-    margin-left: 0 !important;
-    width: 100%;
-    overflow-x: hidden;
+  /* Chat container mobile */
+  #chat-container { 
+    margin-left: 0 !important; 
+    width: 100% !important; 
+    overflow-x: hidden !important; 
   }
+  
+  /* Header mobile */
   .header-left {
     gap: 8px;
   }
+  
   #chat-title {
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
     max-width: 60vw;
   }
-}
-
-@media (max-width: 768px) {
-  /* Final mobile overrides */
-  #chat-container { margin-left: 0 !important; width: 100% !important; overflow-x: hidden !important; }
-  .prompt-suggestions { grid-template-columns: 1fr !important; width: 100% !important; box-sizing: border-box; padding-left: 0; padding-right: 0; }
-  .prompt-suggestions, .prompt-card { max-width: 100% !important; overflow: hidden; }
-  .prompt-card h3, .prompt-card p { overflow: hidden; text-overflow: ellipsis; }
-  .prompt-card p { white-space: nowrap; }
-  #input-area-wrapper { padding-left: 16px; padding-right: 16px; width: 100% !important; max-width: 100% !important; box-sizing: border-box; }
-  #chat-box { padding-left: 16px; padding-right: 16px; }
+  
+  /* Content mobile */
+  .prompt-suggestions { 
+    grid-template-columns: 1fr !important; 
+    width: 100% !important; 
+    box-sizing: border-box; 
+    padding-left: 0; 
+    padding-right: 0; 
+  }
+  
+  .prompt-suggestions, .prompt-card { 
+    max-width: 100% !important; 
+    overflow: hidden; 
+  }
+  
+  .prompt-card h3, .prompt-card p { 
+    overflow: hidden; 
+    text-overflow: ellipsis; 
+  }
+  
+  .prompt-card p { 
+    white-space: nowrap; 
+  }
+  
+  #input-area-wrapper { 
+    padding-left: 16px; 
+    padding-right: 16px; 
+    width: 100% !important; 
+    max-width: 100% !important; 
+    box-sizing: border-box; 
+  }
+  
+  #chat-box { 
+    padding-left: 16px; 
+    padding-right: 16px; 
+  }
+  
   /* Cegah elemen melebar ke kanan */
-  html, body, #app-wrapper, #chat-container, #chat-area { max-width: 100% !important; overflow-x: hidden !important; }
-  .prompt-card, .message, .header-actions, .sidebar-content { max-width: 100% !important; box-sizing: border-box !important; }
-  /* Hamburger: hanya di header */
-  #chat-header .header-menu-btn { display: flex !important; }
-  #sidebar .header-menu-btn { display: none !important; }
+  html, body, #app-wrapper, #chat-container, #chat-area { 
+    max-width: 100% !important; 
+    overflow-x: hidden !important; 
+  }
+  
+  .prompt-card, .message, .header-actions, .sidebar-content { 
+    max-width: 100% !important; 
+    box-sizing: border-box !important; 
+  }
 }

@@ -19,6 +19,10 @@ load_dotenv()
 app = Flask(__name__)
 app.secret_key = os.getenv("FLASK_SECRET_KEY", "ganti-dengan-kunci-rahasia-yang-kuat")
 
+# Aktifkan debug mode untuk auto-reload
+app.config['DEBUG'] = True
+app.config['TEMPLATES_AUTO_RELOAD'] = True
+
 try:
     firebase_sdk_json_str = os.getenv("FIREBASE_ADMIN_SDK_JSON")
     cred = None
