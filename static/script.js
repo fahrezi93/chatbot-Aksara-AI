@@ -582,6 +582,9 @@ document.addEventListener("DOMContentLoaded", () => {
     const botMessageElement = createBotMessageElement();
     const typingIndicator = showTypingIndicator(botMessageElement);
     let fullResponseText = "";
+    
+    // Dapatkan model yang dipilih
+    const selectedModelId = localStorage.getItem('selectedModelId') || 'gemini';
 
     try {
       const response = await fetch("/send_message", {
@@ -592,6 +595,7 @@ document.addEventListener("DOMContentLoaded", () => {
           history: conversationHistory.slice(0, -1),
           imageData: imageToSend,
           conversationId: currentConversationId,
+          modelId: selectedModelId, // Tambahkan model yang dipilih
         }),
       });
 

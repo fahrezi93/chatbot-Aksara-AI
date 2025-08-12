@@ -11,7 +11,9 @@
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='transitions.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='model-selector.css') }}">
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <script src="{{ url_for('static', filename='model-selector.js') }}"></script>
     <style>
         @keyframes pulse {
             0% { opacity: 1; transform: scale(1); }
@@ -189,18 +191,38 @@
                             <button id="remove-preview-btn" aria-label="Hapus gambar">×</button>
                         </div>
                         <form id="chat-form" novalidate>
-                            <button type="button" id="upload-btn" class="input-area-btn" aria-label="Lampirkan file" data-tooltip="Lampirkan Gambar">
-                                 <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"></path></svg>
-                            </button>
+                            <!-- Top: Textarea -->
+                            <textarea name="user-input" placeholder="Ketik atau Lampirkan Gambar…" rows="1" aria-label="Type your message"></textarea>
                             <input type="file" id="file-input" accept="image/*" style="display: none;" aria-label="Upload image file">
-                            <!-- Ganti textarea agar tidak ada class/id yang diberi style khusus -->
-                            <textarea name="user-input" placeholder="Ketik atau Lampirkan Gambar..." rows="1" aria-label="Type your message"></textarea>
-                            <button type="button" id="mic-btn" class="input-area-btn" aria-label="Gunakan suara" data-tooltip="Gunakan Suara">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path><path d="M19 10v2a7 7 0 0 1-14 0v-2"></path><line x1="12" y1="19" x2="12" y2="23"></line></svg>
-                            </button>
-                            <button type="submit" id="send-btn" class="input-area-btn primary" aria-label="Kirim Pesan">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
-                            </button>
+                            <!-- Bottom: Button Row -->
+                            <div class="input-button-row">
+                                <!-- Left side buttons -->
+                                <div class="left-buttons">
+                                    <button type="button" id="upload-btn" class="input-area-btn" aria-label="Lampirkan file" data-tooltip="Lampirkan Gambar">
+                                         <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"></path></svg>
+                                    </button>
+                                    <button type="button" id="mic-btn" class="input-area-btn" aria-label="Gunakan suara" data-tooltip="Gunakan Suara">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path><path d="M19 10v2a7 7 0 0 1-14 0v-2"></path><line x1="12" y1="19" x2="12" y2="23"></line></svg>
+                                    </button>
+                                </div>
+                                <!-- Right side buttons -->
+                                <div class="right-buttons">
+                                    <div class="model-selector">
+                                        <button type="button" class="model-selector-button" id="model-selector-btn">
+                                            <img src="/static/google-gemini-icon.png" alt="Model AI" class="model-icon-img">
+                                            <div class="model-name">Gemini 2.5</div>
+                                        </button>
+                                        <div class="model-dropdown" id="model-dropdown">
+                                            <div class="model-list" id="model-list">
+                                                <!-- Model items will be populated by JavaScript -->
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <button type="submit" id="send-btn" class="input-area-btn primary" aria-label="Kirim Pesan">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
+                                    </button>
+                                </div>
+                            </div>
                         </form>
                     </div>
                     <p class="disclaimer">Aksara AI can make mistake. so please check the answers again</p>

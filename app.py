@@ -6,6 +6,7 @@ from flask import Flask, render_template, request, Response, jsonify, session, r
 from dotenv import load_dotenv
 import google.generativeai as genai
 import markdown
+from deepseek_api import DeepSeekAPI
 import firebase_admin
 from firebase_admin import credentials, auth, firestore
 from google.cloud.firestore_v1.base_query import FieldFilter
@@ -40,9 +41,15 @@ try:
         
     db = firestore.client()
 
+    # Initialize Gemini
     gemini_api_key = os.getenv("GEMINI_API_KEY")
     if not gemini_api_key: raise ValueError("Kunci API Gemini tidak ditemukan.")
     genai.configure(api_key=gemini_api_key)
+    
+    # Initialize DeepSeek
+    deepseek_api_key = os.getenv("DEEPSEEK_API_KEY")
+    if not deepseek_api_key: raise ValueError("Kunci API DeepSeek tidak ditemukan.")
+    deepseek = DeepSeekAPI(deepseek_api_key)
     
     current_date = datetime.now().strftime("%A, %d %B %Y")
     system_instruction = (
@@ -243,17 +250,67 @@ def save_message():
         print(f"Error save_message: {e}")
         return jsonify({"status": "error", "message": str(e)}), 500
 
+def format_chat_history_for_deepseek(history):
+    """Format chat history untuk DeepSeek API"""
+    formatted_history = []
+    for msg in history:
+        role = "user" if msg.get("isUser") else "assistant"
+        formatted_history.append({
+            "role": role,
+            "content": msg.get("text", "")
+        })
+    return formatted_history
+
 @app.route("/send_message", methods=["POST"])
 def send_message():
     data = request.json
     user_message = data['message']
     history = data.get('history', [])
     image_data_b64 = data.get('imageData')
+    model_id = data.get('modelId', 'gemini')  # Default ke Gemini jika tidak ada
 
-    gemini_history = []
-    for msg in history:
-        role = "user" if msg.get("isUser") else "model"
-        gemini_history.append({"role": role, "parts": [{"text": msg.get("text")}]})
+    if model_id == 'deepseek':
+        # Format history untuk DeepSeek
+        formatted_history = format_chat_history_for_deepseek(history)
+        # Tambahkan pesan user saat ini
+        formatted_history.append({
+            "role": "user",
+            "content": user_message
+        })
+        
+        def generate():
+            try:
+                response_stream = deepseek.create_completion(
+                    messages=formatted_history,
+                    stream=True
+                )
+                
+                for line in response_stream:
+                    if line:
+                        try:
+                            line_text = line.decode('utf-8')
+                            if line_text.startswith('data: '):
+                                json_str = line_text[6:]  # Hapus 'data: '
+                                if json_str.strip() == '[DONE]':
+                                    break
+                                response_json = json.loads(json_str)
+                                content = response_json['choices'][0]['delta'].get('content', '')
+                                if content:
+                                    yield f"data: {content}\n\n"
+                        except Exception as e:
+                            print(f"Error processing DeepSeek response: {e}")
+                            continue
+            except Exception as e:
+                print(f"Error with DeepSeek API: {e}")
+                yield f"data: Error: {str(e)}\n\n"
+        
+        return Response(generate(), mimetype='text/event-stream')
+    
+    else:  # Gemini model
+        gemini_history = []
+        for msg in history:
+            role = "user" if msg.get("isUser") else "model"
+            gemini_history.append({"role": role, "parts": [{"text": msg.get("text")}]})
 
     prompt_parts = []
     
