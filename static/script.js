@@ -273,23 +273,41 @@ document.addEventListener("DOMContentLoaded", () => {
 
   function toggleSidebar() {
     if (isMobile()) {
-      // Mobile: show/hide overlay
-      body.classList.toggle('sidebar-open');
-      // Biarkan CSS transform mengatur animasi; tidak perlu mengubah display
+      requestAnimationFrame(() => {
+        body.classList.toggle('sidebar-open');
+      });
     } else {
-      // Desktop: collapsed/expanded
-      sidebar.classList.toggle('collapsed');
-      sidebar.classList.toggle('expanded');
-      setSidebarState();
+      const isCurrentlyCollapsed = sidebar.classList.contains('collapsed');
+      requestAnimationFrame(() => {
+        if (isCurrentlyCollapsed) {
+          // Expand sidebar
+          sidebar.classList.remove('collapsed');
+          sidebar.classList.add('expanded');
+          body.classList.remove('sidebar-collapsed');
+        } else {
+          // Collapse sidebar
+          sidebar.classList.add('collapsed');
+          sidebar.classList.remove('expanded');
+          body.classList.add('sidebar-collapsed');
+        }
+        
+        // Update state langsung dalam callback yang sama
+        setSidebarState();
+      });
     }
   }
 
   function closeSidebar() {
     if (isMobile()) {
+      // Mobile: tutup sidebar dengan animasi
       body.classList.remove('sidebar-open');
     } else {
+      // Desktop: collapse sidebar dengan animasi yang sinkron
       sidebar.classList.add('collapsed');
       sidebar.classList.remove('expanded');
+      body.classList.add('sidebar-collapsed');
+      
+      // Update state langsung tanpa setTimeout
       setSidebarState();
     }
   }
@@ -1071,7 +1089,6 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  // Prompt suggestion click: isi textarea dan kirim
   if (promptSuggestionsContainer) {
     promptSuggestionsContainer.addEventListener('click', (e) => {
       const promptCard = e.target.closest('.prompt-card');

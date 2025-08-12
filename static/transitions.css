@@ -1,0 +1,76 @@
+/* Transisi Global */
+:root {
+    --transition-timing: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    --sidebar-width-expanded: 280px;
+    --sidebar-width-collapsed: 80px;
+}
+
+/* Transisi Sidebar */
+#sidebar {
+    width: var(--sidebar-width-expanded);
+    transition: all var(--transition-timing);
+    will-change: transform, width;
+}
+
+#sidebar.collapsed {
+    width: var(--sidebar-width-collapsed);
+}
+
+/* Transisi Chat Container */
+#chat-container {
+    margin-left: var(--sidebar-width-expanded);
+    transition: margin-left var(--transition-timing);
+    will-change: margin-left;
+}
+
+#sidebar.collapsed ~ #chat-container,
+body.sidebar-collapsed #chat-container {
+    margin-left: var(--sidebar-width-collapsed);
+}
+
+/* Transisi Header */
+.sidebar-content {
+    transition: opacity var(--transition-timing),
+                width var(--transition-timing),
+                transform var(--transition-timing);
+}
+
+#sidebar.collapsed .sidebar-text {
+    opacity: 0;
+    transform: translateX(-20px);
+    transition: opacity var(--transition-timing),
+                transform var(--transition-timing),
+                width var(--transition-timing);
+}
+
+/* Mobile Transitions */
+@media (max-width: 768px) {
+    #sidebar {
+        transform: translateX(-100%);
+    }
+
+    body.sidebar-open #sidebar {
+        transform: translateX(0);
+    }
+
+    #chat-container {
+        margin-left: 0 !important;
+    }
+
+    /* Overlay background transition */
+    body.sidebar-open::before {
+        opacity: 1;
+        pointer-events: auto;
+    }
+
+    body::before {
+        content: '';
+        position: fixed;
+        z-index: 1000;
+        left: 0; top: 0; right: 0; bottom: 0;
+        background: rgba(0,0,0,0.45);
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity var(--transition-timing);
+    }
+}
