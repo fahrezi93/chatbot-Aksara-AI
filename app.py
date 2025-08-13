@@ -82,6 +82,31 @@ def delete_collection(coll_ref, batch_size):
     if deleted >= batch_size:
         return delete_collection(coll_ref, batch_size)
 
+def generate_title_from_message(message_text: str, has_image: bool = False) -> str:
+    try:
+        base_prompt = (
+            "Buatkan judul singkat dan jelas (maksimal 6 kata) untuk percakapan berikut dalam Bahasa Indonesia. "
+            "Tanpa tanda kutip, kapitalisasi judul yang wajar. Pesan: "
+        )
+        prompt = f"{base_prompt}{message_text.strip()}"
+        response = gemini_model.generate_content(prompt)
+        title = (response.text or '').strip()
+        # Bersihkan baris dan panjang
+        title = title.split('\n')[0]
+        if len(title) > 60:
+            title = title[:60].rstrip()
+        if not title:
+            raise ValueError('Empty title')
+        if has_image and not title.lower().startswith('gambar'):
+            title = f"Gambar: {title}"
+        return title
+    except Exception:
+        # Fallback ke 5 kata pertama
+        fallback = " ".join((message_text or '').split()[:5]).strip()
+        if has_image and fallback:
+            fallback = f"Gambar: {fallback}"
+        return fallback or "Obrolan Baru"
+
 @app.route("/")
 def index():
     return render_template('chat.html')
@@ -226,9 +251,10 @@ def save_message():
         if not conversation_id:
             conv_ref = db.collection('chats').document(user_id).collection('conversations').document()
             conversation_id = conv_ref.id
-            title = " ".join(message_data.get('text', '').split()[:5])
-            if message_data.get('imageData'):
-                title = "Gambar: " + title
+            user_text = message_data.get('text', '') or ''
+            has_image = bool(message_data.get('imageData'))
+            # Generate AI title
+            title = generate_title_from_message(user_text, has_image)
             conv_ref.set({"title": title or "Obrolan Baru", "last_updated": firestore.SERVER_TIMESTAMP})
         
         msg_ref = db.collection('chats').document(user_id).collection('conversations').document(conversation_id).collection('messages').document()
@@ -245,7 +271,12 @@ def save_message():
         msg_ref.set(doc_to_save)
         
         db.collection('chats').document(user_id).collection('conversations').document(conversation_id).update({"last_updated": firestore.SERVER_TIMESTAMP})
-        return jsonify({"status": "success", "conversationId": conversation_id})
+        # Ambil title terkini untuk dikirim balik
+        conv_doc = db.collection('chats').document(user_id).collection('conversations').document(conversation_id).get()
+        current_title = None
+        if conv_doc.exists:
+            current_title = conv_doc.to_dict().get('title')
+        return jsonify({"status": "success", "conversationId": conversation_id, "title": current_title})
     except Exception as e:
         print(f"Error save_message: {e}")
         return jsonify({"status": "error", "message": str(e)}), 500

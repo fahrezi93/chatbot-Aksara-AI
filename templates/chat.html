@@ -13,6 +13,8 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='transitions.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='model-selector.css') }}">
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-dark.min.css" />
+     <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
     <script src="{{ url_for('static', filename='model-selector.js') }}"></script>
     <style>
         @keyframes pulse {
@@ -130,6 +132,9 @@
                         <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
                     </button>
             <h2 id="chat-title">Obrolan Baru</h2>
+            <button id="edit-title-btn" class="header-icon-btn" aria-label="Edit Judul" data-tooltip="Edit Judul" style="margin-left:8px;">
+              <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 1 1 3 3L7 19l-4 1 1-4Z"/></svg>
+            </button>
                 </div>
                 <div class="header-actions">
                     <!-- Guest Actions -->

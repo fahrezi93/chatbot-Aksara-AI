@@ -42,6 +42,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const logoutBtnLink = document.getElementById("logout-btn-link");
   const logoutOverlay = document.getElementById("logout-overlay");
   const chatTitle = document.getElementById("chat-title");
+  const editTitleBtn = document.getElementById("edit-title-btn");
   const feedbackBtn = document.getElementById("feedback-btn");
   const feedbackModalOverlay = document.getElementById(
     "feedback-modal-overlay"
@@ -496,6 +497,8 @@ document.addEventListener("DOMContentLoaded", () => {
         conversationHistory.push({ isUser: msg.isUser, text: msg.text });
       });
       chatBox.appendChild(fragment);
+      // Enhance code blocks for loaded history (syntax, header, previews)
+      try { processCodeBlocks(chatBox); } catch (e) { /* no-op */ }
       scrollToBottom(false);
     } catch (error) {
       console.error(`Gagal memuat percakapan ${conversationId}:`, error);
@@ -609,13 +612,18 @@ document.addEventListener("DOMContentLoaded", () => {
         const { value, done } = await reader.read();
         if (done) break;
         fullResponseText += decoder.decode(value, { stream: true });
-        botMessageElement.querySelector(".content-wrapper").innerHTML =
-          marked.parse(fullResponseText);
+        const interimHtml = marked.parse(fullResponseText);
+        const contentEl = botMessageElement.querySelector(".content-wrapper");
+        contentEl.innerHTML = interimHtml;
+        // Syntax highlight on-the-fly
+        contentEl.querySelectorAll('pre code').forEach((el)=>{ try { window.hljs && hljs.highlightElement(el); } catch(e){} });
         scrollToBottom();
       }
 
       const finalHtml = marked.parse(fullResponseText);
-      botMessageElement.querySelector(".content-wrapper").innerHTML = finalHtml;
+      const contentEl = botMessageElement.querySelector(".content-wrapper");
+      contentEl.innerHTML = finalHtml;
+      processCodeBlocks(botMessageElement);
 
       const botMessageData = {
         isUser: false,
@@ -688,6 +696,8 @@ document.addEventListener("DOMContentLoaded", () => {
 
     if (!isUser && htmlContent) {
       addCopyToBotMessage(messageElement);
+      // Apply code processing for messages when creating from saved HTML
+      try { processCodeBlocks(messageElement); } catch (e) { /* no-op */ }
     }
     return messageElement;
   }
@@ -740,6 +750,173 @@ document.addEventListener("DOMContentLoaded", () => {
       navigator.clipboard.writeText(contentToCopy);
     });
     botMessageElement.appendChild(copyBtn);
+  }
+
+  function processCodeBlocks(containerEl) {
+    // 1) Highlight syntax terlebih dahulu
+    const allCode = containerEl.querySelectorAll('pre code');
+    allCode.forEach((el)=>{ try { window.hljs && hljs.highlightElement(el); } catch(e){} });
+
+    // 2) Tingkatkan blok kode: window header (3 dots + label), canvas/terminal/HTML preview
+    enhanceCodeBlocks(containerEl);
+  }
+
+  // Tingkatkan blok kode: window header (3 dots + label), canvas/terminal/HTML preview
+  function enhanceCodeBlocks(containerEl) {
+    if (!containerEl) return;
+    const codeBlocks = containerEl.querySelectorAll('pre code');
+    codeBlocks.forEach((codeEl) => {
+      const pre = codeEl.parentElement;
+      const langToken = (codeEl.className.match(/language-([a-z0-9+#-]+)/i) || [])[1];
+      const prettyLangMap = {
+        js: 'JavaScript',
+        jsx: 'JavaScript',
+        ts: 'TypeScript',
+        tsx: 'TypeScript',
+        py: 'Python',
+        python: 'Python',
+        html: 'HTML',
+        css: 'CSS',
+        bash: 'Shell',
+        shell: 'Shell',
+        sh: 'Shell',
+        json: 'JSON',
+        sql: 'SQL'
+      };
+      const prettyLang = prettyLangMap[langToken?.toLowerCase()] || (langToken ? langToken.toUpperCase() : 'CODE');
+
+      // Bungkus dengan code-window (header 3 titik + label)
+      if (pre && !pre.parentElement.classList.contains('code-window')) {
+        const wrapper = document.createElement('div');
+        wrapper.className = 'code-window';
+        const header = document.createElement('div');
+        header.className = 'code-header';
+        const leftSide = document.createElement('div');
+        leftSide.className = 'code-header-left';
+        const dots = document.createElement('div');
+        dots.className = 'code-dots';
+        ['red','yellow','green'].forEach(color=>{
+          const d = document.createElement('span');
+          d.className = `code-dot ${color}`;
+          dots.appendChild(d);
+        });
+        const label = document.createElement('span');
+        label.className = 'code-label';
+        label.textContent = prettyLang;
+        leftSide.appendChild(dots);
+        leftSide.appendChild(label);
+        const rightSide = document.createElement('div');
+        rightSide.className = 'code-header-right';
+        const copyBtn = document.createElement('button');
+        copyBtn.className = 'code-copy-btn';
+        copyBtn.textContent = 'Copy';
+        copyBtn.addEventListener('click', () => navigator.clipboard.writeText(codeEl.innerText || ''));
+        rightSide.appendChild(copyBtn);
+        header.appendChild(leftSide);
+        header.appendChild(rightSide);
+        pre.parentElement.insertBefore(wrapper, pre);
+        wrapper.appendChild(header);
+        wrapper.appendChild(pre);
+      }
+      const codeText = codeEl.innerText || '';
+
+      // 1) Canvas preview jika terdapat tag <canvas> atau API Canvas 2D
+      if (/(<canvas)|(getContext\(\s*['\"]2d['\"]\s*\))|ctx\./i.test(codeText)) {
+        // Bungkus preview canvas dalam window
+        const previewWrap = document.createElement('div');
+        previewWrap.className = 'code-window';
+        const header = buildHeader('Canvas');
+        const canvas = document.createElement('canvas');
+        canvas.width = 420;
+        canvas.height = 220;
+        canvas.style.borderRadius = '8px';
+        canvas.style.border = 'none';
+        canvas.style.marginTop = '0px';
+        const ctx = canvas.getContext('2d');
+        // Jalankan potongan skrip JS jika ada untuk menggambar (sandboxed eval ringan)
+        try {
+          const draw = new Function('canvas','ctx', `try { ${codeText} } catch(e) { /* fallback */ }`);
+          // Bersihkan dan panggil
+          ctx.clearRect(0, 0, canvas.width, canvas.height);
+          draw(canvas, ctx);
+        } catch (e) {
+          // Placeholder grafis jika tidak ada script valid
+          ctx.fillStyle = '#0f172a';
+          ctx.fillRect(0, 0, canvas.width, canvas.height);
+          ctx.fillStyle = '#2563eb';
+          ctx.fillRect(24, 24, 120, 80);
+          ctx.fillStyle = '#10b981';
+          ctx.beginPath();
+          ctx.arc(260, 110, 50, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.fillStyle = '#e5e7eb';
+          ctx.font = '13px ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial';
+          ctx.fillText('Canvas preview', 150, 200);
+        }
+        previewWrap.appendChild(header);
+        previewWrap.appendChild(canvas);
+        codeEl.parentElement.insertAdjacentElement('afterend', previewWrap);
+      }
+
+      // 2) Terminal preview untuk blok yang terlihat sebagai output shell
+      if (/^\s*(\$|PS>|>)\s/m.test(codeText) || codeEl.className.includes('language-bash') || codeEl.className.includes('language-shell')) {
+        const wrap = document.createElement('div');
+        wrap.className = 'code-window';
+        const header = buildHeader('Terminal');
+        const term = document.createElement('div');
+        term.className = 'terminal-preview';
+        term.style.marginTop = '0px';
+        term.style.padding = '12px';
+        term.style.whiteSpace = 'pre-wrap';
+        term.textContent = codeText.replace(/^\$\s?/gm, '').replace(/^PS>\s?/gm, '').replace(/^>\s?/gm, '');
+        wrap.appendChild(header);
+        wrap.appendChild(term);
+        codeEl.parentElement.insertAdjacentElement('afterend', wrap);
+      }
+
+      // 3) Demo HTML sederhana jika blok terlihat berisi HTML lengkap
+      if (/(<html|<body|<div|<script|<style)/i.test(codeText) && !/fetch\(|XMLHttpRequest|import\s|require\(/i.test(codeText)) {
+        const wrap = document.createElement('div');
+        wrap.className = 'code-window';
+        const header = buildHeader('HTML Preview');
+        const iframe = document.createElement('iframe');
+        iframe.width = '100%';
+        iframe.height = '260';
+        iframe.style.border = 'none';
+        iframe.style.marginTop = '0px';
+        const doc = iframe.contentDocument || iframe.contentWindow.document;
+        doc.open();
+        doc.write(codeText);
+        doc.close();
+        wrap.appendChild(header);
+        wrap.appendChild(iframe);
+        codeEl.parentElement.insertAdjacentElement('afterend', wrap);
+      }
+    });
+  }
+
+  function buildHeader(labelText) {
+    const header = document.createElement('div');
+    header.className = 'code-header';
+    const left = document.createElement('div');
+    left.className = 'code-header-left';
+    const dots = document.createElement('div');
+    dots.className = 'code-dots';
+    ['red','yellow','green'].forEach(color=>{
+      const d = document.createElement('span');
+      d.className = `code-dot ${color}`;
+      dots.appendChild(d);
+    });
+    const label = document.createElement('span');
+    label.className = 'code-label';
+    label.textContent = labelText;
+    left.appendChild(dots);
+    left.appendChild(label);
+    const right = document.createElement('div');
+    right.className = 'code-header-right';
+    header.appendChild(left);
+    header.appendChild(right);
+    return header;
   }
 
   function scrollToBottom(smooth = true) {
@@ -836,6 +1013,66 @@ document.addEventListener("DOMContentLoaded", () => {
         if (modalOverlay) modalOverlay.classList.remove("visible");
       }
     });
+  }
+
+  // --- EDIT JUDUL CHAT ---
+  function beginEditTitle() {
+    if (!currentConversationId || !currentUser || !chatTitle) return;
+    // Cegah duplikasi input
+    if (chatTitle.querySelector('input')) return;
+    const current = chatTitle.textContent || '';
+    const input = document.createElement('input');
+    input.type = 'text';
+    input.value = current;
+    input.setAttribute('aria-label', 'Edit judul');
+    input.style.fontSize = 'inherit';
+    input.style.fontWeight = '700';
+    input.style.color = 'inherit';
+    input.style.background = 'transparent';
+    input.style.border = '1px dashed var(--border-color)';
+    input.style.borderRadius = '8px';
+    input.style.padding = '2px 6px';
+    chatTitle.textContent = '';
+    chatTitle.appendChild(input);
+    input.focus();
+    input.select();
+
+    const commit = async () => {
+      const newTitle = (input.value || '').trim();
+      chatTitle.textContent = newTitle || current;
+      if (!newTitle || newTitle === current) return;
+      try {
+        const res = await fetch(`/update_title/${currentConversationId}`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ title: newTitle })
+        });
+        if (res.ok) {
+          // sinkronkan di sidebar
+          document.querySelectorAll('.history-item').forEach((el) => {
+            if (el.dataset.conversationId === currentConversationId) {
+              el.textContent = newTitle;
+            }
+          });
+        }
+      } catch (err) {
+        console.error('Gagal update judul:', err);
+      }
+    };
+
+    input.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        input.blur();
+      } else if (e.key === 'Escape') {
+        chatTitle.textContent = current;
+      }
+    });
+    input.addEventListener('blur', commit);
+  }
+
+  if (editTitleBtn) {
+    editTitleBtn.addEventListener('click', beginEditTitle);
   }
 
   if (cancelBtn)
@@ -987,16 +1224,24 @@ document.addEventListener("DOMContentLoaded", () => {
       if (micBtn.classList.contains("recording")) {
         recognition.stop();
       } else {
-        recognition.start();
+        try {
+          recognition.start();
+        } catch (e) {
+          // Safari/WebKit bisa throw jika dipanggil berulang cepat
+        }
       }
     });
 
     recognition.onstart = () => micBtn.classList.add("recording");
     recognition.onend = () => micBtn.classList.remove("recording");
     recognition.onresult = (event) => {
-      userInput.value = event.results[0][0].transcript;
-      autoResizeTextarea();
-      handleFormSubmit(new Event("submit", { bubbles: true }));
+      const transcript = event.results[0][0].transcript;
+      const textarea = document.querySelector('textarea[name="user-input"]');
+      if (textarea) {
+        textarea.value = transcript;
+        textarea.dispatchEvent(new Event('input'));
+        // Jangan auto-submit; biarkan user merevisi
+      }
     };
     recognition.onerror = (event) => {
       console.error("Speech recognition error:", event.error);
