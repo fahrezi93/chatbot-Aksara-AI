@@ -1,8 +1,10 @@
 document.addEventListener('DOMContentLoaded', () => {
-
     // --- INISIALISASI ---
     try {
-        firebase.initializeApp(firebaseConfig);
+        // Firebase sudah diinisialisasi di firebase-config.js
+        if (!firebase.apps.length) {
+            firebase.initializeApp(firebaseConfig);
+        }
     } catch (e) {
         console.error("Error inisialisasi Firebase. Pastikan firebaseConfig sudah benar.", e);
         return;
@@ -28,7 +30,6 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     
     function getFriendlyErrorMessage(errorCode) {
-        console.log("Menerima kode error:", errorCode);
         switch (errorCode) {
             case 'auth/weak-password':
                 return 'Password harus terdiri dari minimal 6 karakter.';
@@ -48,6 +49,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 return 'Beberapa permintaan login dibuka. Coba lagi.';
             case 'auth/network-request-failed':
                 return 'Gagal terhubung ke server. Periksa koneksi internet Anda.';
+            case 'auth/too-many-requests':
+                return 'Terlalu banyak percobaan login. Domain belum diauthorize di Firebase. Tunggu beberapa menit atau hubungi admin.';
             default:
                 return 'Terjadi kesalahan tidak terduga. Silakan coba lagi nanti.';
         }
@@ -70,11 +73,13 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function sendTokenToBackend(idToken) {
-        return fetch('/login', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ id_token: idToken })
-        })
+        // Tambahkan delay untuk mengatasi clock skew
+        return new Promise(resolve => setTimeout(resolve, 3000))
+            .then(() => fetch('/login', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ id_token: idToken })
+            }))
         .then(async (response) => {
             if (!response.ok) {
                 let message = response.statusText;
@@ -104,10 +109,29 @@ document.addEventListener('DOMContentLoaded', () => {
     if (googleSignInBtn) {
         googleSignInBtn.addEventListener('click', () => {
             const provider = new firebase.auth.GoogleAuthProvider();
+            provider.setCustomParameters({
+                prompt: 'select_account'
+            });
+            
+            // Gunakan popup dengan error handling yang lebih baik
             auth.signInWithPopup(provider)
-                .then((result) => result.user.getIdToken())
-                .then(idToken => sendTokenToBackend(idToken))
-                .catch(handleError);
+                .then((result) => {
+                    return result.user.getIdToken();
+                })
+                .then(idToken => {
+                    return sendTokenToBackend(idToken);
+                })
+                .catch((error) => {
+                    // Handle specific popup errors
+                    if (error.code === 'auth/popup-blocked') {
+                        alert('Popup diblokir browser. Silakan izinkan popup untuk login dengan Google.');
+                    } else if (error.code === 'auth/popup-closed-by-user') {
+                        // User closed popup, no need to show error
+                        return;
+                    } else {
+                        handleError(error);
+                    }
+                });
         });
     }
 
@@ -134,15 +158,33 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     const loginForm = document.getElementById('login-form');
+    
     if (loginForm) {
         loginForm.addEventListener('submit', (e) => {
             e.preventDefault();
             const email = document.getElementById('email').value;
             const password = passwordInput.value;
+            const submitBtn = loginForm.querySelector('button[type="submit"]');
+            
+            // Show loading state
+            submitBtn.disabled = true;
+            submitBtn.textContent = 'Memproses...';
+            
             auth.signInWithEmailAndPassword(email, password)
-                .then((userCredential) => userCredential.user.getIdToken())
-                .then(idToken => sendTokenToBackend(idToken))
-                .catch(handleError);
+                .then((userCredential) => {
+                    return userCredential.user.getIdToken();
+                })
+                .then(idToken => {
+                    return sendTokenToBackend(idToken);
+                })
+                .catch((error) => {
+                    handleError(error);
+                })
+                .finally(() => {
+                    // Reset button state
+                    submitBtn.disabled = false;
+                    submitBtn.textContent = 'Login';
+                });
         });
     }
 

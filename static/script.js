@@ -53,11 +53,21 @@ document.addEventListener("DOMContentLoaded", () => {
   const feedbackTextarea = document.getElementById("feedback-textarea");
   const feedbackMessage = document.getElementById("feedback-message");
   const searchHistoryInput = document.getElementById("search-history-input");
+  const modelSelectorContainer = document.querySelector('.model-selector');
 
   let currentUser = null;
   let currentConversationId = null;
   let conversationHistory = [];
   let uploadedImageData = null;
+
+  // Kendalikan visibilitas tombol edit judul
+  function updateEditTitleButtonVisibility() {
+    if (!editTitleBtn) return;
+    const isGuest = body.classList.contains('guest-mode') || !currentUser;
+    const isNewChat = !currentConversationId || conversationHistory.length === 0;
+    // Sembunyikan untuk guest atau ketika belum ada percakapan (chat baru)
+    editTitleBtn.style.display = (isGuest || isNewChat) ? 'none' : 'flex';
+  }
 
   const ALL_PROMPTS = [
     {
@@ -362,10 +372,18 @@ document.addEventListener("DOMContentLoaded", () => {
     conversationHistory = [];
     hideInitialPrompts();
     if (sidebar) sidebar.style.display = "none";
+    // Sembunyikan hamburger/menu toggle
+    if (headerMenuButtons && headerMenuButtons.length) {
+      headerMenuButtons.forEach((btn) => (btn.style.display = 'none'));
+    }
+    // Guest tidak bisa memilih model → sembunyikan selector dan paksa default
+    if (modelSelectorContainer) modelSelectorContainer.style.display = 'none';
+    try { localStorage.setItem('selectedModelId', 'gemini'); } catch(e){}
     updateClearChatButtonState();
     // Sembunyikan tombol new chat di guest mode
     if (newChatBtn) newChatBtn.style.display = "none";
     // Jika ingin sembunyikan fitur lain, tambahkan di sini
+    updateEditTitleButtonVisibility();
   }
 
   function setupUserUI(user) {
@@ -375,6 +393,12 @@ document.addEventListener("DOMContentLoaded", () => {
     if (welcomeScreen) welcomeScreen.classList.add("visible");
     if (guestActions) guestActions.style.display = "none";
     if (userActions) userActions.style.display = "flex";
+    // Tampilkan kembali hamburger di mode user
+    if (headerMenuButtons && headerMenuButtons.length) {
+      headerMenuButtons.forEach((btn) => (btn.style.display = ''));
+    }
+    // Tampilkan kembali model selector untuk user
+    if (modelSelectorContainer) modelSelectorContainer.style.display = '';
 
     const nameToUse = user.user_full_name || user.username;
     const initial = nameToUse ? nameToUse.charAt(0).toUpperCase() : "?";
@@ -387,6 +411,7 @@ document.addEventListener("DOMContentLoaded", () => {
       const username = user.username || 'Pengguna';
       el.textContent = `Hi ${username}, Apa yang bisa saya bantu hari ini?`;
     });
+    updateEditTitleButtonVisibility();
   }
 
   async function checkAuthState() {
@@ -506,6 +531,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     closeSidebar();
+    updateEditTitleButtonVisibility();
   }
 
   function startNewChat() {
@@ -520,6 +546,7 @@ document.addEventListener("DOMContentLoaded", () => {
     if (chatTitle) chatTitle.textContent = "Obrolan Baru";
     updateClearChatButtonState();
     closeSidebar();
+    updateEditTitleButtonVisibility();
   }
 
   async function handleFormSubmit(e) {
@@ -569,6 +596,7 @@ document.addEventListener("DOMContentLoaded", () => {
             item.dataset.conversationId === currentConversationId
           );
         });
+        updateEditTitleButtonVisibility();
       }
       updateClearChatButtonState();
       await streamBotResponse(userMessageText, imageToSend);
@@ -633,6 +661,7 @@ document.addEventListener("DOMContentLoaded", () => {
       conversationHistory.push(botMessageData);
       await saveMessageToDb(botMessageData);
       addCopyToBotMessage(botMessageElement);
+      updateEditTitleButtonVisibility();
     } catch (error) {
       console.error("Error streaming response:", error);
       if (typingIndicator) typingIndicator.remove();
@@ -1074,7 +1103,9 @@ document.addEventListener("DOMContentLoaded", () => {
   if (editTitleBtn) {
     editTitleBtn.addEventListener('click', beginEditTitle);
   }
-
+  // Perbarui visibilitas tombol edit judul saat pertama kali load dan ketika resize
+  updateEditTitleButtonVisibility();
+  window.addEventListener('resize', updateEditTitleButtonVisibility);
   if (cancelBtn)
     cancelBtn.addEventListener("click", () =>
       modalOverlay.classList.remove("visible")

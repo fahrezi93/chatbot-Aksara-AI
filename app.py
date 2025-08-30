@@ -123,23 +123,28 @@ def login():
             if not id_token:
                 return jsonify({"status": "error", "message": "Token tidak ditemukan."}), 400
 
-            # Verifikasi token Firebase dari klien dengan retry kecil untuk clock skew
+            # Verifikasi token Firebase dari klien dengan retry dan clock skew tolerance
             last_error = None
-            for attempt in range(3):
+            for attempt in range(5):  # Increase retry attempts
                 try:
+                    # Verifikasi token tanpa clock skew parameter
                     decoded_token = auth.verify_id_token(id_token)
                     break
                 except auth.InvalidIdTokenError as e:
                     last_error = e
-                    # Jika token dianggap "terlalu awal", tunggu sebentar dan coba lagi
-                    if "Token used too early" in str(e) and attempt < 2:
-                        time.sleep(1)
+                    error_str = str(e)
+                    
+                    # Handle various token timing issues
+                    if any(phrase in error_str for phrase in ["Token used too early", "clock skew", "iat", "exp"]) and attempt < 4:
+                        time.sleep(2)  # Wait longer between retries
                         continue
                     raise
                 except Exception as e:
                     last_error = e
-                    if "Token used too early" in str(e) and attempt < 2:
-                        time.sleep(1)
+                    error_str = str(e)
+                    
+                    if any(phrase in error_str for phrase in ["Token used too early", "clock skew", "iat", "exp"]) and attempt < 4:
+                        time.sleep(2)
                         continue
                     raise
 
