@@ -31,11 +31,14 @@ const isApiAvailable = async (): Promise<boolean> => {
     }
 };
 
+// Supported model types
+export type AIModel = 'gemini' | 'deepseek' | 'claude' | 'llama' | 'qwen';
+
 // Send chat message to AI
 export async function sendChatMessage(
     message: string,
     history: Message[],
-    model: 'gemini' | 'deepseek' = 'gemini',
+    model: AIModel = 'gemini',
     imageData?: string
 ): Promise<ChatResponse> {
     try {
@@ -53,15 +56,18 @@ export async function sendChatMessage(
         });
 
         if (!response.ok) {
-            // Check if it's a 404 (API not deployed) or other error
-            if (response.status === 404) {
+            // Try to parse error response
+            try {
+                const errorData = await response.json();
                 return {
                     status: 'error',
-                    response: '⚠️ **API belum tersedia di local development.**\n\nUntuk menggunakan chat:\n1. Deploy ke Vercel, atau\n2. Jalankan `vercel dev` untuk test API lokal\n\nPastikan juga API keys sudah dikonfigurasi di environment variables.',
+                    response: errorData.response || 'Terjadi kesalahan pada server.',
                     model: model,
                 };
+            } catch {
+                // If parsing fails, throw to be caught below
+                throw new Error(`HTTP Error: ${response.status}`);
             }
-            throw new Error('Failed to send message');
         }
 
         return response.json();
@@ -69,16 +75,25 @@ export async function sendChatMessage(
         console.warn('Chat API not reachable:', error);
         return {
             status: 'error',
-            response: '⚠️ **Tidak dapat terhubung ke API.**\n\nPython API hanya berjalan di Vercel. Untuk development lokal:\n1. Deploy ke Vercel, atau\n2. Gunakan `vercel dev` untuk menjalankan serverless functions',
+            response: '⚠️ **Gagal terhubung ke server.**\n\nPastikan server lokal (`npm run dev`) sedang berjalan.\n\nJika error berlanjut, cek terminal untuk detail error.',
             model: model,
         };
     }
 }
 
-// Get all conversations for a user
-export async function getConversations(userId: string): Promise<Conversation[]> {
+// Get conversations with pagination
+export async function getConversations(
+    userId: string,
+    limit: number = 20,
+    startAfter?: string
+): Promise<{ conversations: Conversation[], pagination: { nextCursor: string | null, hasMore: boolean } }> {
     try {
-        const response = await fetch(`${API_BASE_URL}/conversations?userId=${userId}`, {
+        let url = `${API_BASE_URL}/conversations?userId=${userId}&limit=${limit}`;
+        if (startAfter) {
+            url += `&startAfter=${startAfter}`;
+        }
+
+        const response = await fetch(url, {
             method: 'GET',
             headers: {
                 'X-User-Id': userId,
@@ -86,17 +101,25 @@ export async function getConversations(userId: string): Promise<Conversation[]> 
         });
 
         if (!response.ok) {
-            // API not available in local dev
-            console.warn('Conversations API not available (expected in local dev)');
-            return [];
+            console.warn('Conversations API not available');
+            return { conversations: [], pagination: { nextCursor: null, hasMore: false } };
         }
 
         const data = await response.json();
-        return data.conversations || [];
+        // Handle backward compatibility if API returns array (shouldn't happen with our recent change but good practice)
+        if (Array.isArray(data.conversations)) {
+            return {
+                conversations: data.conversations,
+                pagination: data.pagination || { nextCursor: null, hasMore: false }
+            };
+        }
+
+        // Fallback for unexpected format
+        return { conversations: [], pagination: { nextCursor: null, hasMore: false } };
+
     } catch (error) {
-        // Network error - API not running
         console.warn('Conversations API not reachable:', error);
-        return [];
+        return { conversations: [], pagination: { nextCursor: null, hasMore: false } };
     }
 }
 
