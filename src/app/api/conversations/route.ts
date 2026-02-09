@@ -129,7 +129,7 @@ export async function GET(request: NextRequest) {
         });
     } catch (error) {
         console.error('Firestore error:', error);
-        return NextResponse.json({ conversations: [] });
+        return NextResponse.json({ error: 'Terjadi kesalahan saat mengambil percakapan' }, { status: 500 });
     }
 }
 
@@ -228,7 +228,7 @@ export async function PUT(request: NextRequest) {
         return NextResponse.json({ success: true });
     } catch (error) {
         console.error('Update title error:', error);
-        return NextResponse.json({ error: 'Failed to update title' }, { status: 500 });
+        return NextResponse.json({ error: 'Terjadi kesalahan saat memperbarui judul' }, { status: 500 });
     }
 }
 
@@ -271,6 +271,6 @@ export async function DELETE(request: NextRequest) {
         return NextResponse.json({ success: true });
     } catch (error) {
         console.error('Delete conversation error:', error);
-        return NextResponse.json({ error: 'Failed to delete' }, { status: 500 });
+        return NextResponse.json({ error: 'Terjadi kesalahan saat menghapus percakapan' }, { status: 500 });
     }
 }

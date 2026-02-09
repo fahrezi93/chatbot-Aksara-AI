@@ -59,9 +59,6 @@ async function sendGeminiMessage(
 ): Promise<string> {
     const apiKey = process.env.GEMINI_API_KEY;
 
-    // Debug logging to check if key is loaded (safe, only showing first 4 chars)
-    console.log('Gemini API Key loaded:', apiKey ? `${apiKey.substring(0, 4)}...` : 'NONE');
-
     if (!apiKey || apiKey === 'your-gemini-api-key-here') {
         return '⚠️ **GEMINI_API_KEY belum dikonfigurasi.**\n\nSilakan tambahkan API key di file `.env`:\n```\nGEMINI_API_KEY=your-actual-api-key\n```\n\nDapatkan API key gratis di [Google AI Studio](https://aistudio.google.com/apikey)';
     }

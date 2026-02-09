@@ -32,7 +32,7 @@ if (typeof window !== 'undefined' && isConfigured) {
         console.error('Firebase initialization error:', error);
     }
 } else if (typeof window !== 'undefined' && !isConfigured) {
-    console.warn('Firebase not configured. Please add your Firebase credentials to .env file.');
+    // Firebase not configured
 }
 
 export const googleProvider = new GoogleAuthProvider();
