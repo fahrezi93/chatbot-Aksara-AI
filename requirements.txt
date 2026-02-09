@@ -1,0 +1,6 @@
+# Python dependencies for Vercel serverless functions
+google-generativeai
+python-dotenv
+firebase-admin
+Pillow
+requests

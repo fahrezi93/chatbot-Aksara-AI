@@ -1,0 +1,39 @@
+'use client';
+
+import { initializeApp, getApps, FirebaseApp } from 'firebase/app';
+import { getAuth, Auth, GoogleAuthProvider } from 'firebase/auth';
+import { getFirestore, Firestore } from 'firebase/firestore';
+
+const firebaseConfig = {
+    apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
+    authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN,
+    projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
+    storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET,
+    messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID,
+    appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
+};
+
+// Check if Firebase is properly configured
+const isConfigured = firebaseConfig.apiKey &&
+    firebaseConfig.apiKey !== 'your-firebase-api-key' &&
+    firebaseConfig.projectId;
+
+// Initialize Firebase only on client side and only if configured
+let app: FirebaseApp | undefined;
+let auth: Auth | undefined;
+let db: Firestore | undefined;
+
+if (typeof window !== 'undefined' && isConfigured) {
+    try {
+        app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApps()[0];
+        auth = getAuth(app);
+        db = getFirestore(app);
+    } catch (error) {
+        console.error('Firebase initialization error:', error);
+    }
+} else if (typeof window !== 'undefined' && !isConfigured) {
+    console.warn('Firebase not configured. Please add your Firebase credentials to .env file.');
+}
+
+export const googleProvider = new GoogleAuthProvider();
+export { app, auth, db, isConfigured };
