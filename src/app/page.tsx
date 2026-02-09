@@ -39,6 +39,28 @@ export default function Home() {
 
   const [inputMessage, setInputMessage] = useState('');
 
+  if (loading) {
+    return (
+      <div className="h-screen w-full flex flex-col items-center justify-center bg-background gap-6 animate-pulse">
+        <div className="w-20 h-20 relative animate-float">
+          <img
+            src="/Aksara-AI-Logo-Warna.png"
+            alt="Aksara AI Logo"
+            className="w-full h-full object-contain"
+          />
+        </div>
+        <div className="flex flex-col items-center gap-2">
+          <div className="w-48 h-1 bg-gray-100 dark:bg-gray-800 rounded-full overflow-hidden">
+            <div className="h-full bg-blue-600 animate-loading-bar w-0" />
+          </div>
+          <span className="text-sm font-medium text-gray-400 dark:text-gray-500 animate-pulse">
+            Menyiapkan ruang obrolan...
+          </span>
+        </div>
+      </div>
+    );
+  }
+
   const handleSendMessage = async (text: string, imageData?: string) => {
     if (!text.trim() && !imageData) return;
 
@@ -147,7 +169,7 @@ export default function Home() {
       {/* Main Chat Area */}
       <div className="flex-1 flex flex-col min-w-0 relative">
         {/* Header */}
-        <header className="absolute top-0 left-0 right-0 z-40 px-6 py-4 flex items-center justify-between pointer-events-none">
+        <header className="fixed top-0 left-0 right-0 z-40 px-4 sm:px-6 py-3 sm:py-4 flex items-center justify-between bg-background/80 backdrop-blur-xl">
           <div className="pointer-events-auto">
             <button
               onClick={() => setSidebarOpen(!sidebarOpen)}
@@ -201,7 +223,7 @@ export default function Home() {
         </div>
 
         {/* Input Area */}
-        <div className="absolute bottom-0 left-0 right-0 p-6 bg-gradient-to-t from-[var(--background)] to-transparent pointer-events-none">
+        <div className="absolute bottom-0 left-0 right-0 p-4 sm:p-6 bg-gradient-to-t from-[var(--background)] to-transparent pointer-events-none">
           <div className="max-w-3xl mx-auto pointer-events-auto">
             <ChatInput
               onSend={handleSendMessage}
@@ -209,7 +231,7 @@ export default function Home() {
               value={inputMessage}
               onChange={setInputMessage}
             />
-            <p className="text-center text-xs text-gray-400 dark:text-gray-500 mt-3">
+            <p className="text-center text-[10px] sm:text-xs text-gray-400 dark:text-gray-500 mt-2 sm:mt-3 px-4">
               Aksara AI dapat membuat kesalahan. Periksa kembali informasi penting.
             </p>
           </div>

@@ -155,7 +155,7 @@ export default function ChatInput({ onSend, disabled, value, onChange }: ChatInp
 
 
             {/* Input Container */}
-            <div className={`flex flex-col gap-2 p-2 rounded-[2rem] bg-white dark:bg-gray-800 border transition-all relative z-20 ${listening ? 'border-red-500 ring-2 ring-red-500/20' : 'border-gray-200 dark:border-gray-700 focus-within:ring-2 focus-within:ring-blue-500/20'} shadow-xl shadow-blue-500/5`}>
+            <div className={`flex flex-col gap-1.5 p-1.5 rounded-[2rem] bg-white dark:bg-gray-800 border transition-all relative z-20 ${listening ? 'border-red-500 ring-2 ring-red-500/20' : 'border-gray-200 dark:border-gray-700 focus-within:ring-2 focus-within:ring-blue-500/20'} shadow-xl shadow-blue-500/5`}>
 
                 {/* Attachment Preview (Inside Container) */}
                 {(imageData || attachedFile) && (
@@ -203,12 +203,12 @@ export default function ChatInput({ onSend, disabled, value, onChange }: ChatInp
                     </div>
                 )}
 
-                <div className="flex items-end gap-2 w-full">
+                <div className="flex items-center gap-1.5 sm:gap-2 w-full">
                     {/* File Upload Button */}
                     <button
                         onClick={() => fileInputRef.current?.click()}
                         disabled={disabled || isParsing}
-                        className="p-3 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-500 hover:text-blue-600 dark:text-gray-400 transition-all disabled:opacity-50"
+                        className="p-2.5 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-500 hover:text-blue-600 dark:text-gray-400 transition-all disabled:opacity-50"
                         title="Upload gambar atau dokumen (PDF/TXT)"
                     >
                         <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -233,7 +233,7 @@ export default function ChatInput({ onSend, disabled, value, onChange }: ChatInp
                         disabled={disabled || isParsing}
                         placeholder={listening ? "Mendengarkan..." : "Tulis pesan..."}
                         rows={1}
-                        className="flex-1 resize-none bg-transparent border-none outline-none text-gray-900 dark:text-white placeholder:text-gray-400 py-3.5 px-2 max-h-[200px] disabled:opacity-50 text-base"
+                        className="flex-1 resize-none bg-transparent border-none outline-none text-gray-900 dark:text-white placeholder:text-gray-400 py-2.5 px-2 max-h-[200px] disabled:opacity-50 text-base"
                     />
 
                     {/* Microphone Button */}
@@ -241,7 +241,7 @@ export default function ChatInput({ onSend, disabled, value, onChange }: ChatInp
                         <button
                             onClick={toggleListening}
                             disabled={disabled || isParsing}
-                            className={`p-3 rounded-full transition-all ${listening
+                            className={`p-2.5 rounded-full transition-all ${listening
                                 ? 'bg-red-500 text-white animate-pulse shadow-red-500/20'
                                 : 'hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-500 hover:text-blue-600 dark:text-gray-400'
                                 }`}
@@ -264,7 +264,7 @@ export default function ChatInput({ onSend, disabled, value, onChange }: ChatInp
                     <button
                         onClick={handleSubmit}
                         disabled={disabled || isParsing || (!value.trim() && !imageData && !attachedFile)}
-                        className="p-3 rounded-full bg-blue-600 hover:bg-blue-700 text-white transition-all shadow-md shadow-blue-600/20 disabled:opacity-50 disabled:cursor-not-allowed disabled:shadow-none transform active:scale-95"
+                        className="p-2.5 rounded-full bg-blue-600 hover:bg-blue-700 text-white transition-all shadow-md shadow-blue-600/20 disabled:opacity-50 disabled:cursor-not-allowed disabled:shadow-none transform active:scale-95"
                         title="Kirim"
                     >
                         {isParsing ? (

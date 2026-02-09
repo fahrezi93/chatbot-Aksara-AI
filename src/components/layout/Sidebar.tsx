@@ -138,6 +138,10 @@ export default function Sidebar({
         try {
             const messages = await getConversationMessages(user.uid, conv.id);
             onSelectConversation(conv.id, messages);
+            // Auto close sidebar on mobile after selection
+            if (window.innerWidth < 1024) {
+                onToggle();
+            }
         } catch (error) {
             console.error('Error loading messages:', error);
         }
@@ -159,7 +163,7 @@ export default function Sidebar({
           bg-[var(--sidebar-bg)] border-r border-[var(--border)]
           flex flex-col
           transform transition-all duration-300 ease-in-out shadow-2xl lg:shadow-none
-          ${isOpen ? 'translate-x-0 w-[280px]' : '-translate-x-full lg:translate-x-0 lg:w-[80px] lg:overflow-visible'}
+          ${isOpen ? 'translate-x-0 w-[280px]' : 'w-[280px] -translate-x-full lg:translate-x-0 lg:w-[80px] lg:overflow-visible'}
         `}
             >
                 {/* Header */}
@@ -196,7 +200,10 @@ export default function Sidebar({
                     {/* New Chat Button */}
                     {user && (
                         <button
-                            onClick={onNewChat}
+                            onClick={() => {
+                                onNewChat();
+                                if (window.innerWidth < 1024) onToggle();
+                            }}
                             className={`
                                 flex items-center gap-3 transition-all duration-300 group
                                 ${isOpen

@@ -32,7 +32,7 @@ const isApiAvailable = async (): Promise<boolean> => {
 };
 
 // Supported model types
-export type AIModel = 'gemini' | 'deepseek' | 'claude' | 'llama' | 'qwen';
+export type AIModel = 'gemini' | 'deepseek' | 'llama' | 'qwen' | 'trinity' | 'stepfun' | 'glm';
 
 // Send chat message to AI
 export async function sendChatMessage(

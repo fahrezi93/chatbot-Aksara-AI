@@ -45,6 +45,12 @@
     0%, 100% { transform: translateY(0); }
     50% { transform: translateY(-10px); }
   }
+
+  @keyframes loading-bar {
+    0% { width: 0%; transform: translateX(-100%); }
+    50% { width: 50%; transform: translateX(0%); }
+    100% { width: 0%; transform: translateX(200%); }
+  }
 }
 
 :root {
@@ -188,35 +194,46 @@ body {
 }
 
 /* Markdown Styling */
-.markdown-content p {
-  margin-bottom: 1rem;
-  line-height: 1.7;
+.markdown-content p, .markdown-content ul, .markdown-content ol {
+  margin-bottom: 0.75rem;
+  line-height: 1.6;
 }
 
-.markdown-content ul {
-  list-style-type: disc;
-  padding-left: 1.5rem;
-  margin-bottom: 1rem;
+@media (min-width: 640px) {
+  .markdown-content p, .markdown-content ul, .markdown-content ol {
+    margin-bottom: 1rem;
+    line-height: 1.7;
+  }
 }
 
-.markdown-content ol {
-  list-style-type: decimal;
-  padding-left: 1.5rem;
-  margin-bottom: 1rem;
+.markdown-content ul, .markdown-content ol {
+  padding-left: 1.25rem;
+}
+
+@media (min-width: 640px) {
+  .markdown-content ul, .markdown-content ol {
+    padding-left: 1.5rem;
+  }
 }
 
 .markdown-content pre {
-  background: var(--secondary);
-  padding: 1rem;
-  border-radius: 0.75rem;
-  overflow-x: auto;
-  border: 1px solid var(--border);
+  background: transparent;
+  padding: 0;
+  border: none;
+  overflow: visible;
 }
 
-.markdown-content code {
-  color: var(--primary);
+.markdown-content code:not(pre code) {
+  background: rgba(0, 0, 0, 0.05);
+  padding: 0.2rem 0.4rem;
+  border-radius: 0.4rem;
   font-family: var(--font-mono);
-  font-size: 0.9em;
+  font-size: 0.85em;
+  color: var(--primary);
+}
+
+.dark .markdown-content code:not(pre code) {
+  background: rgba(255, 255, 255, 0.1);
 }
 
 .markdown-content blockquote {

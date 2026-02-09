@@ -45,16 +45,7 @@ const models = [
             </svg>
         ),
     },
-    {
-        id: 'claude' as const,
-        name: 'Claude 3.5 Sonnet',
-        description: 'Jago coding & nalar (Anthropic)',
-        icon: (
-            <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 15h-2v-6h2v6zm4 0h-2v-6h2v6zm-2-8c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2z" fill="#d97757" />
-            </svg>
-        ),
-    },
+
     {
         id: 'llama' as const,
         name: 'Llama 3.1 405B',
@@ -76,6 +67,37 @@ const models = [
             </svg>
         ),
     },
+    {
+        id: 'trinity' as const,
+        name: 'Arcee Trinity Large',
+        description: 'Paling natural & chatty (Creative)',
+        icon: (
+            <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M12 2L4.5 20.29l.71.71L12 18l6.79 3 .71-.71L12 2z" fill="#10b981" />
+            </svg>
+        ),
+    },
+    {
+        id: 'stepfun' as const,
+        name: 'Step 3.5 Flash',
+        description: 'Super cepat, konteks 256K',
+        icon: (
+            <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M13 10V3L4 14h7v7l9-11h-7z" fill="#f59e0b" />
+            </svg>
+        ),
+    },
+    {
+        id: 'glm' as const,
+        name: 'GLM 4.5 Air',
+        description: 'Pintar & lincah (Z.AI)',
+        icon: (
+            <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" stroke="#8b5cf6" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
+        ),
+    },
+
 ];
 
 export default function ModelSelector({ currentModel, onModelChange }: ModelSelectorProps) {

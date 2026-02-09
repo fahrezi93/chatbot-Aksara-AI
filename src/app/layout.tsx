@@ -15,6 +15,9 @@ export const metadata: Metadata = {
   description: "Aksara AI adalah chatbot cerdas yang mendukung multiple AI models dengan interface modern dan responsif.",
   keywords: ["AI", "chatbot", "Gemini", "DeepSeek", "Indonesia", "assistant"],
   authors: [{ name: "Aksara AI Team" }],
+  icons: {
+    icon: "/Aksara-AI-Logo.png",
+  },
   openGraph: {
     title: "Aksara AI - Asisten Cerdas Indonesia",
     description: "Chatbot cerdas dengan dukungan multiple AI models",

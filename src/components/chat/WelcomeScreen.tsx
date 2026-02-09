@@ -200,38 +200,7 @@ const GRADIENTS = [
     'from-fuchsia-500 to-purple-500',
 ];
 
-const ICONS = [
-    (
-        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
-        </svg>
-    ),
-    (
-        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-        </svg>
-    ),
-    (
-        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4" />
-        </svg>
-    ),
-    (
-        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-        </svg>
-    ),
-    (
-        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 3-2 3 2zm0 0v-8" />
-        </svg>
-    ),
-    (
-        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
-        </svg>
-    )
-];
+
 
 export default function WelcomeScreen({ userName, onPromptSelect }: WelcomeScreenProps) {
     const [displayPrompts, setDisplayPrompts] = useState<{
@@ -239,28 +208,22 @@ export default function WelcomeScreen({ userName, onPromptSelect }: WelcomeScree
         subtitle: string;
         full_prompt: string;
         color: string;
-        icon: React.ReactNode;
     }[]>([]);
 
-    const getRandomPrompts = () => {
-        // Randomly select 6 prompts
-        const shuffledPrompts = [...ALL_PROMPTS].sort(() => 0.5 - Math.random()).slice(0, 6);
+    const getPrompts = () => {
+        // Use first 6 prompts
+        const selectedPrompts = ALL_PROMPTS.slice(0, 6);
 
-        // Map them to include random colors and icons
-        return shuffledPrompts.map((prompt, index) => ({
+        // Map them to include random colors
+        return selectedPrompts.map((prompt, index) => ({
             ...prompt,
-            color: GRADIENTS[index % GRADIENTS.length],
-            icon: ICONS[index % ICONS.length]
+            color: GRADIENTS[index % GRADIENTS.length]
         }));
     };
 
     useEffect(() => {
-        setDisplayPrompts(getRandomPrompts());
+        setDisplayPrompts(getPrompts());
     }, []);
-
-    const handleRefresh = () => {
-        setDisplayPrompts(getRandomPrompts());
-    };
 
     return (
         <div className="flex flex-col items-center justify-center min-h-[60vh] text-center px-4 animate-fade-in-up">
@@ -325,32 +288,18 @@ export default function WelcomeScreen({ userName, onPromptSelect }: WelcomeScree
                                 className="group relative overflow-hidden p-5 rounded-2xl glass-card text-left transition-all hover:shadow-lg hover:-translate-y-1"
                             >
                                 <div className={`absolute inset-0 opacity-0 group-hover:opacity-5 bg-gradient-to-br ${suggestion.color} transition-opacity duration-300`} />
-                                <div className="relative z-10 flex items-start gap-4">
-                                    <span className={`p-2 rounded-xl bg-white dark:bg-white/10 shadow-sm text-${suggestion.color.split(' ')[0].replace('from-', '')}`}>
-                                        {suggestion.icon}
-                                    </span>
-                                    <div>
-                                        <h3 className="font-semibold text-[var(--text-primary)] mb-1 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
-                                            {suggestion.title}
-                                        </h3>
-                                        <p className="text-sm text-[var(--text-secondary)] line-clamp-2 leading-relaxed">
-                                            {suggestion.subtitle}
-                                        </p>
-                                    </div>
+                                <div className="relative z-10">
+                                    <h3 className="font-semibold text-[var(--text-primary)] mb-1 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
+                                        {suggestion.title}
+                                    </h3>
+                                    <p className="text-sm text-[var(--text-secondary)] line-clamp-2 leading-relaxed">
+                                        {suggestion.subtitle}
+                                    </p>
                                 </div>
                             </button>
                         ))}
                     </div>
 
-                    <button
-                        onClick={handleRefresh}
-                        className="mt-8 flex items-center gap-2 text-sm text-gray-500 hover:text-blue-600 transition-colors group"
-                    >
-                        <svg className="w-4 h-4 transition-transform group-hover:rotate-180 duration-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                        </svg>
-                        Acak Rekomendasi
-                    </button>
                 </>
             )}
         </div>

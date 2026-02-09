@@ -130,15 +130,23 @@ async function sendOpenRouterMessage(
             case 'deepseek':
                 targetModel = 'deepseek/deepseek-r1';
                 break;
-            case 'claude':
-                targetModel = 'anthropic/claude-3.5-sonnet';
-                break;
+
             case 'llama':
                 targetModel = 'meta-llama/llama-3.1-405b-instruct';
                 break;
             case 'qwen':
                 targetModel = 'qwen/qwen-2.5-72b-instruct';
                 break;
+            case 'trinity':
+                targetModel = 'arcee-ai/trinity-large-preview:free';
+                break;
+            case 'stepfun':
+                targetModel = 'stepfun/step-3.5-flash:free';
+                break;
+            case 'glm':
+                targetModel = 'z-ai/glm-4.5-air:free';
+                break;
+
             default:
                 targetModel = 'deepseek/deepseek-r1';
         }
