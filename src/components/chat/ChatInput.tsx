@@ -2,6 +2,7 @@
 
 import { useState, useRef, KeyboardEvent, ChangeEvent, useEffect } from 'react';
 import 'regenerator-runtime/runtime';
+import { useAlert } from '@/context/AlertContext';
 import SpeechRecognition, { useSpeechRecognition } from 'react-speech-recognition';
 
 interface ChatInputProps {
@@ -19,6 +20,7 @@ export default function ChatInput({ onSend, disabled, value, onChange }: ChatInp
     const textareaRef = useRef<HTMLTextAreaElement>(null);
     const fileInputRef = useRef<HTMLInputElement>(null);
     const initialVoiceValueRef = useRef('');
+    const { showAlert } = useAlert();
 
     const [isMounted, setIsMounted] = useState(false);
 
@@ -77,7 +79,11 @@ export default function ChatInput({ onSend, disabled, value, onChange }: ChatInp
 
             } catch (error) {
                 console.error('Error parsing file:', error);
-                alert('Gagal membaca dokumen. Silakan coba lagi.');
+                showAlert({
+                    title: 'Kesalahan',
+                    message: 'Gagal membaca dokumen. Silakan coba lagi.',
+                    type: 'error'
+                });
                 setIsParsing(false);
                 return;
             }
@@ -128,7 +134,11 @@ export default function ChatInput({ onSend, disabled, value, onChange }: ChatInp
             setAttachedFile(file);
             setImageData(null); // Clear image if any
         } else {
-            alert('Hanya mendukung file Gambar, PDF, dan TXT.');
+            showAlert({
+                title: 'Format Tidak Didukung',
+                message: 'Maaf, saat ini kami hanya mendukung file Gambar, PDF, dan TXT.',
+                type: 'warning'
+            });
         }
     };
 

@@ -5,6 +5,7 @@ import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import Image from 'next/image';
 import { useState, useEffect } from 'react';
+import { useAlert } from '@/context/AlertContext';
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
 import { vscDarkPlus } from 'react-syntax-highlighter/dist/esm/styles/prism';
 
@@ -100,6 +101,7 @@ export default function ChatMessage({ message, isTyping }: ChatMessageProps) {
     const [isSpeaking, setIsSpeaking] = useState(false);
     const [copied, setCopied] = useState(false);
     const [voicesReady, setVoicesReady] = useState(false);
+    const { showAlert } = useAlert();
 
     useEffect(() => {
         if (typeof window === 'undefined' || !('speechSynthesis' in window)) return;
@@ -130,7 +132,11 @@ export default function ChatMessage({ message, isTyping }: ChatMessageProps) {
 
         // Check browser support
         if (typeof window === 'undefined' || !('speechSynthesis' in window)) {
-            alert('Browser tidak mendukung Text-to-Speech');
+            showAlert({
+                title: 'Tidak Didukung',
+                message: 'Browser Anda tidak mendukung fitur Text-to-Speech.',
+                type: 'error'
+            });
             return;
         }
 
