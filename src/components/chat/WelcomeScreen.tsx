@@ -226,9 +226,9 @@ export default function WelcomeScreen({ userName, onPromptSelect }: WelcomeScree
     }, []);
 
     return (
-        <div className="flex flex-col items-center justify-center min-h-[60vh] text-center px-4 animate-fade-in-up">
+        <div className="flex flex-col items-center justify-center min-h-[50vh] text-center px-4 animate-fade-in-up">
             {/* Logo */}
-            <div className="w-24 h-24 relative mb-6 animate-float">
+            <div className="w-20 h-20 relative mb-4 animate-float">
                 <Image
                     src="/Aksara-AI-Logo-Warna.png"
                     alt="Aksara AI Logo"
@@ -242,14 +242,14 @@ export default function WelcomeScreen({ userName, onPromptSelect }: WelcomeScree
             <h1 className="text-3xl sm:text-4xl font-bold mb-3 bg-clip-text text-transparent bg-gradient-to-r from-gray-900 to-gray-600 dark:from-white dark:to-gray-300">
                 Hi {userName},
             </h1>
-            <h2 className="text-xl sm:text-2xl font-medium text-[var(--text-secondary)] mb-8">
+            <h2 className="text-xl sm:text-2xl font-medium text-[var(--text-secondary)] mb-4">
                 Apa yang bisa saya bantu hari ini?
             </h2>
 
             {/* Guest CTA */}
             {userName === 'Guest' && (
-                <div className="mt-4 p-8 rounded-3xl bg-blue-50/50 dark:bg-blue-900/10 border border-blue-100 dark:border-blue-900/30 max-w-2xl w-full backdrop-blur-sm shadow-xl shadow-blue-500/5 transition-all hover:shadow-blue-500/10 mb-12">
-                    <div className="inline-flex items-center justify-center w-12 h-12 rounded-2xl bg-blue-100 dark:bg-blue-800/30 text-blue-600 dark:text-blue-400 mb-6">
+                <div className="mt-4 p-6 rounded-3xl bg-blue-50/50 dark:bg-blue-900/10 border border-blue-100 dark:border-blue-900/30 max-w-2xl w-full backdrop-blur-sm shadow-xl shadow-blue-500/5 transition-all hover:shadow-blue-500/10 mb-6">
+                    <div className="inline-flex items-center justify-center w-12 h-12 rounded-2xl bg-blue-100 dark:bg-blue-800/30 text-blue-600 dark:text-blue-400 mb-3">
                         <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
                         </svg>
@@ -257,19 +257,19 @@ export default function WelcomeScreen({ userName, onPromptSelect }: WelcomeScree
                     <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2">
                         Dapatkan Pengalaman Penuh
                     </h3>
-                    <p className="text-gray-600 dark:text-gray-400 mb-8 leading-relaxed max-w-md mx-auto">
+                    <p className="text-gray-600 dark:text-gray-400 mb-5 leading-relaxed max-w-md mx-auto">
                         Masuk untuk menyimpan riwayat chat, mencoba model AI terbaru, dan fitur premium lainnya secara gratis.
                     </p>
                     <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
                         <Link
                             href="/register"
-                            className="w-full sm:w-auto px-8 py-3.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-bold shadow-lg shadow-blue-600/20 transition-all hover:-translate-y-0.5 active:scale-95"
+                            className="w-full sm:w-auto px-8 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-bold shadow-lg shadow-blue-600/20 transition-all hover:-translate-y-0.5 active:scale-95"
                         >
                             Daftar Gratis
                         </Link>
                         <Link
                             href="/login"
-                            className="w-full sm:w-auto px-8 py-3.5 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 text-blue-600 dark:text-blue-400 border border-blue-200 dark:border-gray-700 rounded-xl font-bold transition-all hover:-translate-y-0.5 active:scale-95"
+                            className="w-full sm:w-auto px-8 py-2.5 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 text-blue-600 dark:text-blue-400 border border-blue-200 dark:border-gray-700 rounded-xl font-bold transition-all hover:-translate-y-0.5 active:scale-95"
                         >
                             Masuk Akun
                         </Link>
