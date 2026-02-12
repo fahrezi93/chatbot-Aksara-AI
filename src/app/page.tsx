@@ -61,7 +61,7 @@ export default function Home() {
     );
   }
 
-  const handleSendMessage = async (text: string, imageData?: string) => {
+  const handleSendMessage = async (text: string, imageData?: string, overrideHistory?: Message[]) => {
     if (!text.trim() && !imageData) return;
 
     // Add user message
@@ -71,7 +71,11 @@ export default function Home() {
       imageData: imageData,
     };
 
-    setMessages(prev => [...prev, userMessage]);
+    setMessages(prev => {
+      const base = overrideHistory || prev;
+      return [...base, userMessage];
+    });
+
     setInputMessage(''); // Clear input
     setIsLoading(true);
 
@@ -97,8 +101,11 @@ export default function Home() {
       }
 
       // 2. Send to AI
+      // Use overrideHistory if provided, otherwise use current messages state
+      const baseHistory = overrideHistory || messages;
+
       // Filter out error messages from history so AI doesn't hallucinate errors
-      const history = messages.filter(m =>
+      const history = baseHistory.filter(m =>
         !m.text.startsWith('Maaf, terjadi kesalahan') &&
         !m.text.startsWith('⚠️') &&
         !m.text.includes('masalah teknis internal') // Filter user's screenshot error too just in case
@@ -137,6 +144,14 @@ export default function Home() {
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const handleEditMessage = async (index: number, newText: string) => {
+    // 1. Get history up to this index
+    const history = messages.slice(0, index);
+
+    // 2. Re-send the message with new text and explicit history
+    await handleSendMessage(newText, undefined, history);
   };
 
   const handleNewChat = () => {
@@ -209,6 +224,7 @@ export default function Home() {
                   key={index}
                   message={message}
                   isTyping={false}
+                  onEdit={message.isUser ? (newText) => handleEditMessage(index, newText) : undefined}
                 />
               ))}
               {isLoading && (

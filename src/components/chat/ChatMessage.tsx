@@ -12,6 +12,7 @@ import { vscDarkPlus } from 'react-syntax-highlighter/dist/esm/styles/prism';
 interface ChatMessageProps {
     message: Message;
     isTyping?: boolean;
+    onEdit?: (newText: string) => void;
 }
 
 const CodeBlock = ({ node, inline, className, children, ...props }: any) => {
@@ -65,7 +66,7 @@ const CodeBlock = ({ node, inline, className, children, ...props }: any) => {
                     ) : (
                         <div className="flex items-center gap-1.5 text-white/20 group-hover/copy:text-white/50 transition-colors">
                             <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3" />
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7v8a2 2 0 002 2h6M8 7V5a2 2 0 012-2h4.586a1 1 0 01.707.293l4.414 4.414a1 1 0 01.293.707V15a2 2 0 01-2 2h-2M8 7H6a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2v-2" />
                             </svg>
                             <span className="text-[10px] font-medium lowercase">salin</span>
                         </div>
@@ -97,10 +98,12 @@ const CodeBlock = ({ node, inline, className, children, ...props }: any) => {
     );
 };
 
-export default function ChatMessage({ message, isTyping }: ChatMessageProps) {
+export default function ChatMessage({ message, isTyping, onEdit }: ChatMessageProps) {
     const [isSpeaking, setIsSpeaking] = useState(false);
     const [copied, setCopied] = useState(false);
     const [voicesReady, setVoicesReady] = useState(false);
+    const [isEditing, setIsEditing] = useState(false);
+    const [editText, setEditText] = useState(message.text);
     const { showAlert } = useAlert();
 
     useEffect(() => {
@@ -220,6 +223,18 @@ export default function ChatMessage({ message, isTyping }: ChatMessageProps) {
         });
     };
 
+    const handleSaveEdit = () => {
+        if (editText.trim() && editText !== message.text && onEdit) {
+            onEdit(editText);
+        }
+        setIsEditing(false);
+    };
+
+    const handleCancelEdit = () => {
+        setEditText(message.text);
+        setIsEditing(false);
+    };
+
     if (isTyping) {
         return (
             <div className="flex gap-4 animate-fade-in px-2">
@@ -260,20 +275,63 @@ export default function ChatMessage({ message, isTyping }: ChatMessageProps) {
                         </div>
                     )}
                     {message.text && (
-                        <div className="px-4 sm:px-5 py-3 sm:py-3.5 rounded-3xl rounded-tr-sm user-message-bubble shadow-lg shadow-blue-500/10 relative">
-                            <p className="whitespace-pre-wrap leading-relaxed text-sm sm:text-base">{message.text}</p>
-
-                            {/* Copy button for user - minimalist */}
-                            <button
-                                onClick={handleCopy}
-                                className={`absolute -bottom-6 right-0 transition-all duration-200 flex items-center gap-1 text-[10px] ${copied ? 'text-green-500 opacity-100' : 'text-gray-400 opacity-0 group-hover:opacity-100'}`}
-                            >
-                                {copied ? 'Disalin' : (
+                        <div className="flex items-center gap-2 justify-end">
+                            {/* Actions to the left of user bubble */}
+                            <div className={`flex items-center gap-1.5 transition-all duration-200 ${isEditing ? 'hidden' : copied ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'}`}>
+                                <button
+                                    onClick={() => setIsEditing(true)}
+                                    className="text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors p-1"
+                                    title="Edit pesan"
+                                >
                                     <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3" />
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-5M16.243 3.757a2.828 2.828 0 114 4.000L11 18.343l-4 1 1-4 9.243-9.243z" />
                                     </svg>
+                                </button>
+                                <button
+                                    onClick={handleCopy}
+                                    className={`p-1 transition-colors ${copied ? 'text-green-500' : 'text-gray-400 hover:text-gray-900 dark:hover:text-white'}`}
+                                    title="Salin pesan"
+                                >
+                                    {copied ? (
+                                        <svg className="w-3.5 h-3.5 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
+                                        </svg>
+                                    ) : (
+                                        <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7v8a2 2 0 002 2h6M8 7V5a2 2 0 012-2h4.586a1 1 0 01.707.293l4.414 4.414a1 1 0 01.293.707V15a2 2 0 01-2 2h-2M8 7H6a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2v-2" />
+                                        </svg>
+                                    )}
+                                </button>
+                            </div>
+
+                            <div className="px-4 sm:px-5 py-3 sm:py-3.5 rounded-3xl rounded-tr-sm user-message-bubble shadow-lg shadow-blue-500/10">
+                                {isEditing ? (
+                                    <div className="flex flex-col gap-2 min-w-[200px] sm:min-w-[300px]">
+                                        <textarea
+                                            value={editText}
+                                            onChange={(e) => setEditText(e.target.value)}
+                                            className="bg-transparent border-none outline-none resize-none text-white text-sm sm:text-base leading-relaxed w-full min-h-[60px]"
+                                            autoFocus
+                                        />
+                                        <div className="flex justify-end gap-2 mt-2">
+                                            <button
+                                                onClick={handleCancelEdit}
+                                                className="px-3 py-1 rounded-full text-[10px] font-medium bg-white/10 hover:bg-white/20 transition-colors"
+                                            >
+                                                Batal
+                                            </button>
+                                            <button
+                                                onClick={handleSaveEdit}
+                                                className="px-3 py-1 rounded-full text-[10px] font-medium bg-white text-black hover:bg-white/90 transition-colors"
+                                            >
+                                                Simpan & Kirim
+                                            </button>
+                                        </div>
+                                    </div>
+                                ) : (
+                                    <p className="whitespace-pre-wrap leading-relaxed text-sm sm:text-base">{message.text}</p>
                                 )}
-                            </button>
+                            </div>
                         </div>
                     )}
                 </div>
@@ -325,14 +383,14 @@ export default function ChatMessage({ message, isTyping }: ChatMessageProps) {
 
                         <button
                             onClick={handleCopy}
-                            className={`p-1 hover:text-blue-500 transition-colors ${copied ? 'text-green-500' : 'text-gray-400'}`}
+                            className={`p-1 transition-colors ${copied ? 'text-green-500' : 'text-gray-400 hover:text-blue-500'}`}
                             title="Salin teks"
                         >
                             {copied ? (
                                 <span className="text-[10px] font-medium">Disalin!</span>
                             ) : (
                                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3" />
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7v8a2 2 0 002 2h6M8 7V5a2 2 0 012-2h4.586a1 1 0 01.707.293l4.414 4.414a1 1 0 01.293.707V15a2 2 0 01-2 2h-2M8 7H6a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2v-2" />
                                 </svg>
                             )}
                         </button>
