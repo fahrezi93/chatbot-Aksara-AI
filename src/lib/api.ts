@@ -39,7 +39,8 @@ export async function sendChatMessage(
     message: string,
     history: Message[],
     model: AIModel = 'gemini',
-    imageData?: string
+    imageData?: string,
+    useSearch?: boolean
 ): Promise<ChatResponse> {
     try {
         const response = await fetch(`${API_BASE_URL}/chat`, {
@@ -52,6 +53,7 @@ export async function sendChatMessage(
                 history,
                 model,
                 imageData,
+                useSearch,
             }),
         });
 

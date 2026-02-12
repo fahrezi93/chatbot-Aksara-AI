@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { GoogleGenerativeAI } from '@google/generative-ai';
+import { GoogleGenerativeAI, GenerateContentResult } from '@google/generative-ai';
 
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || '');
 
@@ -12,11 +12,12 @@ interface Message {
 export async function POST(request: NextRequest) {
     try {
         const body = await request.json();
-        const { message, history, model, imageData } = body as {
+        const { message, history, model, imageData, useSearch } = body as {
             message: string;
             history: Message[];
             model: string;
             imageData?: string;
+            useSearch?: boolean;
         };
 
         if (!message) {
@@ -29,7 +30,7 @@ export async function POST(request: NextRequest) {
         let responseText: string;
 
         if (model === 'gemini') {
-            responseText = await sendGeminiMessage(message, history, imageData);
+            responseText = await sendGeminiMessage(message, history, imageData, useSearch);
         } else {
             responseText = await sendOpenRouterMessage(message, history, model);
         }
@@ -55,7 +56,8 @@ export async function POST(request: NextRequest) {
 async function sendGeminiMessage(
     message: string,
     history: Message[],
-    imageData?: string
+    imageData?: string,
+    useSearch?: boolean
 ): Promise<string> {
     const apiKey = process.env.GEMINI_API_KEY;
 
@@ -64,8 +66,15 @@ async function sendGeminiMessage(
     }
 
     try {
-        // Use gemini-2.5-flash as confirmed available by API check
-        const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
+        // Configure model with optional Google Search grounding
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const modelOptions: any = { model: 'gemini-2.5-flash' };
+
+        if (useSearch) {
+            modelOptions.tools = [{ googleSearch: {} }];
+        }
+
+        const model = genAI.getGenerativeModel(modelOptions);
 
         // Convert history to Gemini format
         const chatHistory = history.map((msg) => ({
@@ -88,7 +97,7 @@ async function sendGeminiMessage(
                 },
             ]);
 
-            return result.response.text();
+            return formatResponseWithGrounding(result);
         }
 
         // Start chat with history
@@ -97,7 +106,7 @@ async function sendGeminiMessage(
         });
 
         const result = await chat.sendMessage(message);
-        return result.response.text();
+        return formatResponseWithGrounding(result);
     } catch (error: unknown) {
         const err = error as { status?: number; message?: string };
 
@@ -107,6 +116,41 @@ async function sendGeminiMessage(
 
         throw error;
     }
+}
+
+// Extract grounding metadata from Gemini response and append sources
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function formatResponseWithGrounding(result: GenerateContentResult | any): string {
+    const text = result.response.text();
+
+    // Try to extract grounding metadata
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const candidate = result.response.candidates?.[0] as any;
+    const groundingMetadata = candidate?.groundingMetadata;
+
+    if (!groundingMetadata) {
+        return text;
+    }
+
+    // Extract source chunks
+    const chunks = groundingMetadata.groundingChunks;
+    if (!chunks || chunks.length === 0) {
+        return text;
+    }
+
+    // Build sources section
+    const sources = chunks
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        .filter((chunk: any) => chunk.web?.uri && chunk.web?.title)
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        .map((chunk: any, i: number) => `${i + 1}. [${chunk.web.title}](${chunk.web.uri})`)
+        .join('\n');
+
+    if (!sources) {
+        return text;
+    }
+
+    return `${text}\n\n---\n📌 **Sumber:**\n${sources}`;
 }
 
 async function sendOpenRouterMessage(

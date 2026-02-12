@@ -17,6 +17,7 @@ export default function Home() {
   const [currentModel, setCurrentModel] = useState<AIModel>('gemini');
   const [conversationId, setConversationId] = useState<string | null>(null);
   const [sidebarOpen, setSidebarOpen] = useState(false); // Default false to prevent flash on mobile
+  const [useSearch, setUseSearch] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const scrollToBottom = () => {
@@ -115,7 +116,8 @@ export default function Home() {
         text,
         history,
         currentModel,
-        imageData
+        imageData,
+        currentModel === 'gemini' ? useSearch : undefined
       );
 
       // Add AI response
@@ -201,6 +203,21 @@ export default function Home() {
 
           <div className="pointer-events-auto flex items-center gap-3">
             <ThemeToggle />
+            {user && currentModel === 'gemini' && (
+              <button
+                onClick={() => setUseSearch(prev => !prev)}
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl border backdrop-blur-sm transition-all shadow-sm text-sm font-medium ${useSearch
+                    ? 'border-blue-400 dark:border-blue-600 bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400'
+                    : 'border-gray-200 dark:border-gray-800 bg-white/50 dark:bg-black/50 text-gray-500 dark:text-gray-400 hover:bg-white/80 dark:hover:bg-black/80'
+                  }`}
+                title={useSearch ? 'Google Search aktif' : 'Aktifkan Google Search'}
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                </svg>
+                <span className="hidden sm:inline">Search</span>
+              </button>
+            )}
             {user && (
               <ModelSelector
                 currentModel={currentModel}

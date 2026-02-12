@@ -355,7 +355,18 @@ export default function ChatMessage({ message, isTyping, onEdit }: ChatMessagePr
                         <ReactMarkdown
                             remarkPlugins={[remarkGfm]}
                             components={{
-                                code: CodeBlock
+                                code: CodeBlock,
+                                a: ({ href, children, ...props }: any) => (
+                                    <a
+                                        href={href}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="text-blue-500 dark:text-blue-400 hover:text-blue-600 dark:hover:text-blue-300 underline underline-offset-2 decoration-blue-500/30 hover:decoration-blue-500 transition-colors break-all"
+                                        {...props}
+                                    >
+                                        {children}
+                                    </a>
+                                )
                             }}
                         >
                             {message.text}
