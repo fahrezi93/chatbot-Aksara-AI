@@ -59,9 +59,9 @@ export default function LoginPage() {
         } catch (err: unknown) {
             const error = err as { code?: string };
             if (error.code === 'auth/popup-closed-by-user') {
-                // User closed popup, don't show error
+                setError('Login dibatalkan');
             } else if (error.code === 'auth/cancelled-popup-request') {
-                // Multiple popups, ignore
+                // Ignore multiple popup requests
             } else {
                 setError('Gagal masuk dengan Google. Silakan coba lagi.');
             }

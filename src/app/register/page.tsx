@@ -73,11 +73,11 @@ export default function RegisterPage() {
         } catch (err: unknown) {
             const error = err as { code?: string };
             if (error.code === 'auth/popup-closed-by-user') {
-                // User closed popup, don't show error
+                setError('Pendaftaran dibatalkan');
             } else if (error.code === 'auth/cancelled-popup-request') {
-                // Multiple popups, ignore
+                // Ignore multiple popup requests
             } else {
-                setError('Gagal masuk dengan Google. Silakan coba lagi.');
+                setError('Gagal mendaftar dengan Google. Silakan coba lagi.');
             }
         } finally {
             setLoading(false);

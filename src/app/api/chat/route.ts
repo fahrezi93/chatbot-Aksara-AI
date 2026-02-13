@@ -215,7 +215,7 @@ async function sendOpenRouterMessage(
             'Authorization': `Bearer ${apiKey}`,
             // OpenRouter specific headers
             ...(openRouterKey ? {
-                'HTTP-Referer': 'https://aksara-ai.vercel.app', // Site URL
+                'HTTP-Referer': 'https://aksara-ai.my.id', // Site URL
                 'X-Title': 'Aksara AI', // App Name
             } : {})
         },

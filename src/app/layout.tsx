@@ -12,6 +12,7 @@ const jakarta = Plus_Jakarta_Sans({
 });
 
 export const metadata: Metadata = {
+  metadataBase: new URL('https://aksara-ai.my.id'),
   title: "Aksara AI - Asisten Cerdas Indonesia",
   description: "Aksara AI adalah chatbot cerdas yang mendukung multiple AI models dengan interface modern dan responsif.",
   keywords: ["AI", "chatbot", "Gemini", "DeepSeek", "Indonesia", "assistant"],
