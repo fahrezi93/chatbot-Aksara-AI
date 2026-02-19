@@ -83,6 +83,91 @@ export async function sendChatMessage(
     }
 }
 
+// Send chat message with streaming
+export async function sendChatMessageStream(
+    message: string,
+    history: Message[],
+    model: AIModel = 'gemini',
+    onChunk: (text: string) => void,
+    imageData?: string,
+    useSearch?: boolean
+): Promise<{ fullText: string; error?: boolean }> {
+    try {
+        const response = await fetch(`${API_BASE_URL}/chat/stream`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                message,
+                history,
+                model,
+                imageData,
+                useSearch,
+            }),
+        });
+
+        if (!response.ok) {
+            return {
+                fullText: '⚠️ **Gagal terhubung ke server.**\n\nPastikan server sedang berjalan.',
+                error: true,
+            };
+        }
+
+        const reader = response.body?.getReader();
+        if (!reader) {
+            return {
+                fullText: '⚠️ Stream tidak tersedia.',
+                error: true,
+            };
+        }
+
+        const decoder = new TextDecoder();
+        let fullText = '';
+        let buffer = '';
+
+        while (true) {
+            const { done, value } = await reader.read();
+            if (done) break;
+
+            buffer += decoder.decode(value, { stream: true });
+
+            const lines = buffer.split('\n');
+            buffer = lines.pop() || '';
+
+            for (const line of lines) {
+                const trimmed = line.trim();
+                if (!trimmed || !trimmed.startsWith('data: ')) continue;
+
+                const data = trimmed.slice(6);
+                try {
+                    const parsed = JSON.parse(data);
+                    if (parsed.done) {
+                        if (parsed.fullText) {
+                            fullText = parsed.fullText;
+                        }
+                        return { fullText, error: parsed.error };
+                    }
+                    if (parsed.text) {
+                        fullText += parsed.text;
+                        onChunk(parsed.text);
+                    }
+                } catch {
+                    // Skip malformed chunks
+                }
+            }
+        }
+
+        return { fullText };
+    } catch (error) {
+        console.warn('Stream API not reachable:', error);
+        return {
+            fullText: '⚠️ **Gagal terhubung ke server.**\n\nPastikan server lokal (`npm run dev`) sedang berjalan.',
+            error: true,
+        };
+    }
+}
+
 // Get conversations with pagination
 export async function getConversations(
     userId: string,

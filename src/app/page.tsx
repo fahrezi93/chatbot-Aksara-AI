@@ -2,7 +2,7 @@
 
 import { useState, useRef, useEffect } from 'react';
 import { useAuthState } from '@/hooks/useAuthState';
-import { sendChatMessage, saveMessage, Message, AIModel } from '@/lib/api';
+import { sendChatMessageStream, saveMessage, Message, AIModel } from '@/lib/api';
 import Sidebar from '@/components/layout/Sidebar';
 import ChatMessage from '@/components/chat/ChatMessage';
 import ChatInput from '@/components/chat/ChatInput';
@@ -14,6 +14,7 @@ export default function Home() {
   const { user, loading } = useAuthState();
   const [messages, setMessages] = useState<Message[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [isStreaming, setIsStreaming] = useState(false);
   const [currentModel, setCurrentModel] = useState<AIModel>('gemini');
   const [conversationId, setConversationId] = useState<string | null>(null);
   const [sidebarOpen, setSidebarOpen] = useState(false); // Default false to prevent flash on mobile
@@ -79,6 +80,7 @@ export default function Home() {
 
     setInputMessage(''); // Clear input
     setIsLoading(true);
+    setIsStreaming(true);
 
     try {
       // 1. Save user message if logged in
@@ -101,34 +103,55 @@ export default function Home() {
         }
       }
 
-      // 2. Send to AI
-      // Use overrideHistory if provided, otherwise use current messages state
+      // 2. Send to AI with streaming
       const baseHistory = overrideHistory || messages;
 
-      // Filter out error messages from history so AI doesn't hallucinate errors
+      // Filter out error messages from history
       const history = baseHistory.filter(m =>
         !m.text.startsWith('Maaf, terjadi kesalahan') &&
         !m.text.startsWith('⚠️') &&
-        !m.text.includes('masalah teknis internal') // Filter user's screenshot error too just in case
+        !m.text.includes('masalah teknis internal')
       );
 
-      const response = await sendChatMessage(
+      // Add empty AI message for streaming
+      const aiMessageIndex = (overrideHistory || messages).length + 1; // +1 for the user message we just added
+      setMessages(prev => [...prev, { isUser: false, text: '' }]);
+      setIsLoading(false); // Hide typing indicator, show streaming text
+
+      const { fullText } = await sendChatMessageStream(
         text,
         history,
         currentModel,
+        (chunk: string) => {
+          // Update the last message (AI response) with each chunk
+          setMessages(prev => {
+            const updated = [...prev];
+            const lastIdx = updated.length - 1;
+            if (lastIdx >= 0 && !updated[lastIdx].isUser) {
+              updated[lastIdx] = {
+                ...updated[lastIdx],
+                text: updated[lastIdx].text + chunk,
+              };
+            }
+            return updated;
+          });
+        },
         imageData,
         currentModel === 'gemini' ? useSearch : undefined
       );
 
-      // Add AI response
-      const aiMessage: Message = {
-        isUser: false,
-        text: response.response,
-      };
-
-      setMessages(prev => [...prev, aiMessage]);
+      // Ensure final text is set correctly
+      setMessages(prev => {
+        const updated = [...prev];
+        const lastIdx = updated.length - 1;
+        if (lastIdx >= 0 && !updated[lastIdx].isUser) {
+          updated[lastIdx] = { ...updated[lastIdx], text: fullText };
+        }
+        return updated;
+      });
 
       // 3. Save AI message if logged in
+      const aiMessage: Message = { isUser: false, text: fullText };
       if (user && currentConvId) {
         try {
           await saveMessage(user.uid, currentConvId, aiMessage);
@@ -145,6 +168,7 @@ export default function Home() {
       setMessages(prev => [...prev, errorMessage]);
     } finally {
       setIsLoading(false);
+      setIsStreaming(false);
     }
   };
 
@@ -207,8 +231,8 @@ export default function Home() {
               <button
                 onClick={() => setUseSearch(prev => !prev)}
                 className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl border backdrop-blur-sm transition-all shadow-sm text-sm font-medium ${useSearch
-                    ? 'border-blue-400 dark:border-blue-600 bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400'
-                    : 'border-gray-200 dark:border-gray-800 bg-white/50 dark:bg-black/50 text-gray-500 dark:text-gray-400 hover:bg-white/80 dark:hover:bg-black/80'
+                  ? 'border-blue-400 dark:border-blue-600 bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400'
+                  : 'border-gray-200 dark:border-gray-800 bg-white/50 dark:bg-black/50 text-gray-500 dark:text-gray-400 hover:bg-white/80 dark:hover:bg-black/80'
                   }`}
                 title={useSearch ? 'Google Search aktif' : 'Aktifkan Google Search'}
               >
@@ -260,7 +284,7 @@ export default function Home() {
           <div className="max-w-3xl mx-auto pointer-events-auto">
             <ChatInput
               onSend={handleSendMessage}
-              disabled={isLoading}
+              disabled={isLoading || isStreaming}
               value={inputMessage}
               onChange={setInputMessage}
             />
