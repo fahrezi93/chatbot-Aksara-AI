@@ -114,6 +114,7 @@ export async function GET(request: NextRequest) {
             id: doc.id,
             title: doc.data().title || 'Untitled',
             lastUpdated: doc.data().lastUpdated,
+            systemPrompt: doc.data().systemPrompt || '',
         }));
 
         const lastDoc = snapshot.docs[snapshot.docs.length - 1];
@@ -172,6 +173,7 @@ export async function POST(request: NextRequest) {
             const newConv = await conversationsRef.add({
                 title,
                 lastUpdated: new Date().toISOString(),
+                ...(body.systemPrompt ? { systemPrompt: body.systemPrompt } : {}),
             });
             convId = newConv.id;
         }
@@ -207,10 +209,15 @@ export async function POST(request: NextRequest) {
 export async function PUT(request: NextRequest) {
     try {
         const body = await request.json();
-        const { userId, conversationId, title } = body;
+        const { userId, conversationId, title, systemPrompt } = body;
 
-        if (!userId || !conversationId || !title) {
+        if (!userId || !conversationId) {
             return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
+        }
+
+        // At least one field to update
+        if (title === undefined && systemPrompt === undefined) {
+            return NextResponse.json({ error: 'Nothing to update' }, { status: 400 });
         }
 
         const firestore = getFirestoreDb();
@@ -218,17 +225,22 @@ export async function PUT(request: NextRequest) {
             return NextResponse.json({ success: false, message: 'Firebase not configured' });
         }
 
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const updateData: any = {};
+        if (title !== undefined) updateData.title = title;
+        if (systemPrompt !== undefined) updateData.systemPrompt = systemPrompt;
+
         await firestore
             .collection('users')
             .doc(userId)
             .collection('conversations')
             .doc(conversationId)
-            .update({ title });
+            .update(updateData);
 
         return NextResponse.json({ success: true });
     } catch (error) {
-        console.error('Update title error:', error);
-        return NextResponse.json({ error: 'Terjadi kesalahan saat memperbarui judul' }, { status: 500 });
+        console.error('Update conversation error:', error);
+        return NextResponse.json({ error: 'Terjadi kesalahan saat memperbarui percakapan' }, { status: 500 });
     }
 }
 

@@ -13,7 +13,7 @@ interface SidebarProps {
     onNewChat: () => void;
     user: User | null;
     conversationId: string | null;
-    onSelectConversation: (id: string, messages: Message[]) => void;
+    onSelectConversation: (id: string, messages: Message[], conversation?: Conversation) => void;
     refreshTrigger?: number;
 }
 
@@ -153,7 +153,7 @@ export default function Sidebar({
         if (!user || editingId === conv.id) return;
         try {
             const messages = await getConversationMessages(user.uid, conv.id);
-            onSelectConversation(conv.id, messages);
+            onSelectConversation(conv.id, messages, conv);
             // Auto close sidebar on mobile after selection
             if (window.innerWidth < 1024) {
                 onToggle();

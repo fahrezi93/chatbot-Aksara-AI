@@ -2,13 +2,14 @@
 
 import { useState, useRef, useEffect } from 'react';
 import { useAuthState } from '@/hooks/useAuthState';
-import { sendChatMessageStream, saveMessage, Message, AIModel } from '@/lib/api';
+import { sendChatMessageStream, saveMessage, updateConversationSystemPrompt, Message, AIModel, Conversation } from '@/lib/api';
 import Sidebar from '@/components/layout/Sidebar';
 import ChatMessage from '@/components/chat/ChatMessage';
 import ChatInput from '@/components/chat/ChatInput';
 import ModelSelector from '@/components/chat/ModelSelector';
 import WelcomeScreen from '@/components/chat/WelcomeScreen';
 import ThemeToggle from '@/components/ThemeToggle';
+import SystemPromptPanel from '@/components/chat/SystemPromptPanel';
 
 export default function Home() {
   const { user, loading } = useAuthState();
@@ -19,6 +20,7 @@ export default function Home() {
   const [conversationId, setConversationId] = useState<string | null>(null);
   const [sidebarOpen, setSidebarOpen] = useState(false); // Default false to prevent flash on mobile
   const [useSearch, setUseSearch] = useState(false);
+  const [systemPrompt, setSystemPrompt] = useState('');
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const scrollToBottom = () => {
@@ -137,7 +139,8 @@ export default function Home() {
           });
         },
         imageData,
-        currentModel === 'gemini' ? useSearch : undefined
+        currentModel === 'gemini' ? useSearch : undefined,
+        systemPrompt || undefined
       );
 
       // Ensure final text is set correctly
@@ -184,6 +187,7 @@ export default function Home() {
     setMessages([]);
     setConversationId(null);
     setInputMessage('');
+    setSystemPrompt('');
   };
 
   const getUserName = () => {
@@ -200,9 +204,10 @@ export default function Home() {
         onNewChat={handleNewChat}
         user={user}
         conversationId={conversationId}
-        onSelectConversation={(id, msgs) => {
+        onSelectConversation={(id: string, msgs: Message[], conv?: Conversation) => {
           setConversationId(id);
           setMessages(msgs);
+          setSystemPrompt(conv?.systemPrompt || '');
         }}
         refreshTrigger={refreshSidebar}
       />
@@ -253,6 +258,18 @@ export default function Home() {
 
         {/* Messages Area */}
         <div className="flex-1 overflow-y-auto pt-24 pb-32 px-4 scrollbar-thin scrollbar-thumb-gray-200 dark:scrollbar-thumb-gray-800">
+          {/* System Prompt Panel */}
+          <SystemPromptPanel
+            systemPrompt={systemPrompt}
+            onSystemPromptChange={(prompt) => {
+              setSystemPrompt(prompt);
+              // Save to Firestore if conversation exists
+              if (user && conversationId) {
+                updateConversationSystemPrompt(user.uid, conversationId, prompt);
+              }
+            }}
+            disabled={isLoading || isStreaming}
+          />
           {messages.length === 0 ? (
             <WelcomeScreen
               userName={getUserName()}

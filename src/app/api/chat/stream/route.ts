@@ -12,12 +12,13 @@ interface Message {
 export async function POST(request: NextRequest) {
     try {
         const body = await request.json();
-        const { message, history, model, imageData, useSearch } = body as {
+        const { message, history, model, imageData, useSearch, systemPrompt } = body as {
             message: string;
             history: Message[];
             model: string;
             imageData?: string;
             useSearch?: boolean;
+            systemPrompt?: string;
         };
 
         if (!message) {
@@ -33,9 +34,9 @@ export async function POST(request: NextRequest) {
             async start(controller) {
                 try {
                     if (model === 'gemini') {
-                        await streamGemini(controller, encoder, message, history, imageData, useSearch);
+                        await streamGemini(controller, encoder, message, history, imageData, useSearch, systemPrompt);
                     } else {
-                        await streamOpenRouter(controller, encoder, message, history, model);
+                        await streamOpenRouter(controller, encoder, message, history, model, systemPrompt);
                     }
                 } catch (error) {
                     console.error('Stream error:', error);
@@ -72,7 +73,8 @@ async function streamGemini(
     message: string,
     history: Message[],
     imageData?: string,
-    useSearch?: boolean
+    useSearch?: boolean,
+    systemPrompt?: string
 ) {
     const apiKey = process.env.GEMINI_API_KEY;
 
@@ -86,6 +88,10 @@ async function streamGemini(
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const modelOptions: any = { model: 'gemini-2.5-flash' };
+
+    if (systemPrompt) {
+        modelOptions.systemInstruction = systemPrompt;
+    }
 
     if (useSearch) {
         modelOptions.tools = [{ googleSearch: {} }];
@@ -194,7 +200,8 @@ async function streamOpenRouter(
     encoder: TextEncoder,
     message: string,
     history: Message[],
-    modelId: string
+    modelId: string,
+    systemPrompt?: string
 ) {
     const openRouterKey = process.env.OPENROUTER_API_KEY;
     const deepSeekKey = process.env.DEEPSEEK_API_KEY;
@@ -244,10 +251,20 @@ async function streamOpenRouter(
     }
 
     // Convert history to OpenAI format
-    const messages = history.map((msg) => ({
-        role: msg.isUser ? 'user' : 'assistant',
-        content: msg.text,
-    }));
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const messages: any[] = [];
+
+    // Add system prompt if provided
+    if (systemPrompt) {
+        messages.push({ role: 'system', content: systemPrompt });
+    }
+
+    history.forEach((msg) => {
+        messages.push({
+            role: msg.isUser ? 'user' : 'assistant',
+            content: msg.text,
+        });
+    });
     messages.push({ role: 'user', content: message });
 
     const response = await fetch(`${baseUrl}/chat/completions`, {

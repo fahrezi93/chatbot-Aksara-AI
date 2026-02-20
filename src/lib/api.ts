@@ -13,6 +13,7 @@ export interface Conversation {
     id: string;
     title: string;
     lastUpdated?: string;
+    systemPrompt?: string;
 }
 
 export interface ChatResponse {
@@ -40,7 +41,8 @@ export async function sendChatMessage(
     history: Message[],
     model: AIModel = 'gemini',
     imageData?: string,
-    useSearch?: boolean
+    useSearch?: boolean,
+    systemPrompt?: string
 ): Promise<ChatResponse> {
     try {
         const response = await fetch(`${API_BASE_URL}/chat`, {
@@ -54,6 +56,7 @@ export async function sendChatMessage(
                 model,
                 imageData,
                 useSearch,
+                systemPrompt,
             }),
         });
 
@@ -90,7 +93,8 @@ export async function sendChatMessageStream(
     model: AIModel = 'gemini',
     onChunk: (text: string) => void,
     imageData?: string,
-    useSearch?: boolean
+    useSearch?: boolean,
+    systemPrompt?: string
 ): Promise<{ fullText: string; error?: boolean }> {
     try {
         const response = await fetch(`${API_BASE_URL}/chat/stream`, {
@@ -104,6 +108,7 @@ export async function sendChatMessageStream(
                 model,
                 imageData,
                 useSearch,
+                systemPrompt,
             }),
         });
 
@@ -314,6 +319,31 @@ export async function deleteConversation(
         return response.ok;
     } catch (error) {
         console.warn('Delete conversation API not reachable:', error);
+        return false;
+    }
+}
+
+// Update conversation system prompt
+export async function updateConversationSystemPrompt(
+    userId: string,
+    conversationId: string,
+    systemPrompt: string
+): Promise<boolean> {
+    try {
+        const response = await fetch(`${API_BASE_URL}/conversations/${conversationId}`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                userId,
+                systemPrompt,
+            }),
+        });
+
+        return response.ok;
+    } catch (error) {
+        console.warn('Update system prompt API not reachable:', error);
         return false;
     }
 }
