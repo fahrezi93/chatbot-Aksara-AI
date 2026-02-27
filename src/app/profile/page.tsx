@@ -7,6 +7,8 @@ import { useRouter } from 'next/navigation';
 import { useAuthState } from '@/hooks/useAuthState';
 import Link from 'next/link';
 import ThemeToggle from '@/components/ThemeToggle';
+import SystemPromptPanel from '@/components/chat/SystemPromptPanel';
+import { getUserPreferences, updateUserPreferences } from '@/lib/api';
 
 export default function ProfilePage() {
     const { user, loading } = useAuthState();
@@ -15,6 +17,8 @@ export default function ProfilePage() {
     const [success, setSuccess] = useState('');
     const [error, setError] = useState('');
     const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+    const [systemPrompt, setSystemPrompt] = useState('');
+    const [isPromptLoading, setIsPromptLoading] = useState(false);
     const router = useRouter();
 
     useEffect(() => {
@@ -23,6 +27,16 @@ export default function ProfilePage() {
         }
         if (user) {
             setName(user.displayName || '');
+
+            // Load preferences
+            setIsPromptLoading(true);
+            getUserPreferences(user.uid).then(prefs => {
+                if (prefs?.systemPrompt) {
+                    setSystemPrompt(prefs.systemPrompt);
+                }
+            }).finally(() => {
+                setIsPromptLoading(false);
+            });
         }
     }, [user, loading, router]);
 
@@ -44,6 +58,16 @@ export default function ProfilePage() {
             setSaving(false);
         }
     };
+
+    const handleSystemPromptChange = async (prompt: string) => {
+        setSystemPrompt(prompt);
+        if (user) {
+            await updateUserPreferences(user.uid, { systemPrompt: prompt });
+            setSuccess('Instruksi khusus berhasil disimpan');
+            setTimeout(() => setSuccess(''), 3000);
+        }
+    };
+
 
     const handleLogout = async () => {
         if (!auth) return;
@@ -166,15 +190,29 @@ export default function ProfilePage() {
                             <svg className="w-5 h-5 text-purple-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4" />
                             </svg>
-                            Preferensi Tampilan
+                            Personalisasi
                         </h2>
 
-                        <div className="flex items-center justify-between p-4 rounded-xl bg-gray-50 dark:bg-gray-900/50 border border-gray-100 dark:border-gray-700/50">
-                            <div>
-                                <p className="font-medium text-gray-900 dark:text-white">Tema Aplikasi</p>
-                                <p className="text-sm text-gray-500 dark:text-gray-400">Sesuaikan tampilan antarmuka</p>
+                        <div className="space-y-4">
+                            <div className="flex items-center justify-between p-4 rounded-xl bg-gray-50 dark:bg-gray-900/50 border border-gray-100 dark:border-gray-700/50">
+                                <div>
+                                    <p className="font-medium text-gray-900 dark:text-white">Tema Aplikasi</p>
+                                    <p className="text-sm text-gray-500 dark:text-gray-400">Sesuaikan tampilan antarmuka</p>
+                                </div>
+                                <ThemeToggle />
                             </div>
-                            <ThemeToggle />
+
+                            <div className="p-4 rounded-xl bg-gray-50 dark:bg-gray-900/50 border border-gray-100 dark:border-gray-700/50">
+                                <div className="mb-3">
+                                    <p className="font-medium text-gray-900 dark:text-white">Instruksi Khusus AI</p>
+                                    <p className="text-sm text-gray-500 dark:text-gray-400">Atur instruksi dasar untuk setiap obrolan dengan AI</p>
+                                </div>
+                                <SystemPromptPanel
+                                    systemPrompt={systemPrompt}
+                                    onSystemPromptChange={handleSystemPromptChange}
+                                    disabled={isPromptLoading}
+                                />
+                            </div>
                         </div>
                     </div>
 

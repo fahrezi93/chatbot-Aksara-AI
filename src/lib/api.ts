@@ -348,4 +348,48 @@ export async function updateConversationSystemPrompt(
     }
 }
 
+// Get user preferences
+export async function getUserPreferences(userId: string): Promise<{ systemPrompt?: string } | null> {
+    try {
+        const response = await fetch(`${API_BASE_URL}/user/preferences?userId=${userId}`, {
+            method: 'GET',
+        });
+
+        if (!response.ok) {
+            console.warn('Get preferences API not available');
+            return null;
+        }
+
+        const data = await response.json();
+        return data.preferences || null;
+    } catch (error) {
+        console.warn('Get preferences API not reachable:', error);
+        return null;
+    }
+}
+
+// Update user preferences
+export async function updateUserPreferences(
+    userId: string,
+    preferences: { systemPrompt?: string }
+): Promise<boolean> {
+    try {
+        const response = await fetch(`${API_BASE_URL}/user/preferences`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                userId,
+                preferences,
+            }),
+        });
+
+        return response.ok;
+    } catch (error) {
+        console.warn('Update preferences API not reachable:', error);
+        return false;
+    }
+}
+
 export { isApiAvailable };
